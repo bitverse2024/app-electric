@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/PayrollPages/viewcashad.aspx" hash="2e7cb0847" filehash="fd3a25fb4a6ee4a" flags="110000" assembly="App_Web_ej1ah3bv" type="ASP.pages_admin_payrollpages_viewcashad_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/PayrollPages/viewcashad.aspx" />
+    </filedeps>
+</preserve>

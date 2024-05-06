@@ -1,0 +1,182 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.Master" AutoEventWireup="true" CodeBehind="employeeded.aspx.cs" Inherits="HRIS_APPELECTRIC.Pages.Admin.PayrollPages.employeeded" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+      <script type="text/javascript">
+        function Confirm1() {
+            var confirm_value = document.createElement("INPUT");
+            confirm_value.type = "hidden";
+            confirm_value.name = "confirm_value";
+            if (confirm("Are you sure you want to update this item?")) {
+                confirm_value.value = "Yes";
+            } else {
+                confirm_value.value = "No";
+            }
+            document.forms[0].appendChild(confirm_value);
+        }
+    </script>
+     <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6"></div>
+                <div class="col-sm-6"></div>
+            </div>
+        </div>
+    </div>
+     <div class="col-md-12">
+        <div class="content">
+            <div class="container-fluid">
+                <div class="container"></div>
+                <h3 class="m-0 text-dark">Payroll<small> Deductions</small></h3>
+                <section class="card">
+                    <div class="card-header">
+                        <a href="#" class="btn btn-default"><i class="fa fa-list"></i><span class="h6">List</span></a>
+                        <a href="<%= ResolveUrl("~/Pages/Admin/PayrollPages/createded.aspx?empid="+empno+"")%>" class="btn btn-default"><i class="fa fa-plus"></i><span class="h6">Create</span></a>
+                    </div>
+                    <div class="card-body">
+                        <div class="content">
+                            <div class="container-fluid">
+                                <div id="display-grid" class="grid-view">
+                                    <div class="summary">Displaying <%=gridrangecount%> of <%=gridtotalcount%> results.</div>
+                                    <asp:GridView ID="GridViewList" runat="server" AutoGenerateColumns="False"
+                                        ShowFooter="True" CssClass="items table table-striped table-bordered table-condensed"
+                                        GridLines="None" AllowPaging="True" Font-Names="Segoe UI"
+                                        ForeColor="Black" OnRowCommand="GridViewList_RowCommand"
+                                        OnPageIndexChanging="GridViewList_PageIndexChanging" ShowHeaderWhenEmpty="true"
+                                        ViewStateMode="Enabled">
+                                        <EmptyDataTemplate>
+                                            <center><h1>NO USERS AVAILABLE</h1></center>
+                                        </EmptyDataTemplate>
+                                        <Columns>
+                                            <asp:TemplateField Visible="false">
+                                                                        <ItemTemplate>
+                                                                            <asp:Label ID="lblid" Text='<%# Eval("id") %>' runat="server"></asp:Label>
+                                                                        </ItemTemplate>
+                                                                    </asp:TemplateField>
+                                            <asp:TemplateField Visible="false">
+                                                <HeaderTemplate>
+                                                    <asp:LinkButton ID="lnkEmpID" CssClass="h8" Text='Employee Number' runat="server" CommandName="Sort" CommandArgument="EmpID"></asp:LinkButton><br />
+                                                    <asp:TextBox ID="txtSearchEmpID" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+                                                </HeaderTemplate>
+                                                <ItemTemplate>
+                                                    <asp:Label ID="lblidEmpID" CssClass="h6" Text='<%# Eval("EmpID") %>' runat="server"></asp:Label>
+                                                </ItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField>
+                                                <HeaderTemplate>
+                                                    <asp:LinkButton ID="lnkCutOffID" CssClass="h8" Text='Pay Period' runat="server" CommandName="Sort" CommandArgument="CutOffID"></asp:LinkButton><br />
+                                                    <asp:TextBox ID="txtCutOffID" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+                                                </HeaderTemplate>
+                                                <ItemTemplate>
+                                                    <asp:Label ID="lblDeduction" CssClass="h6" Text='<%# Eval("CutOffID") %>' runat="server"></asp:Label>
+                                                </ItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField>
+                                                <HeaderTemplate>
+                                                    <asp:LinkButton ID="lnkSSSDed" CssClass="h8" Text='SSS' runat="server" CommandName="Sort" CommandArgument="SSSDed"></asp:LinkButton><br />
+                                                    <asp:TextBox ID="txtSSSDed" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+                                                </HeaderTemplate>
+                                                <ItemTemplate>
+                                                    <asp:Label ID="lblSSSDed" CssClass="h6" Text='<%# Eval("SSSDed") %>' runat="server"></asp:Label>
+                                                </ItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField>
+                                                <HeaderTemplate>
+                                                    <asp:LinkButton ID="lnkPhilDed" CssClass="h8" Text='Philhealth' runat="server" CommandName="Sort" CommandArgument="PhilDed"></asp:LinkButton><br />
+                                                    <asp:TextBox ID="txtPhilDed" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+                                                </HeaderTemplate>
+                                                <ItemTemplate>
+                                                    <asp:Label ID="lblPhilDed" CssClass="h6" Text='<%# Eval("PhilDed") %>' runat="server"></asp:Label>
+                                                </ItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField>
+                                                <HeaderTemplate>
+                                                    <asp:LinkButton ID="lnkPagibigDed" CssClass="h8" Text='Pag-ibig' runat="server" CommandName="Sort" CommandArgument="PagibigDed"></asp:LinkButton><br />
+                                                    <asp:TextBox ID="txtPagibigDed" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+                                                </HeaderTemplate>
+                                                <ItemTemplate>
+                                                    <asp:Label ID="lblPagibigDed" CssClass="h6" Text='<%# Eval("PagibigDed") %>' runat="server"></asp:Label>
+                                                </ItemTemplate>
+                                            </asp:TemplateField>
+                                            
+
+                                            <asp:TemplateField HeaderStyle-Width="5%" ItemStyle-HorizontalAlign="Center">
+                                                <ItemTemplate>
+                                                    <%--<asp:Button ID="btnView" CssClass="btn-success btn-xs" runat="server" Text="View"  CommandName="view" CommandArgument='<%# Eval("id") %>'  />--%>
+                                                                            
+                                                    <asp:LinkButton ID="btnUpd" CssClass="fa fa-edit" runat="server" ForeColor="Black" CommandName="upd" CommandArgument='<%# Eval("id") %>' />
+                                                    <%--<asp:LinkButton ID="btnView" CssClass="fa fa-eye" runat="server" ForeColor="Black" CommandName="view" CommandArgument='<%# Eval("EmpID") %>' />--%>
+                                                </ItemTemplate>
+
+                                            </asp:TemplateField>
+
+
+                                        </Columns>
+                                    </asp:GridView>
+
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+            </div>
+        </div>
+    </div>   
+     <div class="modal fade" id="listmodal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <asp:UpdatePanel ID="upListDetails" runat="server" ChildrenAsTriggers="False" UpdateMode="Conditional">
+                    <ContentTemplate>
+                        <div class="modal-header">
+                            <h4 class="modal-title">
+                                <asp:Label ID="Label3" runat="server" Text="Edit Information"></asp:Label></h4>
+                            <asp:LinkButton ID="lnkbtnXlist" CssClass="close" runat="server"
+                                OnClick="lnkbtnXlist_Click">
+                                                <span>&times;</span>
+                            </asp:LinkButton>
+                        </div>
+                        <div class="modal-body">
+                            <asp:HiddenField ID="HiddenEmpID" runat="server" />
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <label class="control-label required" for="updSSS">SSS <span class="required"></span></label>
+                                    <div class="controls">
+                                        <input class="form-control" maxlength="50" id="updSSS" type="text" runat="server" />
+                                    </div>
+                                     <label class="control-label required" for="updPhilhealth">Philhealth <span class="required"></span></label>
+                                    <div class="controls">
+                                        <input class="form-control" maxlength="50" id="updPhilhealth" type="text" runat="server" />
+                                    </div>
+                                     <label class="control-label required" for="updPagibig">Pagibig</label>
+                                    <div class="controls">
+                                        <input class="form-control" maxlength="50" id="updPagibig" type="text" runat="server" />
+                                    </div>
+                                     
+                                </div>
+
+
+                            </div>
+
+
+                        </div>
+                        <div class="modal-footer">
+                            <asp:Button ID="btnsaveUpdate" runat="server" Text="Update" CssClass="btn btn-primary"
+                                OnClick="btnsaveUpdate_Click" OnClientClick="Confirm1()"></asp:Button>
+
+
+                        </div>
+
+
+                    </ContentTemplate>
+                    <Triggers>
+                        <asp:PostBackTrigger ControlID="btnsaveUpdate" />
+                    </Triggers>
+                </asp:UpdatePanel>
+
+            </div>
+        </div>
+    </div>
+</asp:Content>

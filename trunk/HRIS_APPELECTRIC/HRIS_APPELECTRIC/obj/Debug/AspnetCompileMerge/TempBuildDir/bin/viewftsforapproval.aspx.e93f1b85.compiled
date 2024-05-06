@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/Employees/viewftsforapproval.aspx" hash="fffffffb122f315e" filehash="e2fc0d26fdfea80a" flags="110000" assembly="App_Web_dd4x2hei" type="ASP.pages_admin_employees_viewftsforapproval_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/Employees/viewftsforapproval.aspx" />
+    </filedeps>
+</preserve>

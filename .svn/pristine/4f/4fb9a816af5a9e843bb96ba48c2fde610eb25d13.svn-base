@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Default_kioskAdmin.aspx" hash="2e7cb0847" filehash="d01cb28e5ae50ac4" flags="110000" assembly="App_Web_llgpiuic" type="ASP.default_kioskadmin_aspx">
+    <filedeps>
+        <filedep name="/Default_kioskAdmin.aspx" />
+        <filedep name="/MasterPage.Master" />
+    </filedeps>
+</preserve>

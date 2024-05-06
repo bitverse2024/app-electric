@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/PayrollPages/uploadpayreg.aspx" hash="fffffffb122f315e" filehash="1d04036bb84ad7e6" flags="110000" assembly="App_Web_uzp3dqty" type="ASP.pages_admin_payrollpages_uploadpayreg_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/PayrollPages/uploadpayreg.aspx" />
+    </filedeps>
+</preserve>

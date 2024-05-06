@@ -1,0 +1,400 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+
+namespace HRIS_APPELECTRIC.Pages.Admin.TK
+{
+    public partial class viewfts : System.Web.UI.Page
+    {
+        Employee emp = new Employee();
+        Timekeeping tk = new Timekeeping();
+        Common cm = new Common();
+        public string empno = "";
+        string empviewURL = "";
+        public int gridtotalcount = 0;
+        public string gridrangecount = "";
+        string getdate, gettime, getreason, gettype, getfiledate;
+        public Dictionary<string, string> empInfo = new Dictionary<string, string>();
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            empno = Request.QueryString["id"];
+            //if (empno != Session["ACTIVE_EMPNO"].ToString())
+            //{
+
+            //    empno = Session["ACTIVE_EMPNO"].ToString();
+            //    ScriptManager.RegisterStartupScript(this, this.GetType(),
+            //    "alert",
+            //    "alert('Injection not allowed!!!');window.location ='viewobt.aspx?id=" + empno + "';",
+            //    true);
+            //}
+            empInfo = emp.GetEmployeeInfoDict(empno);
+            if (!IsPostBack)
+            {
+                refresh();
+            }
+        }
+        void refresh()
+        {
+            DataTable dt = new DataTable();
+            dt = tk.populateGridFTS(empno);
+            GridViewList.DataSource = dt;
+            GridViewList.DataBind();
+            ViewState["EMP_GRID"] = dt;
+            ViewState["SORTDR"] = null;
+            summary();
+        }
+        void summary()
+        {
+            gridtotalcount = ((DataTable)ViewState["EMP_GRID"]).Rows.Count;
+            int pageIndex = GridViewList.PageIndex;
+            int c = (pageIndex > 0 ? 10 * pageIndex : 0) + GridViewList.Rows.Count;
+            gridrangecount = (c > 0 ? c : 0) + " - " + gridtotalcount;
+        }
+        protected void sort_grid(string sort_args)
+        {
+            DataTable dt = (DataTable)ViewState["EMP_GRID"];
+            if (dt.Rows.Count > 0)
+            {
+                if (Convert.ToString(ViewState["SORTDR"]) == "Asc")
+                {
+                    dt.DefaultView.Sort = sort_args + " Desc";
+                    ViewState["SORTDR"] = "Desc";
+                }
+                else
+                {
+                    dt.DefaultView.Sort = sort_args + " Asc";
+                    ViewState["SORTDR"] = "Asc";
+                }
+
+                GridViewList.DataSource = dt;
+                GridViewList.DataBind();
+                summary();
+
+
+            }
+
+        }
+        protected void txtItem_TextChanged(object sender, EventArgs e)
+        {
+
+            //awong-retrieve textbox values from the grid control during runtime.
+            GridViewRow currentRow = (GridViewRow)((TextBox)sender).Parent.Parent;
+            string _status = ((TextBox)currentRow.FindControl("txtSearchfts_Status")).Text;
+            string _datefiled = ((TextBox)currentRow.FindControl("txtSearchDateFiled")).Text;
+            string _bussdate = ((TextBox)currentRow.FindControl("txtSearchbuss_date")).Text;
+            string _ftime = ((TextBox)currentRow.FindControl("txtSearchftime")).Text;
+            string _type = ((TextBox)currentRow.FindControl("txtSearchtype")).Text;
+            string _reason = ((TextBox)currentRow.FindControl("txtSearchReason")).Text;
+            string _approver1 = ((TextBox)currentRow.FindControl("txtSearchApprover1")).Text;
+            string _dapproved1 = ((TextBox)currentRow.FindControl("txtSearchDapproved1")).Text;
+            string _approver2 = ((TextBox)currentRow.FindControl("txtSearchApprover2")).Text;
+            string _dapproved2 = ((TextBox)currentRow.FindControl("txtSearchDapproved2")).Text;
+            //string _reason2 = ((TextBox)currentRow.FindControl("txtSearchreasons2")).Text;
+            string expr = emp.build_or_like_param(saveSearchParam(_status, _datefiled, _bussdate, _ftime, _type, _reason, _approver1, _dapproved1, _approver2, _dapproved2, ""));
+            //string expr = "and (license_type like '%" + lictype + "%' or license_no like '%" + licno + "%' or lic_expirydate like '%" + licdate + "%')";
+            //GridViewList.DataSource = emp.populateGridSearch((DataTable)ViewState["EMP_GRID"], expr);
+            GridViewList.DataSource = tk.populateGridFTSCol(empno, expr);
+            GridViewList.DataBind();
+
+            if (GridViewList.Rows.Count == 0)
+            {
+                ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('No Data Found !!!');", true);
+                refresh();
+            }
+        }
+        protected void ddlStatus_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            GridViewRow currentRow = (GridViewRow)((DropDownList)sender).Parent.Parent;
+            string stat = ((DropDownList)currentRow.FindControl("ddlStat")).SelectedValue.ToString();
+            string expr = emp.build_or_like_param(saveSearchParam1(stat));
+
+            GridViewList.DataSource = tk.populateGridFTSCol(empno, expr);
+            GridViewList.DataBind();
+
+        }
+
+        Dictionary<string, string> saveSearchParam1(string _status)
+        {
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            param.Add("fts_Status", "'%" + _status + "%'");
+
+
+            return param;
+
+
+        }
+        Dictionary<string, string> saveSearchParam(string _status, string _datefiled, string _tripdate, string _in, string _out, string _reason, string _approver1, string _dapproved1, string _approver2, string _dapproved2, string _reason2)
+        {
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            param.Add("fts_status", "'%" + _status + "%'");
+            param.Add("DateFiled", "'%" + _datefiled + "%'");
+            param.Add("buss_date", "'%" + _tripdate + "%'");
+            param.Add("ftime", "'%" + _in + "%'");
+            param.Add("fts_type", "'%" + _out + "%'");
+            param.Add("Reason", "'%" + _reason + "%'");
+            param.Add("Approver1", "'%" + _approver1 + "%'");
+            param.Add("DateApproved1", "'%" + _dapproved1 + "%'");
+            param.Add("Approver2", "'%" + _approver2 + "%'");
+            param.Add("DateApproved2", "'%" + _dapproved2 + "%'");
+
+
+            return param;
+
+
+        }
+        protected void GridViewList_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            GridViewList.PageIndex = e.NewPageIndex;
+            refresh();
+        }
+        protected void GridViewList_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (e.CommandName == "Sort")
+            {
+                sort_grid(e.CommandArgument.ToString());
+
+            }
+            if (e.CommandName == "Reset")
+            {
+                refresh();
+
+            }
+            if (e.CommandName == "del")
+            {
+                getdate = cm.FormatDate(cm.GetSpecificDataFromDB("buss_date", "TBL_FTS", "where id = " + e.CommandArgument.ToString() + ""));
+                getfiledate = cm.FormatDate(cm.GetSpecificDataFromDB("DateFiled", "TBL_FTS", "where id = " + e.CommandArgument.ToString() + ""));
+                getreason = cm.GetSpecificDataFromDB("Reason", "TBL_FTS", "where id = " + e.CommandArgument.ToString() + "");
+                emp.DeleteQuery("TBL_FTS", "where id =" + e.CommandArgument.ToString() + "");
+                cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " removed UA of " + "with DATE " + emp.GetEmployeeName(empno) + getdate +
+                    ".Date Filed: " + getfiledate + ".Reason: " + getreason + ".", "DELETE", "UA", e.CommandArgument.ToString(), "UA", Session["EMP_ID"].ToString());
+                refresh();
+                ScriptManager.RegisterStartupScript(this, this.GetType(),
+                "alert",
+                "alert('Successfully Deleted');",
+                true);
+
+            }
+
+            if (e.CommandName == "upd")
+            {
+                HiddenEmpID.Value = e.CommandArgument.ToString();
+                populateUpdateField(e.CommandArgument.ToString());
+                openTransDetails(empno);
+            }
+        }
+        protected void btnCreate_Click(object sender, EventArgs e)
+        {
+            string confirmValue = Request.Form["confirm_value"];
+            DateTime dtnow = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Taipei Standard Time");
+            if (confirmValue == "Yes")
+            {
+                if (cm.ItemExist("TBL_FTS", buss_date.ID, "where EmpID = '" + empno + "' and buss_date = '" + buss_date.Value + "'", ""))
+                {
+                    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Duplicate Entry Not Allowed');", true);
+                    return;
+                    reset();
+                }
+                if (emp.InsertQueryCommon(saveParam(), "TBL_FTS"))
+                {
+                    cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " created UA with Date " + buss_date.Value + " for " + emp.GetEmployeeName(empno) +
+                             "Date Filed: " + cm.FormatDate(dtnow) + ".Reason: " + Fts_reasons.Value + ".",
+                                 "CREATE", "UA", Session["EMP_ID"].ToString(), "UA", Session["EMP_ID"].ToString());
+                    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully Save !!!');", true);
+                    refresh();
+                    reset();
+                }
+            }
+        }
+
+        Dictionary<string, string> saveParam()
+        {
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            List<string> approver = new List<string>();
+            param.Add("EmpID", empno);
+            param.Add("buss_date", "'" + buss_date.Value + "'");
+            param.Add("ftime", "'" + Fts_time.Value + "'");
+            param.Add("fts_type", "'" + Fts_type.Value + "'");
+            param.Add("Reason", "'" + Fts_reasons.Value + "'");
+            if (Session["ROLES"] != null)
+            {
+                if (Session["ROLES"].ToString() == "admin")
+                {
+                    param.Add("fts_Status", "'1'");
+                }
+                else
+                {
+                    param.Add("Approver1", "'" + empInfo["emp_Approver1"] + "'");
+                    param.Add("Approver2", "'" + empInfo["emp_Approver2"] + "'");
+                    param.Add("Approving", "'" + empInfo["emp_Approver1"] + "'");
+                    param.Add("fts_Status", "'2'");
+                }
+            }
+            else
+            {
+                param.Add("Approver1", "'" + empInfo["emp_Approver1"] + "'");
+                param.Add("Approver2", "'" + empInfo["emp_Approver2"] + "'");
+                param.Add("Approving", "'" + empInfo["emp_Approver1"] + "'");
+                param.Add("fts_Status", "'2'");
+            }
+
+            param.Add("FullName", "'" + empInfo["emp_FullName"] + "'");
+            param.Add("DateFiled", "'" + cm.FormatDateyyyy(DateTime.Now) + "'");
+
+
+            return param;
+
+
+        }
+
+        Dictionary<string, string> saveUpdateParam()
+        {
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            param.Add("EmpID", empno);
+            param.Add("buss_date", "'" + upd_bussdate.Value + "'");
+            param.Add("ftime", "'" + upd_time.Value + "'");
+            param.Add("fts_type", "'" + upd_type.Value + "'");
+            param.Add("Reason", "'" + upd_reason.Value + "'");
+            param.Add("DateFiled", "'" + cm.FormatDate(DateTime.Now) + "'");
+
+
+            return param;
+
+
+        }
+        void reset()
+        {
+            upd_bussdate.Value = "";
+            upd_reason.Value = "";
+            upd_time.Value = "";
+            upd_type.Value = "";
+        }
+        protected void btnReset_Click(object sender, EventArgs e)
+        {
+            reset();
+            refresh();
+        }
+
+        public void closeTransDetails()
+        {
+            upListDetails.Update();
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append(@"<script type='text/javascript'>");
+            sb.Append(string.Format(@"$('#{0}').modal('hide')", "listmodal"));
+            sb.Append(@"</script>");
+
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "listmodal", sb.ToString(), false);
+
+        }
+        public void openTransDetails(string empNo)
+        {
+            upListDetails.Update();
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append(@"<script type='text/javascript'>");
+            sb.Append(string.Format(@"$('#{0}').modal('show')", "listmodal"));
+            sb.Append(@"</script>");
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "listmodal", sb.ToString(), false);
+            string username = "", fullname = "", email = "", roles = "";
+        }
+        protected void lnkbtnXlist_Click(object sender, EventArgs e)
+        {
+            closeTransDetails();
+        }
+        public void populateUpdateField(string id)
+        {
+            upd_bussdate.Value = cm.FormatDateyyyy(cm.GetSpecificDataFromDB("buss_date", "TBL_FTS", "where id = " + id + ""));
+            upd_time.Value = cm.GetSpecificDataFromDB("ftime", "TBL_FTS", "where id = " + id + "");
+            upd_reason.Value = cm.GetSpecificDataFromDB("Reason", "TBL_FTS", "where id = " + id + "");
+            upd_type.Value = cm.GetSpecificDataFromDB("fts_type", "TBL_FTS", "where id = " + id + "");
+        }
+
+        private void getdata()
+        {
+            getdate = cm.FormatDate(cm.GetSpecificDataFromDB("buss_date", "TBL_FTS", "where id = " + HiddenEmpID.Value + ""));
+            gettime = cm.GetSpecificDataFromDB("ftime", "TBL_FTS", "where id = " + HiddenEmpID.Value + "");
+            getreason = cm.GetSpecificDataFromDB("Reason", "TBL_FTS", "where id = " + HiddenEmpID.Value + "");
+            gettype = cm.GetSpecificDataFromDB("fts_type", "TBL_FTS", "where id = " + HiddenEmpID.Value + "");
+        }
+
+        private void addlogs()
+        {
+            if (getdate != upd_bussdate.Value)
+            {
+                cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " changed UA DATE for " + emp.GetEmployeeName(empno) + " from " + getdate + " to " + upd_bussdate.Value +
+                    ".Date Filed: " + getfiledate + ".Reason: " + getreason + ".", "CHANGE", "UA", HiddenEmpID.Value, "UA", Session["EMP_ID"].ToString());
+            }
+            if (gettime != upd_time.Value)
+            {
+                cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " changed UA TIME for " + emp.GetEmployeeName(empno) + " from " + gettime + " to " + upd_time.Value +
+                    ".Date Filed: " + getfiledate + ".Reason: " + getreason + ".", "CHANGE", "UA", HiddenEmpID.Value, "UA", Session["EMP_ID"].ToString());
+            }
+            if (getreason != upd_reason.Value)
+            {
+                cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " changed UA REASON for " + emp.GetEmployeeName(empno) + " from " + getreason + " to " + upd_reason +
+                    ".Date Filed: " + getfiledate + ".Reason: " + getreason + ".", "CHANGE", "UA", HiddenEmpID.Value, "UA", Session["EMP_ID"].ToString());
+            }
+            if (gettype != upd_type.Value)
+            {
+                cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " changed UA TYPE for " + emp.GetEmployeeName(empno) + " from " + gettype + " to " + upd_type.Value +
+                    ".Date Filed: " + getfiledate + ".Reason: " + getreason + ".", "CHANGE", "UA", HiddenEmpID.Value, "UA", Session["EMP_ID"].ToString());
+            }
+        }
+
+        protected void btnsaveUpdate_Click(object sender, EventArgs e)
+        {
+            string confirmValue = Request.Form["confirm_value"];
+            if (confirmValue == "Yes")
+            {
+                if (cm.ItemExist("TBL_FTS", "*", "where EmpID = '" + empno + "' and buss_date = '" + upd_bussdate.Value + "' AND id != " + HiddenEmpID.Value+"", ""))
+                {
+                    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Duplicate entry not allowed.');", true);
+                    return;
+                    
+                }
+                getdata();
+                if (cm.UpdateQueryCommon(saveUpdateParam(), "TBL_FTS", "id = " + HiddenEmpID.Value + ""))
+                {
+                    addlogs();
+                    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully updated.');", true);
+                    closeTransDetails();
+                    refresh();
+                }
+                else
+                    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Fields should not be empty !!!');", true);
+            }
+        }
+
+        protected void btnExport_Click(object sender, EventArgs e)
+        {
+            Response.Clear();
+            Response.Buffer = true;
+            Response.ContentType = "application/octet-stream";
+            Response.AddHeader("content-disposition", "attachment;filename= UA" + empno + ".xls");
+            Response.ContentType = "application/vnd.ms-excel";
+            Response.Charset = "";
+            this.EnableViewState = false;
+
+            System.IO.StringWriter swriter = new System.IO.StringWriter();
+            System.Web.UI.HtmlTextWriter htmlwriter = new System.Web.UI.HtmlTextWriter(swriter);
+
+            DataGrid dg = new DataGrid();
+            dg.DataSource = tk.populateGridFTS(empno);
+            dg.DataBind();
+
+            dg.RenderControl(htmlwriter);
+
+
+            Response.Write(swriter.ToString());
+            cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " exported UA",
+            "EXPORT", "TIMEKEEPING", Session["EMP_ID"].ToString(), "TIMEKEEPING", Session["EMP_ID"].ToString());
+            Response.End();
+            //exportTOxlsx();
+
+
+        }
+    }
+}

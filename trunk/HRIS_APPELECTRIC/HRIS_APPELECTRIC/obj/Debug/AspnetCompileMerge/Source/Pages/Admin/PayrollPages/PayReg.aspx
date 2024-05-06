@@ -1,0 +1,386 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.Master" AutoEventWireup="true" CodeBehind="PayReg.aspx.cs" Inherits="HRIS_APPELECTRIC.Pages.Admin.PayrollPages.PayReg" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <div>
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6"></div>
+                    <div class="col-sm-6"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="content">
+                <div class="container-fluid">
+                    <div class="container"></div>
+                    <h3 class="m-0 text-dark">Payroll<small> Payroll Register</small></h3>
+                    <section class="card">
+                        <div class="card-header">
+
+                            <a href="PayReg.aspx" class="btn btn-default"><i class="fa fa-list"></i><span class="h6">List</span></a>
+                            <a href="processpayroll.aspx" class="btn btn-default"><i class="fa fa-plus"></i><span class="h6">Process Payroll</span></a>
+                            <%--<a href="closepayroll.aspx" class="btn btn-default"><i class="fa fa-close"></i><span class="h5">Close Payroll</span></a>--%>
+                            <%--<a href="uploadpayreg.aspx" class="btn btn-default"><i class="fa fa-upload"></i><span class="h5">Upload Payroll Register</span></a>--%>
+                            <%--<a href="payrollsum.aspx" class="btn btn-default"><i class="fa fa-list"></i><span class="h5">Payroll Summary</span></a>--%>
+
+
+                            <%if (Session["EMP_ID"].ToString() == "00000")
+                                { %><a id="A2" href="<%=ResolveUrl("~/Pages/Admin/Employees/ImportEmployeeList.aspx")%>" class="btn btn-default">
+                                    <i class="fa fa-arrow-circle-o-down"></i><span class="h6">Import</span></a><%} %>
+                        </div>
+                        <div class="card-body">
+                            <div class="content">
+                                <div class="container-fluid">
+                                    <div class="box-body">
+                                        <%--<div class="row">
+                                        <div class="col-lg-6">
+                                            <label for="ddlSearch" class="required">m
+                                                <asp:Label ID="Label4" runat="server"  Text="Search By:"></asp:Label><span class="required">
+                                                    <asp:RequiredFieldValidator ID="RequiredFieldValidator3" ControlToValidate="ddlSearch" ForeColor="Red" runat="server" ErrorMessage="Field Required" ValidationGroup="docs"></asp:RequiredFieldValidator></span></label>
+                                            <asp:DropDownList AutoPostBack="true" ID="ddlSearch" runat="server" CssClass="form-control" OnSelectedIndexChanged="ddlSearch_SelectedIndexChanged">
+                                            <asp:ListItem Value="all" Text="---ALL---"></asp:ListItem>
+                                            </asp:DropDownList>
+                                        </div>
+                                        
+
+                                    </div>--%>
+                                                </br>
+                                                    <%--<div class="list">--%>
+                                        <div id="display-grid" class="grid-view box-body">
+                                            <asp:GridView ID="GridUserList" runat="server" AutoGenerateColumns="False"
+                                                ShowFooter="True" CssClass="table table-bordered table-striped table-responsive p-0 dataTable"
+                                                GridLines="None" AllowPaging="True" Font-Names="Segoe UI"
+                                                ForeColor="Black" OnRowCommand="GridUserList_RowCommand"
+                                                OnPageIndexChanging="GridUserList_PageIndexChanging"
+                                                ViewStateMode="Enabled" PageSize="25" ShowHeader="true" ShowHeaderWhenEmpty="true">
+                                                <EmptyDataTemplate>
+                                                    <center><h1>NO DATA AVAILABLE</h1></center>
+                                                </EmptyDataTemplate>
+                                                <Columns>
+                                                    <asp:TemplateField Visible="false">
+                                                        <ItemTemplate>
+                                                            <asp:Label ID="lblid" Text='<%# Eval("id") %>' runat="server"></asp:Label>
+                                                        </ItemTemplate>
+                                                    </asp:TemplateField>
+                                                    <asp:TemplateField>
+                                                        <HeaderTemplate>
+                                                            <asp:LinkButton ID="lblCODate" Text="Credit Date" runat="server" CommandName="Sort" CommandArgument="CODate"></asp:LinkButton><br />
+                                                        </HeaderTemplate>
+                                                        <ItemTemplate>
+
+                                                            <asp:Label ID="lblCODate" Width="100px" Text='<%# Eval("CODate") %>' runat="server"></asp:Label>
+
+                                                        </ItemTemplate>
+                                                    </asp:TemplateField>
+
+                                                    <asp:TemplateField>
+                                                        <HeaderTemplate>
+                                                            <asp:LinkButton ID="lblEmpName" Text="Name" runat="server" CommandName="Sort" CommandArgument="EmpName"></asp:LinkButton><br />
+                                                            <asp:TextBox ID="txtSearchEmpName" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+
+                                                        </HeaderTemplate>
+                                                        <ItemTemplate>
+                                                            <asp:Label ID="lblEmpName" Text='<%# Eval("EmpName") %>' runat="server"></asp:Label>
+
+                                                        </ItemTemplate>
+                                                    </asp:TemplateField>
+                                                    <asp:TemplateField>
+                                                        <HeaderTemplate>
+                                                            <asp:LinkButton ID="lblGrossPay" Text='Gross Pay' runat="server" CommandName="Sort" CommandArgument="GrossPay"></asp:LinkButton><br />
+                                                            <asp:TextBox ID="txtSearchGrossPay" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+                                                        </HeaderTemplate>
+                                                        <ItemTemplate>
+                                                            <asp:Label ID="lblGrossPay" Width="80px" Text='<%# Eval("GrossPay") %>' runat="server"></asp:Label>
+                                                        </ItemTemplate>
+                                                    </asp:TemplateField>
+
+                                                    <asp:TemplateField>
+                                                        <HeaderTemplate>
+
+                                                            <asp:LinkButton ID="lblSSSDed" Text='SSS Deduction' runat="server" CommandName="Sort" CommandArgument="SSSDed"></asp:LinkButton><br />
+                                                            <asp:TextBox ID="txtSearchSSSDed" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+
+                                                        </HeaderTemplate>
+                                                        <ItemTemplate>
+
+                                                            <asp:Label ID="lblTotDed" Text='<%# Eval("SSSDed") %>' runat="server"></asp:Label>
+
+                                                        </ItemTemplate>
+                                                    </asp:TemplateField>
+                                                    <asp:TemplateField>
+                                                        <HeaderTemplate>
+
+                                                            <asp:LinkButton ID="lblPhilhealthDed" Text='Philhealth Deduction' runat="server" CommandName="Sort" CommandArgument="PhilhealthDed"></asp:LinkButton><br />
+                                                            <asp:TextBox ID="txtSearchPhilhealthDed" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+
+                                                        </HeaderTemplate>
+                                                        <ItemTemplate>
+
+                                                            <asp:Label ID="lblTotDed" Text='<%# Eval("PhilhealthDed") %>' runat="server"></asp:Label>
+
+                                                        </ItemTemplate>
+                                                    </asp:TemplateField>
+                                                    <asp:TemplateField>
+                                                        <HeaderTemplate>
+
+                                                            <asp:LinkButton ID="lblPagibigDed" Text='Pag-ibig Deduction' runat="server" CommandName="Sort" CommandArgument="PagibigDed"></asp:LinkButton><br />
+                                                            <asp:TextBox ID="txtSearchPagibigDed" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+
+                                                        </HeaderTemplate>
+                                                        <ItemTemplate>
+
+                                                            <asp:Label ID="lblTotDed" Text='<%# Eval("PagibigDed") %>' runat="server"></asp:Label>
+
+                                                        </ItemTemplate>
+                                                    </asp:TemplateField>
+                                                    <asp:TemplateField>
+                                                        <HeaderTemplate>
+
+                                                            <asp:LinkButton ID="lblTotDed" Text='Total Deduction' runat="server" CommandName="Sort" CommandArgument="TotDed"></asp:LinkButton><br />
+                                                            <asp:TextBox ID="txtSearchTotDed" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+
+                                                        </HeaderTemplate>
+                                                        <ItemTemplate>
+
+                                                            <asp:Label ID="lblTotDed" Text='<%# Eval("TotDed") %>' runat="server"></asp:Label>
+
+                                                        </ItemTemplate>
+                                                    </asp:TemplateField>
+
+
+
+                                                    <asp:TemplateField>
+                                                        <HeaderTemplate>
+                                                            <asp:LinkButton ID="lnkbtnNetPay" Text='Net Pay' runat="server" CommandName="Sort" CommandArgument="NetPay"></asp:LinkButton><br />
+                                                            <asp:TextBox ID="txtSearchNetPay" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+
+                                                        </HeaderTemplate>
+                                                        <ItemTemplate>
+                                                            <asp:Label ID="lblNetPay" Text='<%# Eval("NetPay") %>' runat="server"></asp:Label>
+
+                                                        </ItemTemplate>
+                                                    </asp:TemplateField>
+                                                    <asp:TemplateField>
+                                                        <HeaderTemplate>
+                                                            <asp:LinkButton ID="lnkbtnUT" Text='UT' runat="server" CommandName="Sort" CommandArgument="UT"></asp:LinkButton><br />
+                                                            <asp:TextBox ID="txtSearchUT" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+
+                                                        </HeaderTemplate>
+                                                        <ItemTemplate>
+                                                            <asp:Label ID="lblUT" Width="50px" Text='<%# Eval("UT") %>' runat="server"></asp:Label>
+
+                                                        </ItemTemplate>
+                                                    </asp:TemplateField>
+                                                    <asp:TemplateField>
+                                                        <HeaderTemplate>
+                                                            <asp:LinkButton ID="lnkbtnAbsent" Text='Absent' runat="server" CommandName="Sort" CommandArgument="Absent"></asp:LinkButton><br />
+                                                            <asp:TextBox ID="txtSearchAbsent" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+
+                                                        </HeaderTemplate>
+                                                        <ItemTemplate>
+                                                            <asp:Label ID="lblAbsent" Text='<%# Eval("Absent") %>' runat="server"></asp:Label>
+
+                                                        </ItemTemplate>
+                                                    </asp:TemplateField>
+                                                    <asp:TemplateField>
+                                                        <HeaderTemplate>
+                                                            <asp:LinkButton ID="lnkbtnLates" Text='Lates' runat="server" CommandName="Sort" CommandArgument="Lates"></asp:LinkButton><br />
+                                                            <asp:TextBox ID="txtSearchLates" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+
+                                                        </HeaderTemplate>
+                                                        <ItemTemplate>
+                                                            <asp:Label ID="lblLates" Text='<%# Eval("Lates") %>' runat="server"></asp:Label>
+
+                                                        </ItemTemplate>
+                                                    </asp:TemplateField>
+                                                    <asp:TemplateField>
+                                                        <HeaderTemplate>
+                                                            <asp:LinkButton ID="lblOTPay" Text='OT Pay' runat="server" CommandName="Sort" CommandArgument="OTPay"></asp:LinkButton><br />
+                                                            <asp:TextBox ID="txtSearchOTPay" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+
+                                                        </HeaderTemplate>
+                                                        <ItemTemplate>
+                                                            <asp:Label ID="lblOTPay" Width="80px" Text='<%# Eval("OTPay") %>' runat="server"></asp:Label>
+
+                                                        </ItemTemplate>
+                                                    </asp:TemplateField>
+
+
+                                                    <asp:TemplateField Visible ="false">
+                                                        <HeaderTemplate>
+                                                            <asp:LinkButton ID="lblControls" Width="75px" Text='' runat="server" CommandName="Sort" CommandArgument="Active"></asp:LinkButton><br />
+                                                        </HeaderTemplate>
+                                                        <ItemTemplate>
+                                                            <center>
+                                                                            <%--<asp:Button ID="btnAdd" CssClass="btn-instagram btn-xs" runat="server"  Text="View" CommandName="view" CommandArgument='<%# Eval("EmployeeNo") %>'  />
+                                                                            <asp:Button ID="btnUpdate" CssClass="btn-success btn-xs" runat="server" Text="Update"   CommandName="update" CommandArgument='<%# Eval("EmployeeNo") %>'  />
+                                                                            <asp:Button ID="btnDelete" CssClass="btn-danger btn-xs" runat="server" Text="Delete"  CommandName="del" CommandArgument='<%# Eval("EmployeeNo") %>'  />--%>
+
+                                                                                        <%--<asp:LinkButton ID="btnView" runat="server" ForeColor="Black" Font-Size="" CommandName="view" CommandArgument='<%# Eval("id") %>'><i class="fa fa-eye"></i></asp:LinkButton> &nbsp;
+                                                                                        <asp:LinkButton ID="LinkButton1" runat="server" ForeColor="Black" Font-Size="" CommandName="update" CommandArgument='<%# Eval("id") %>'><i class="fa fa-edit"></i></asp:LinkButton>&ensp;
+                                                                                        <asp:LinkButton ID="LinkButton2" runat="server" ForeColor="Black" Font-Size="" OnClientClick="if (!confirm('Are you sure you want to permanently remove this item?')) return false;"  CommandName="del" CommandArgument='<%# Eval("id") %>'><i class="fa fa-trash"></i></asp:LinkButton>--%>
+                                                                                    </center>
+                                                        </ItemTemplate>
+
+                                                    </asp:TemplateField>
+                                                    <%--<asp:CommandField HeaderText="Cancel Item" ShowDeleteButton="True" ControlStyle-CssClass="btn btn-xs btn-danger"  /> --%>
+                                                </Columns>
+                                            </asp:GridView>
+                                        </div>
+                                        <%--</div>--%>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <%--</ContentTemplate>
+            </asp:UpdatePanel>--%>
+                        <!-- search-form -->
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="modal fade" id="listmodal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <asp:UpdatePanel ID="upListDetails" runat="server" ChildrenAsTriggers="False" UpdateMode="Conditional">
+                    <ContentTemplate>
+
+                        <div class="modal-header">
+                            <asp:LinkButton ID="lnkbtnXlist" CssClass="close" runat="server"
+                                OnClick="lnkbtnXlist_Click">
+                            <span>&times;</span>
+                            </asp:LinkButton>
+                            <h4 class="modal-title">
+                                <asp:Label ID="Label3" runat="server" Text="Edit Information"></asp:Label></h4>
+                        </div>
+                        <div class="modal-body">
+                            <asp:Label ID="lblEmpNo" Text="" runat="server"></asp:Label>
+                            <asp:DropDownList ID="deleteDropDownList" runat="server">
+                                <asp:ListItem Enabled="true" Text="Select Action" Value="-1"></asp:ListItem>
+                                <asp:ListItem Text="ACTIVATE" Value="Y"></asp:ListItem>
+                                <asp:ListItem Text="DEACTIVATE" Value="N"></asp:ListItem>
+                                <%--<asp:ListItem Text="ARCHIVE" Value="A"></asp:ListItem>--%>
+                                <asp:ListItem Text="PERMANENTLY DELETE" Value="D"></asp:ListItem>
+
+
+                            </asp:DropDownList>
+
+                        </div>
+                        <div class="modal-footer">
+                            <asp:Button ID="btnsaveUpdate" runat="server" Text="Apply Action"
+                                OnClick="btnDoDelete_Click"></asp:Button>
+
+
+                        </div>
+
+
+                    </ContentTemplate>
+                    <Triggers>
+                        <asp:PostBackTrigger ControlID="btnsaveUpdate" />
+                    </Triggers>
+                </asp:UpdatePanel>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="mbox_modal" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <asp:UpdatePanel ID="updateMbox" runat="server" ChildrenAsTriggers="False" UpdateMode="Conditional">
+                    <ContentTemplate>
+                        <asp:HiddenField ID="HiddenDeleteNo" runat="server" />
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <%--<asp:LinkButton ID="lnk_closembox" CssClass ="close" runat="server" 
+                            onclick="closeMbox_click" >
+                            <span>&times;</span>
+                        </asp:LinkButton>--%>
+                            <h4 class="modal-title">
+                                <asp:Label ID="Label1" runat="server" Text="Confirmation"></asp:Label></h4>
+                        </div>
+                        <div class="modal-body">
+                            Permanent deletion of this record is irreparable.
+                        Do you still want to proceed?
+                        
+                        </div>
+                        <div class="modal-footer">
+                            <asp:Button ID="btnYes" runat="server" Text="Yes" CommandArgument="YES"
+                                OnClick="btnConfirmClick"></asp:Button>
+                            <asp:Button ID="btnNo" runat="server" Text="No" CommandArgument="NO"
+                                OnClick="btnConfirmClick"></asp:Button>
+
+
+                        </div>
+
+
+                    </ContentTemplate>
+                    <Triggers>
+                        <asp:PostBackTrigger ControlID="btnYes" />
+                        <asp:PostBackTrigger ControlID="btnNo" />
+                    </Triggers>
+                </asp:UpdatePanel>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="viewmodal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <asp:UpdatePanel ID="upListDetails2" runat="server" ChildrenAsTriggers="False" UpdateMode="Conditional">
+                    <ContentTemplate>
+                        <div class="col-lg-6">
+                            <label for="txtBasicPay" class="required">Basic Pay</label>
+                            <input class="form-control" maxlength="50" id="txtBasicPay" type="text" disabled="disabled" runat="server" clientidmode="Static" />
+
+                            <label for="txtAbsences" class="required">Absences</label>
+                            <input class="form-control" maxlength="50" id="txtAbsences" type="text" disabled="disabled" runat="server" clientidmode="Static" />
+
+                            <label for="txtLates" class="required">Lates</label>
+                            <input class="form-control" maxlength="50" id="txtLates" type="text" disabled="disabled" runat="server" clientidmode="Static" />
+
+                            <label for="txtUT" class="required">Undertime</label>
+                            <input class="form-control" maxlength="50" id="txtUT" type="text" disabled="disabled" runat="server" clientidmode="Static" />
+
+                            <label for="txtOT" class="required">Overtime</label>
+                            <input class="form-control" maxlength="50" id="txtOT" type="text" disabled="disabled" runat="server" clientidmode="Static" />
+
+                            <label for="txtLCreds" class="required">Remaining Leave Credits</label>
+                            <input class="form-control" maxlength="50" id="txtLCreds" type="text" disabled="disabled" runat="server" clientidmode="Static" />
+
+                        </div>
+                        <div class="col-lg-6">
+                            <label for="txtSSS" class="required">SSS</label>
+                            <input class="form-control" maxlength="50" id="txtSSS" type="text" disabled="disabled" runat="server" clientidmode="Static" />
+
+                            <label for="txtPhilhealth" class="required">PhilHealth</label>
+                            <input class="form-control" maxlength="50" id="txtPhilhealth" type="text" disabled="disabled" runat="server" clientidmode="Static" />
+
+                            <label for="txtPagibig" class="required">Pag-Ibig</label>
+                            <input class="form-control" maxlength="50" id="txtPagibig" type="text" disabled="disabled" runat="server" clientidmode="Static" />
+
+                            <label for="txtLPay" class="required">Leave Pay</label>
+                            <input class="form-control" maxlength="50" id="txtLPay" type="text" disabled="disabled" runat="server" clientidmode="Static" />
+
+                            <label for="txtCashAd" class="required">Cash Ad</label>
+                            <input class="form-control" maxlength="50" id="txtCashAd" type="text" disabled="disabled" runat="server" clientidmode="Static" />
+
+                            <label for="txtHPay" class="required">Holiday Pay</label>
+                            <input class="form-control" maxlength="50" id="txtHPay" disabled="disabled" type="text" runat="server" clientidmode="Static" />
+                        </div>
+                    </ContentTemplate>
+                </asp:UpdatePanel>
+            </div>
+        </div>
+    </div>
+</asp:Content>

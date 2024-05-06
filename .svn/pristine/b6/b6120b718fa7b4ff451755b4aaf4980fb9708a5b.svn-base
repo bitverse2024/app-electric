@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/movementtypelist.aspx" hash="2e7cb0847" filehash="f02c33ce4b422a06" flags="110000" assembly="App_Web_loybl1ma" type="ASP.pages_admin_movementtypelist_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/movementtypelist.aspx" />
+    </filedeps>
+</preserve>

@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/ifApprover.aspx" hash="2e7cb0847" filehash="fd3bcc0cfb1372c" flags="110000" assembly="App_Web_ombe5zcw" type="ASP.pages_admin_ifapprover_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/ifApprover.aspx" />
+    </filedeps>
+</preserve>

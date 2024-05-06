@@ -1,0 +1,503 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.IO;
+using System.Data.SqlClient;
+using System.Configuration;
+
+namespace HRIS_APPELECTRIC.Pages.Admin.Employees
+{
+    public partial class EmployeeMaster : System.Web.UI.Page
+    {
+        Employee db_Emp = new Employee();
+        Common cm = new Common();
+        string[] searchItem = new string[2];
+        public string empid = "";
+        public string empname = "";
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                refresh();                
+            }
+        }
+        /// <summary>
+        /// Reset/Refresh the employee list
+        /// </summary>
+        void refresh()
+        {
+            //w
+            //GridUserList.DataSource = db.populateGridUserList();
+            //GridUserList.DataBind();
+            DataTable dt = new DataTable();
+            dt = db_Emp.populateGridEmployeeMaster();
+            GridUserList.DataSource = dt;
+            GridUserList.DataBind();
+            ViewState["EMP_MASTER"] = dt;
+            ViewState["SORTDR"] = null;
+            
+        }
+
+
+        protected void GridUserList_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            GridUserList.PageIndex = e.NewPageIndex;
+            refresh();
+        }
+        protected void GridUserList_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (e.CommandName == "del")
+            {
+                Session["ACTIVE_EMPNO"] = e.CommandArgument.ToString();
+                openTransDetails(Session["ACTIVE_EMPNO"].ToString());
+
+                //Session["ACTIVE_EMPNO"] = e.CommandArgument.ToString();
+                //openMbox();
+                //string getemp = cm.GetSpecificDataFromDB("emp_FullName", "TBL_EMPLOYEE_MASTER", "where emp_EmpID = " + e.CommandArgument.ToString() + "");
+                //db_Emp.DeleteQuery("TBL_EMPLOYEE_MASTER", "where emp_EmpID =" + e.CommandArgument.ToString() + "");
+                //cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " removed Employee " + getemp,
+                //    "DELETE", "x123", "qwg-23", "DELETE", Session["EMP_ID"].ToString());
+                //refresh();
+                //ScriptManager.RegisterStartupScript(this, this.GetType(),
+                //"alert",
+                //"alert('Successfully Deleted');",
+                //true);
+
+            }
+
+            if (e.CommandName == "view")
+            {
+                Session["ACTIVE_EMPNO"] = e.CommandArgument.ToString();
+                Response.Redirect("~/Pages/Admin/Employees/EmployeeView.aspx?empid=" + e.CommandArgument.ToString());
+            }
+
+            if (e.CommandName == "update")
+            {
+                Session["ACTIVE_EMPNO"] = e.CommandArgument.ToString();
+                Response.Redirect("~/Pages/Admin/Employees/EmployeeUpdateView.aspx?empid=" + e.CommandArgument.ToString());
+                //openTransDetails(e.CommandArgument.ToString());
+            }
+
+            if (e.CommandName == "Sort")
+            {
+                sort_grid(e.CommandArgument.ToString());
+
+            }
+
+            if (e.CommandName == "Reset")
+            {
+                refresh();
+            }
+
+
+
+        }
+
+        protected void sort_grid(string sort_args)
+        {
+
+
+            //Label lbl = this.FindControl("lblEmpNo") as Label;
+            //lbl.Text = "Hello";
+            DataTable dt = (DataTable)ViewState["EMP_MASTER"];
+
+            foreach (DataRow row in dt.Rows)
+            {
+
+                //var mainContent = Master.FindControl("ContentPlaceHolder1");
+                //if (mainContent != null)
+                //{
+                //    Label lb = mainContent.FindControl("lblEmpNo") as Label;
+                //    if (lb != null)
+                //    {
+                //        //Set the value
+                //        lb.CssClass = "label label-success";
+                //    }
+                //}
+
+                string active = "";
+                if (row["Active"].ToString() == "ACTIVE")
+                {
+
+                    //active = "ACTIVE";
+                    //row["Active"] = active;]
+
+                }
+                else if (row["Active"].ToString() == "INACTIVE")
+                {
+                    //active = "INACTIVE";
+                    //row["Active"] = active;
+                }
+                else if (row["Active"].ToString() == "A")
+                {
+                    //active = "ARCHIVED";
+                    //row["Active"] = active;
+                }
+                if (dt.Rows.Count > 0)
+                {
+                    if (Convert.ToString(ViewState["SORTDR"]) == "Asc")
+                    {
+                        dt.DefaultView.Sort = sort_args + " Desc";
+                        ViewState["SORTDR"] = "Desc";
+                    }
+                    else
+                    {
+                        dt.DefaultView.Sort = sort_args + " Asc";
+                        ViewState["SORTDR"] = "Asc";
+                    }
+
+                }
+                GridUserList.DataSource = dt;
+                GridUserList.DataBind();
+
+
+            }
+
+        }
+        /// <summary>
+        /// Event that will trigger the search and get values from the textbox
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        protected void txtItem_TextChanged(object sender, EventArgs e)
+        {
+            //awong-retrieve textbox values from the grid control during runtime.
+            //GridViewRow currentRow = (GridViewRow)((TextBox)sender).Parent.Parent;
+            //string a1 = ((TextBox)GridUserList.FindControl("txtSearch1")).Text;
+            //string a2 = ((TextBox)GridUserList.FindControl("txtSearch2")).Text;
+
+
+            //GridUserList.DataSource = db_Emp.populateGridEmployeeListCol(a1, a2, a3, a4, a5, a6, a7);
+            //GridUserList.DataBind();
+
+            GridViewRow currentRow = (GridViewRow)((TextBox)sender).Parent.Parent;
+            string a1 = ((TextBox)currentRow.FindControl("txtSearchEmpNo")).Text;
+            string a2 = ((TextBox)currentRow.FindControl("txtSearchFullName")).Text;
+            string a3 = ((TextBox)currentRow.FindControl("txtSearchPosition")).Text;
+            string a4 = ((TextBox)currentRow.FindControl("txtSearchDepartment")).Text;
+            string a5 = ((TextBox)currentRow.FindControl("txtSearchRank")).Text;
+            string a6 = ((TextBox)currentRow.FindControl("txtSearchStatus")).Text;
+            //string a7 = ((TextBox)currentRow.FindControl("txtSearchActive")).Text;
+            string expr = db_Emp.build_or_like_param(saveSearchParam(a1, a2, a3, a4, a5, a6));
+            //string expr = "and (license_type like '%" + lictype + "%' or license_no like '%" + licno + "%' or lic_expirydate like '%" + licdate + "%')";
+            //GridViewList.DataSource = emp.populateGridSearch((DataTable)ViewState["EMP_GRID"], expr);
+
+            GridUserList.DataSource = db_Emp.populateGridEmployeelistCol(expr);
+            GridUserList.DataBind();
+
+            #region Search per textbox
+            //if (sender is TextBox)
+            //{
+            //    TextBox txtBox = (TextBox)sender;
+            //    if (txtBox.ID == "txtSearch1")
+            //    {
+            //        GridUserList.DataSource = db.populateGridUserListCol(txtBox.Text, "");
+            //        GridUserList.DataBind();
+            //    }
+            //    if (txtBox.ID == "txtSearch2")
+            //    {
+            //        GridUserList.DataSource = db.populateGridUserListCol("", txtBox.Text);
+            //        GridUserList.DataBind();
+            //    }
+            //}
+            #endregion
+
+        }
+        protected void ddlChange(object sender, EventArgs e)
+        {
+            //awong-retrieve textbox values from the grid control during runtime.
+            //GridViewRow currentRow = (GridViewRow)((TextBox)sender).Parent.Parent;
+            //string a1 = ((TextBox)GridUserList.FindControl("txtSearch1")).Text;
+            //string a2 = ((TextBox)GridUserList.FindControl("txtSearch2")).Text;
+
+
+            //GridUserList.DataSource = db_Emp.populateGridEmployeeListCol(a1, a2, a3, a4, a5, a6, a7);
+            //GridUserList.DataBind();
+
+            GridViewRow currentRow = (GridViewRow)((DropDownList)sender).Parent.Parent;
+            string a1 = ((DropDownList)currentRow.FindControl("ddlSearch")).SelectedItem.Value.ToString();
+            //string a7 = ((TextBox)currentRow.FindControl("txtSearchActive")).Text;
+            string expr = db_Emp.build_or_like_param(saveSearchParam1(a1));
+            //string expr = "and (license_type like '%" + lictype + "%' or license_no like '%" + licno + "%' or lic_expirydate like '%" + licdate + "%')";
+            //GridViewList.DataSource = emp.populateGridSearch((DataTable)ViewState["EMP_GRID"], expr);
+
+            GridUserList.DataSource = db_Emp.populateGridEmployeelistCol(expr);
+            GridUserList.DataBind();
+        }
+        Dictionary<string, string> saveSearchParam(string a1, string a2, string a3, string a4, string a5, string a6)
+        {
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            param.Add("emp_EmpID", "'%" + a1 + "%'");
+            param.Add("emp_FullName", "'%" + a2 + "%'");
+            param.Add("PositionName", "'%" + a3 + "%'");
+            param.Add("DeptName", "'%" + a4 + "%'");
+            param.Add("RankName", "'%" + a5 + "%'");
+            param.Add("StatusDesc", "'%" + a6 + "%'");            
+
+
+            return param;
+
+
+        }
+        Dictionary<string, string> saveSearchParam1(string a1)
+        {
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            param.Add("emp_Active", "'%" + a1 + "%'");
+
+
+            return param;
+
+
+        }
+
+        public void closeTransDetails()
+        {
+            upListDetails.Update();
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append(@"<script type='text/javascript'>");
+            sb.Append(string.Format(@"$('#{0}').modal('hide')", "listmodal"));
+            sb.Append(@"</script>");
+
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "listmodal", sb.ToString(), false);
+
+        }
+        public void openTransDetails(string empNo)
+        {
+            upListDetails.Update();
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append(@"<script type='text/javascript'>");
+            sb.Append(string.Format(@"$('#{0}').modal('show')", "listmodal"));
+            sb.Append(@"</script>");
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "listmodal", sb.ToString(), false);
+            lblEmpNo.Text = empNo;
+
+            //db_Emp.getEmployeeInfo(empNo, out fname, out mname, out lname);
+
+
+
+
+
+        }
+        protected void lnkbtnXlist_Click(object sender, EventArgs e)
+        {
+            closeTransDetails();
+        }
+        protected void btnDoDeleteold_Click(object sender, EventArgs e)
+        {
+            if (deleteDropDownList.SelectedValue == "D")
+            {
+                HiddenDeleteNo.Value = lblEmpNo.Text;
+                openMbox();
+                return;
+            }
+            if (db_Emp.updateEmployeeActiveStatus(lblEmpNo.Text, deleteDropDownList.SelectedValue))
+            {
+                ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully updated !!!');", true);
+                closeTransDetails();
+                refresh();
+            }
+            //else
+            //    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Failed to update !!!');", true);
+
+            //if (txtbox_fname.Text != "" && txtbox_mname.Text != "" && txtbox_lname.Text != "")
+            //{
+            //    db_Emp.updateEmployeeInfo(lblEmpNo.Text, txtbox_fname.Text, txtbox_mname.Text, txtbox_lname.Text);
+            //    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully updated !!!');", true);
+            //    closeTransDetails();
+            //    refresh();
+            //}
+            //else
+            //    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Name should not be empty !!!');", true);
+        }
+
+
+        protected void btnExport_Click(object sender, EventArgs e)
+        {
+            Response.Clear();
+            Response.Buffer = true;
+            Response.ContentType = "application/octet-stream";
+            Response.AddHeader("content-disposition", "attachment;filename= EmployeeMasterList" + ".xls");
+            Response.ContentType = "application/vnd.ms-excel";
+            Response.Charset = "";
+            this.EnableViewState = false;
+
+            System.IO.StringWriter swriter = new System.IO.StringWriter();
+            System.Web.UI.HtmlTextWriter htmlwriter = new System.Web.UI.HtmlTextWriter(swriter);
+
+            swriter.Write("<table style='font-weight:bold;font-size:10px'><tr><td style='border-style:solid; border-width:thin;text-align:center'>ID</td><td style='border-style:solid; border-width:thin;text-align:center'>USER ID    </td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>APPLICANT ID</td><td style='border-style:solid; border-width:thin;text-align:center'>HRMR ID</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>MR ID</td><td style='border-style:solid; border-width:thin;text-align:center'>EMPLOYEE ID</td><td style='border-style:solid; border-width:thin;text-align:center'>STATUS</td><td style='border-style:solid; border-width:thin;text-align:center'>SURNAME</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>FIRST NAME</td><td style='border-style:solid; border-width:thin;text-align:center'>MIDDLE NAME</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>SUFFIX</td><td style='border-style:solid; border-width:thin;text-align:center'>FULL NAME</td><td style='border-style:solid; border-width:thin;text-align:center'>NICKNAME</td><td style='border-style:solid; border-width:thin;'>ASSIGNMENT</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>PAYROLL GROUP</td><td style='border-style:solid; border-width:thin;text-align:center'>PROJECT</td><td style='border-style:solid; border-width:thin;text-align:center'>DIVISION</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>DEPARTMENT</td><td style='border-style:solid; border-width:thin;text-align:center'>BIOMETRICS ID</td><td style='border-style:solid; border-width:thin;text-align:center'>COST CENTER CODE</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>POSITION</td><td style='border-style:solid; border-width:thin;text-align:center'>RANK</td><td style='border-style:solid; border-width:thin;text-align:center'>PAYCLASS</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>GROUP CODE</td><td style='border-style:solid; border-width:thin;text-align:center'>HOUSE NUMBER</td><td style='border-style:solid; border-width:thin;text-align:center'>STREET</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>PERMANENT ADDRESS</td><td style='border-style:solid; border-width:thin;text-align:center'>PERMANENT CITY</td><td style='border-style:solid; border-width:thin;text-align:center'>PERMANENT ZIP CODE</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>HOME TELEPHONE</td><td style='border-style:solid; border-width:thin;text-align:center'>PRESENT ADDRESS</td><td style='border-style:solid; border-width:thin;text-align:center'>PRESENT CITY CODE</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>PRESENT ZIP CODE</td><td style='border-style:solid; border-width:thin;text-align:center'>PROVINCIAL TELEPHONE</td><td style='border-style:solid; border-width:thin;text-align:center'>CELLPHONE</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>EMAIL</td><td style='border-style:solid; border-width:thin;text-align:center'>BIRTHDATE</td><td style='border-style:solid; border-width:thin;text-align:center'>BIRTH PLACE</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>CIVIL STATUS</td><td style='border-style:solid; border-width:thin;text-align:center'>GENDER</td><td style='border-style:solid; border-width:thin;text-align:center'>STATUS</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>SSS</td><td style='border-style:solid; border-width:thin;text-align:center'>TIN</td><td style='border-style:solid; border-width:thin;text-align:center'>PAGIBIG</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>PHILHEALTH</td><td style='border-style:solid; border-width:thin;text-align:center'>NATIONAL ID</td><td style='border-style:solid; border-width:thin;text-align:center'>DATE START</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>DATE SEPARATED</td><td style='border-style:solid; border-width:thin;text-align:center'>CONTRACT START</td><td style='border-style:solid; border-width:thin;text-align:center'>CONTRACT DURATION</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>CONTRACT END</td><td style='border-style:solid; border-width:thin;text-align:center'>WAGE TYPE</td><td style='border-style:solid; border-width:thin;text-align:center'>BASIC PAY</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>HOUSING ALLOWANCE</td><td style='border-style:solid; border-width:thin;text-align:center'>LIVING ALLOWANCE</td><td style='border-style:solid; border-width:thin;text-align:center'>PARKIN ALLOWANCE</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>AIRFARE ALLOWANCE</td><td style='border-style:solid; border-width:thin;text-align:center'>CAR ALLOWANCE</td><td style='border-style:solid; border-width:thin;text-align:center'>COMMUNICATION ALLOWANCE</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>STAFFHOUSE ALLOWANCE</td><td style='border-style:solid; border-width:thin;text-align:center'>PER DAY</td><td style='border-style:solid; border-width:thin;text-align:center'>BASIC ALLOWANCE</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>ECOLA</td><td style='border-style:solid; border-width:thin;text-align:center'>SEA</td><td style='border-style:solid; border-width:thin;text-align:center'>TRANSPORTATION ALLOWANCE</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>OTHER ALLOWANCE</td><td style='border-style:solid; border-width:thin;text-align:center'>OT ALLOWANCE</td><td style='border-style:solid; border-width:thin;text-align:center'>NON-TAXABLE OT ALLOWANCE</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>TAXABLE OT ALLOWANCE </td><td style='border-style:solid; border-width:thin;text-align:center'>DE MINIMIS</td><td style='border-style:solid; border-width:thin;text-align:center'>A ALLOWANCE</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>CA ALLOWANCE</td><td style='border-style:solid; border-width:thin;text-align:center'>OUT OF STATION ALLOWANCE</td><td style='border-style:solid; border-width:thin;text-align:center'>BEA</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>NT PAY</td><td style='border-style:solid; border-width:thin;text-align:center'>ADD PAGIBIG</td><td style='border-style:solid; border-width:thin;text-align:center'>TAX UNIT</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>TAX EXEMPTION</td><td style='border-style:solid; border-width:thin;text-align:center'>SSS DEDUCTION</td><td style='border-style:solid; border-width:thin;text-align:center'>PHILHEALTH DEDUCTION</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>PAGIBIG DEDUCTION</td><td style='border-style:solid; border-width:thin;text-align:center'>BANK ACCOUNT NUMBER</td><td style='border-style:solid; border-width:thin;text-align:center'>ACCOUNT NUMBER</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>ACCOUNT TYPE</td><td style='border-style:solid; border-width:thin;text-align:center'>BANK CODE</td><td style='border-style:solid; border-width:thin;text-align:center'>COURSE CODE</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>BLOOD TYPE</td><td style='border-style:solid; border-width:thin;text-align:center'>MEDICAL SUMMARY</td><td style='border-style:solid; border-width:thin;text-align:center'>YTD GROSS</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>YTD W/TAX</td><td style='border-style:solid; border-width:thin;text-align:center'>R1A BATCH</td><td style='border-style:solid; border-width:thin;text-align:center'>ACTIVE STATUS</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>DATE ENCODED</td><td style='border-style:solid; border-width:thin;text-align:center'>YTD CAP</td><td style='border-style:solid; border-width:thin;text-align:center'>TOTAL CAP</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>TRACKING NO</td><td style='border-style:solid; border-width:thin;text-align:center'>BARANGAY</td><td style='border-style:solid; border-width:thin;text-align:center'>HOUSE NUMBER</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>CITY 1</td><td style='border-style:solid; border-width:thin;text-align:center'>CITY 2</td><td style='border-style:solid; border-width:thin;text-align:center'>STREET 2</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>BARANGAY 2</td><td style='border-style:solid; border-width:thin;text-align:center'>LICENSE NO</td><td style='border-style:solid; border-width:thin;text-align:center'>LICENSE EXPIRY DATE</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>MONDAY SCHEDULE</td><td style='border-style:solid; border-width:thin;text-align:center'>TUESDAY SCHEDULE</td><td style='border-style:solid; border-width:thin;text-align:center'>WEDNESDAY SCHEDULE</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>THURSDAY SCHEDULE</td><td style='border-style:solid; border-width:thin;text-align:center'>FRIDAY SCHEDULE</td><td style='border-style:solid; border-width:thin;text-align:center'>SATURDAY SCHEDULE</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>SUNDAY SCHEDULE</td><td style='border-style:solid; border-width:thin;text-align:center'>APPROVER 1</td><td style='border-style:solid; border-width:thin;text-align:center'>APPROVER 2</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>APPORVER 3</td><td style='border-style:solid; border-width:thin;text-align:center'>APPROVER 4</td><td style='border-style:solid; border-width:thin;text-align:center'>CWS</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>TEAM</td><td style='border-style:solid; border-width:thin;text-align:center'>SWIPE</td><td style='border-style:solid; border-width:thin;text-align:center'>TAX RATE</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>LOAN DEDUCTION</td><td style='border-style:solid; border-width:thin;text-align:center'>TAX DEDUCTION</td><td style='border-style:solid; border-width:thin;text-align:center'>SITE LOCATION</td>" +
+                    "<td style='border-style:solid; border-width:thin;text-align:center'>IMAGE</td></tr>");
+
+            DataGrid dg = new DataGrid();
+            dg.DataSource = db_Emp.populateGridAllEmployee();            
+            dg.DataBind();
+            dg.ShowHeader = false;
+            dg.RenderControl(htmlwriter);
+
+
+            Response.Write(swriter.ToString());
+            cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " exported Employee Master",
+            "EXPORT", "x123", "qwg-23", "EXPORT", Session["EMP_ID"].ToString());
+            Response.End();
+            //exportTOxlsx();
+
+
+        }
+
+        void exportTOxlsx()
+        {
+            Response.Clear();
+            Response.Buffer = true;
+            Response.ContentType = "application/octet-stream";
+            //Response.AddHeader("content-disposition", "attachment;filename= EmployeeMasterList" + ".xls");
+            //Response.ContentType = "application/vnd.ms-excel";
+            Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            Response.AddHeader("content-disposition", "attachment;filename=EmployeeMasterList.xlsx");
+            Response.Charset = "";
+            this.EnableViewState = false;
+
+            System.IO.StringWriter swriter = new System.IO.StringWriter();
+            System.Web.UI.HtmlTextWriter htmlwriter = new System.Web.UI.HtmlTextWriter(swriter);
+
+            DataGrid dg = new DataGrid();
+            dg.DataSource = db_Emp.populateGridAllEmployee();
+            dg.DataBind();
+
+            dg.RenderControl(htmlwriter);
+
+
+            Response.Write(swriter.ToString());
+            Response.End();
+
+        }
+
+        protected void btnSearch_Click(object sender, EventArgs e)
+        {
+
+
+        }
+
+
+
+        protected void openMbox()
+        {
+            //closeTransDetails();
+            empid = Session["ACTIVE_EMPNO"].ToString();
+            empname = db_Emp.GetEmployeeFullName(empid);
+            updateMbox.Update();
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append(@"<script type='text/javascript'>");
+            sb.Append(string.Format(@"$('#{0}').modal('show')", "mbox_modal"));
+            sb.Append(@"</script>");
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "mbox_modal", sb.ToString(), false);
+            Label1.Text = "Confirmation (Deletion " + empid + " , " + empname + ")";
+        }
+        protected void closeMbox()
+        {
+            updateMbox.Update();
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append(@"<script type='text/javascript'>");
+            sb.Append(string.Format(@"$('#{0}').modal('hide')", "mbox_modal"));
+            sb.Append(@"</script>");
+
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "mbox_modal", sb.ToString(), false);
+        }
+        protected void closeMbox_click(object sender, EventArgs e)
+        {
+            closeMbox();
+        }
+        protected void btnConfirmClick(object sender, EventArgs e)
+        {
+            empid = Session["ACTIVE_EMPNO"].ToString();
+            string aa = ((Button)sender).CommandArgument;
+            if (aa == "YES")
+            {
+                //db_Emp.DeleteQuery("TBL_EMPLOYEE_MASTER", "where emp_EmpID =" + empid + "");
+                //db_Emp.DeleteEmployee(HiddenDeleteNo.Value);
+                db_Emp.DeleteEmployee(empid);
+                ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully DELETED !!!');", true);
+            }
+            else
+                ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Cancelled Deletion!!!');", true);
+            closeTransDetails();
+            closeMbox();
+            refresh();
+
+        }
+        protected void btnDoDelete_Click(object sender, EventArgs e)
+        {
+            if (deleteDropDownList.SelectedValue == "-1")
+                return;
+
+            if (deleteDropDownList.SelectedValue == "D")
+            {
+                HiddenDeleteNo.Value = lblEmpNo.Text;
+                openMbox();
+                return;
+            }
+            if (db_Emp.updateEmployeeActiveStatus(lblEmpNo.Text, deleteDropDownList.SelectedValue))
+            {
+                ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully updated !!!');", true);
+                closeTransDetails();
+                refresh();
+            }
+            //else
+            //    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Failed to update !!!');", true);
+
+            //if (txtbox_fname.Text != "" && txtbox_mname.Text != "" && txtbox_lname.Text != "")
+            //{
+            //    db_Emp.updateEmployeeInfo(lblEmpNo.Text, txtbox_fname.Text, txtbox_mname.Text, txtbox_lname.Text);
+            //    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully updated !!!');", true);
+            //    closeTransDetails();
+            //    refresh();
+            //}
+            //else
+            //    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Name should not be empty !!!');", true);
+        }
+    }
+}

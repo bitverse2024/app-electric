@@ -1,0 +1,209 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.Master" AutoEventWireup="true" CodeBehind="processpayroll.aspx.cs" Inherits="HRIS_APPELECTRIC.Pages.Admin.PayrollPages.processpayroll" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+      <script type = "text/javascript">
+    function MutExChkList(chk)
+    {
+        var chkList = chk.parentNode.parentNode.parentNode;
+        var chks = chkList.getElementsByTagName("input");
+        for(var i=0;i<chks.length;i++)
+        {
+            if(chks[i] != chk && chk.checked)
+            {
+                chks[i].checked=false;
+            }
+        }
+    }
+</script>
+    <script type="text/javascript">
+        function Confirm() {
+            var confirm_value = document.createElement("INPUT");
+            confirm_value.type = "hidden";
+            confirm_value.name = "confirm_value";
+            if (confirm("Are you sure you want to process this payroll?")) {
+                confirm_value.value = "Yes";
+            } else {
+                confirm_value.value = "No";
+            }
+            document.forms[0].appendChild(confirm_value);
+        }
+    </script>
+    <aside class="right-side">
+        <!-- Small boxes (Stat box) -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div id="content">
+
+                    <div class="content-header">
+                        <div class="container-fluid">
+                            <div class="row mb-2">
+                                <div class="col-sm-6"></div>
+                                <div class="col-sm-6"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="content">
+                            <div class="container-fluid">
+                                <div class="container"></div>
+                                <h3 class="m-0 text-dark">Payroll<small> Process Payroll</small></h3>
+                                <section class="card">
+                                    <div class="card-header">
+                                        <a href="PayReg.aspx" class="btn btn-default"><i class="fa fa-list"></i><span class="h6">List</span></a>
+
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="content">
+                                            <div class="container-fluid">
+                                                <div class="box-body">
+                                                    <div class="form">
+
+                                                        <fieldset>
+                                                            <legend>
+                                                                <p class="note">Fields with <span class="required text-red">*</span> are required.</p>
+                                                            </legend>
+
+
+                                                            <div class="row">
+                                                                <div class="form col-lg-4">
+                                                                    <label for="lblCreditDate" class="required">
+                                                                        Credit Date <span class="required text-red">*</span>
+                                                                        <asp:RequiredFieldValidator ID="RequiredFieldValidator1" ForeColor="Red" runat="server"
+                                                                            ErrorMessage="Field Required" ValidationGroup="ProcessPayroll"
+                                                                            ControlToValidate="ddlCredDate"></asp:RequiredFieldValidator></label>
+                                                                    <asp:DropDownList ID="ddlCredDate" CssClass="form-control" runat="server" OnSelectedIndexChanged="ddlCredDate_SelectedIndexChanged" AutoPostBack="true">
+                                                                        <asp:ListItem Enabled="true" Text="----SELECT CREDIT DATE----" Value=""></asp:ListItem>
+                                                                    </asp:DropDownList>
+                                                                    <%--<div style="padding-top:5px">
+                                                <asp:CheckBox ID="chkIsfilingEnabled" runat="server" Text="Enable Overtime Filing" CssClass="checkbox-inline" />
+                                            </div>--%>
+                                                                    <div style="padding-top:5px">
+                                                <asp:CheckBox ID="chkIsLoanDeductionDisabled" runat="server" Text="Disable Loan Deduction" CssClass="checkbox-inline" />
+                                            </div>
+                                                                    <label class="required" style="padding-top:5px">Loan Deduction:</label>
+                                                                    <asp:CheckBoxList ID="cblLoan" runat="server">
+                                                                    <%--<asp:ListItem Text="SSS Salary Loan" Value="1" onclick="MutExChkList(this);" />
+                                                                    <asp:ListItem Text="Pag-ibig Loan" Value="2" onclick="MutExChkList(this);" />
+                                                                        <asp:ListItem Text="Pag-ibig Calamity Loan" Value="3" onclick="MutExChkList(this);" />
+                                                                        <asp:ListItem Text="SSS Calamity Loan" Value="4" onclick="MutExChkList(this);" />--%>
+
+                                                                    
+                                                                </asp:CheckBoxList>
+
+                                                                    
+                                                                    
+                                                                    
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                    <label class="required">Employee:</label>
+                                                    <asp:DropDownList class="form-control" ID="ddlEmployee" runat="server" >
+                                                        <asp:ListItem Value="" Text="---Select Employee---"></asp:ListItem>
+                                                    </asp:DropDownList>
+                                                                    <div style="padding-top:5px">
+                                                <asp:CheckBox ID="cbEnableLeaveMonetization" runat="server" Text="Enable Leave Monetization" CssClass="checkbox-inline" />
+                                            </div>
+                                                                    <div style="padding-top:5px">
+                                                <asp:CheckBox ID="chkIsGovDeductionDisabled" runat="server" Text="Disable Government Deduction" CssClass="checkbox-inline" />
+                                            </div>
+                                                                     <label class="required" style="padding-top:5px">Government Deduction:</label>
+                                                                    <%--<div style="padding-top:5px">
+                                                <asp:CheckBox ID="cbGovDed1" runat="server" Text="30%" CssClass="checkbox-inline" OnCheckedChanged="cbGovDed1_CheckedChanged" AutoPostBack="true" />
+                                            </div>
+                                                                    <div style="padding-top:5px">
+                                                <asp:CheckBox ID="cbGovDed2" runat="server" Text="70%" CssClass="checkbox-inline" OnCheckedChanged="cbGovDed2_CheckedChanged" AutoPostBack="true"/>
+                                            </div>--%>
+                                                                    <asp:CheckBoxList ID="cblGovDeduction" runat="server">
+                                                                    <asp:ListItem Text="30%" Value="1" onclick="MutExChkList(this);" />
+                                                                    <asp:ListItem Text="70%" Value="2" onclick="MutExChkList(this);" />
+                                                                    
+                                                                </asp:CheckBoxList>
+
+                                                </div>
+                                                                <div class="col-lg-2">
+                                                                    
+                                                                    <asp:UpdatePanel ID="mergePanel" runat="server">
+                                                                    <ContentTemplate>
+                                                                        <div class="form col-lg-6" style="padding-top: 30px">
+                                                                            <div class="form-actions">
+                                                                                <asp:Button ID="btnProcess" Width="80" class="btn btn-primary" runat="server" Text="Process"
+                                                                                    ValidationGroup="ProcessPayroll" OnClientClick="Confirm()" OnClick="btnProcess_Click"
+                                                                                     data-toggle="modal" data-target="#listmodal"></asp:Button>
+                                                                                &ensp;
+                                                                            </div>
+                                                                        </div>
+                                                                    </ContentTemplate>
+                                                                    <Triggers>
+
+                                                                        <asp:PostBackTrigger ControlID="btnProcess" />
+                                                                    </Triggers>
+                                                                </asp:UpdatePanel>
+                                                                    </div>
+                                                                
+                                                            </div>
+                                                            <br />
+
+                                                        </fieldset>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                            </div>
+                            <!-- content -->
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div id="sidebar">
+                    </div>
+                    <!-- sidebar -->
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="listmodal" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <asp:UpdatePanel ID="UpdatePanel2" runat="server">
+                        <ContentTemplate>
+                            <div class="modal-body" style="">
+                                <asp:UpdatePanel ID="UpdatePanel1" runat="server">
+                                    <ContentTemplate>
+                                        <asp:UpdateProgress ID="mergeProgress" AssociatedUpdatePanelID="mergePanel" DisplayAfter="200" runat="server">
+                                            <ProgressTemplate>
+                                                <strong>Please wait while system is processing payroll...</strong>
+
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+                                                    </div>
+                                                </div>
+                                            </ProgressTemplate>
+                                        </asp:UpdateProgress>
+                                    </ContentTemplate>
+                                </asp:UpdatePanel>
+                            </div>
+                        </ContentTemplate>
+                            <Triggers>
+
+                            <asp:PostBackTrigger ControlID="btnProcess" />
+                        </Triggers>
+                    </asp:UpdatePanel>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript">
+            window.onsubmit = function () {
+                //        if (Page_IsValid) {
+                var updateProgress = $find("<%= mergeProgress.ClientID %>");
+                window.setTimeout(function () {
+                    updateProgress.set_visible(true);
+                }, 100);
+                //        }
+            }
+        </script>
+        <!-- /.row (main row) -->
+    </aside>
+</asp:Content>

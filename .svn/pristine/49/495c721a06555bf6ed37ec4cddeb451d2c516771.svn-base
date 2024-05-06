@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/Employees/EmployeeUpdateView.aspx" hash="2e7cb0847" filehash="fd3d51e80f6bd78" flags="110000" assembly="App_Web_xlgz4cte" type="ASP.pages_admin_employees_employeeupdateview_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/Employees/EmployeeUpdateView.aspx" />
+    </filedeps>
+</preserve>

@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/Reports/LatesReport.aspx" hash="fffffffb122f315e" filehash="1d03d90f1a669c40" flags="110000" assembly="App_Web_g3coojeu" type="ASP.pages_admin_reports_latesreport_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/Reports/LatesReport.aspx" />
+    </filedeps>
+</preserve>

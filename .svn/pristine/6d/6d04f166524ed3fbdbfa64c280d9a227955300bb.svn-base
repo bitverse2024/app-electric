@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/statuslist.aspx" hash="2e7cb0847" filehash="fd399040a12fd57" flags="110000" assembly="App_Web_kk5mlmva" type="ASP.pages_admin_statuslist_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/statuslist.aspx" />
+    </filedeps>
+</preserve>

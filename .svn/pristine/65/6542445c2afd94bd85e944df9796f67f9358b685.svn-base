@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/PayrollPages/bpiadvice.aspx" hash="2e7cb0847" filehash="fd3a60ed35c19de" flags="110000" assembly="App_Web_ej1ah3bv" type="ASP.pages_admin_payrollpages_bpiadvice_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/PayrollPages/bpiadvice.aspx" />
+    </filedeps>
+</preserve>

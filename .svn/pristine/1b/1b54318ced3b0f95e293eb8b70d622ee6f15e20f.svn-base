@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/PayrollPages/createpayregadjcom.aspx" hash="2e7cb0847" filehash="fd3d7c68df8c6b2" flags="110000" assembly="App_Web_uu0hbzi5" type="ASP.pages_admin_payrollpages_createpayregadjcom_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/PayrollPages/createpayregadjcom.aspx" />
+    </filedeps>
+</preserve>

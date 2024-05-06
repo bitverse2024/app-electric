@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/AdminKiosk/adminrolemanagement.aspx" hash="2e7cb0847" filehash="fd3a0c9608d8d06" flags="110000" assembly="App_Web_5n3hefyp" type="ASP.pages_adminkiosk_adminrolemanagement_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/AdminKiosk/adminrolemanagement.aspx" />
+    </filedeps>
+</preserve>

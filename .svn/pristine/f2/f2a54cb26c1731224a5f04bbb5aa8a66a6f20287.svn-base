@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/AdminKiosk/admincashadvance.aspx" hash="2e7cb0847" filehash="fd3c2c9eadd8472" flags="110000" assembly="App_Web_1by2v34l" type="ASP.pages_adminkiosk_admincashadvance_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/AdminKiosk/admincashadvance.aspx" />
+    </filedeps>
+</preserve>

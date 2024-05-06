@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/createmr.aspx" hash="2e7cb0847" filehash="f02c39eea4ecf307" flags="110000" assembly="App_Web_kk5mlmva" type="ASP.pages_admin_createmr_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/createmr.aspx" />
+    </filedeps>
+</preserve>

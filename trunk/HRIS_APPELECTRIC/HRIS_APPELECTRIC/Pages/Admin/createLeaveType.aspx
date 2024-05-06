@@ -1,0 +1,107 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.Master" AutoEventWireup="true" CodeBehind="createLeaveType.aspx.cs" Inherits="HRIS_APPELECTRIC.Pages.Admin.createLeaveType" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <aside class="right-side">
+        <!-- Small boxes (Stat box) -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div id="content">
+                    <script type="text/javascript">
+                        function Confirm() {
+                            var confirm_value = document.createElement("INPUT");
+                            confirm_value.type = "hidden";
+                            confirm_value.name = "confirm_value";
+                            if (confirm("Are you sure you want to add this item?")) {
+                                confirm_value.value = "Yes";
+                            } else {
+                                confirm_value.value = "No";
+                            }
+                            document.forms[0].appendChild(confirm_value);
+                        }
+                    </script>
+
+                    <div class="content-header">
+                        <div class="container-fluid">
+                            <div class="row mb-2">
+                                <div class="col-sm-6"></div>
+                                <div class="col-sm-6"></div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="col-md-12">
+                        <div class="content">
+                            <div class="container-fluid">
+                                <div class="container"></div>
+                                <h3 class="m-0 text-dark">Admin<small> Create Leave Type</small></h3>
+                                <section class="card">
+                                    <div class="card-header">
+                                        <a href="/index.php?r=leavetype/create" class="btn btn-default"><i class="fa fa-plus"></i><span class="h6">Create</span></a>
+                                        <a href="LeaveType.aspx" class="btn btn-default"><i class="fa fa-th-list"></i><span class="h6">List</span></a>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="content">
+                                            <div class="container-fluid">
+                                                <div class="box-body">
+                                                    <div class="form">
+                                                        <legend>
+                                                            <p class="note">Fields with <span class="required text-red">*</span> are required.</p>
+                                                        </legend>
+
+
+                                                        <div class="showgrid row">
+                                                            <div class="col-lg-6">
+                                                                <label for="LeaveType_LeaveTypeDesc" class="required">
+                                                                    Leave Name <span class="required text-red">*
+                                                   
+                                                                    <asp:RequiredFieldValidator ID="validatorUploader" runat="server" ControlToValidate="LeaveType_LeaveTypeDesc" ValidationGroup="CreateCompanyGroup" ForeColor="Red" ErrorMessage="Field Required">
+                                                    </asp:RequiredFieldValidator>
+                                                                    </span>
+                                                                </label>
+                                                                <input class="form-control" maxlength="40" name="LeaveType_LeaveTypeDesc[LeaveType_:eaveTypeDesc]" id="LeaveType_LeaveTypeDesc" type="text" runat="server" />
+
+                                                                <label for="Employee_AssignmentCode" class="required">Leave Type <span class="required text-red">*
+                                                   
+                                                                    <asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server" ControlToValidate="LeaveKey" ValidationGroup="CreateCompanyGroup" ForeColor="Red" ErrorMessage="Field Required">
+                                                                    </asp:RequiredFieldValidator>
+                                                                    </span></label>
+                                                                <select class="form-control" name="emp_Assignment" id="LeaveKey" runat="server">
+                                                                    <option value="">---Select Leave Type---</option>
+                                                                    <option value="SL">Sick Leave</option>
+                                                                    <option value="VL">Vacation Leave</option>
+                                                                    
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <br />
+                                                        <div class="form-actions">
+                                                            <asp:Button ID="btnCreate" class="btn btn-primary" Width="80" runat="server" Text="Create"
+                                                                OnClick="btnCreate_Click" ValidationGroup="CreateCompanyGroup" OnClientClick="Confirm()"></asp:Button>
+                                                            <asp:Button ID="btnReset" class="btn btn-danger" Width="80" runat="server" Text="Reset"
+                                                                OnClick="btnReset_Click"></asp:Button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- content -->
+            </div>
+            <div class="col-lg-6">
+                <div id="sidebar">
+                </div>
+                <!-- sidebar -->
+            </div>
+        </div>
+
+        <!-- /.row (main row) -->
+    </aside>
+</asp:Content>

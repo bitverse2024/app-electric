@@ -1,0 +1,258 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.Master" AutoEventWireup="true" CodeBehind="COE.aspx.cs" Inherits="HRIS_APPELECTRIC.Pages.Admin.Employees.COE" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <aside class="right-side">
+        <!-- Small boxes (Stat box) -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6"></div>
+                    <div class="col-sm-6"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="content">
+                <div class="container-fluid">
+                    <div class="container"></div>
+                    <h3 class="m-0 text-dark">Employees<small> Employee Certificate</small></h3>
+                    <section class="card">
+                        <div class="card-header">
+                            <a href="CreateEmployee.aspx" class="btn btn-default"><i class="fa fa-plus"></i><span class="h6">Create</span></a>
+                            <a href="EmployeeMaster.aspx" class="btn btn-default"><i class="fa fa-list"></i><span class="h6">List</span></a>
+                            <a href="COE.aspx" class="btn btn-default"><i class="fa fa-file"></i><span class="h6">COE</span></a>
+                            <%--<a href="../TK/leaves.aspx" class="btn btn-default"><i class="fa fa-list-ol"></i><span
+                                class="h6">Leaves</span></a>--%>
+                        </div>
+                        <div class="card-body">
+                            <div class="content">
+                                <div class="container-fluid">
+                                    <div class="box-body">
+                                        <%--<hr />--%><div style="overflow-x: auto;" id="display-grid" class="grid-view box-body">
+                                            <div class="search-form">
+                                                <div class="row">
+                                                    <div class="panel-body">
+                                                        <div class="col-md-12">
+                                                            <div class="row">
+                                                                <div class="col-md-12">
+                                                                    <div class="panel-body">
+                                                                        <asp:Panel ID="Panel2" runat="server" ScrollBars="Auto">
+                                                                            <div>
+
+                                                                                <asp:GridView ID="GridUserList" runat="server" AutoGenerateColumns="False"
+                                                                                    ShowFooter="True" CssClass="items table table-striped table-bordered table-condensed"
+                                                                                    GridLines="None" AllowPaging="True" Font-Names="Segoe UI"
+                                                                                    ForeColor="Black" OnRowCommand="GridUserList_RowCommand"
+                                                                                    OnPageIndexChanging="GridUserList_PageIndexChanging"
+                                                                                    ViewStateMode="Enabled" PageSize="25" OnDataBound="OnDataBound">
+
+                                                                                    <EmptyDataTemplate>
+                                                                                        <center><h1>NO USERS AVAILABLE</h1></center>
+                                                                                    </EmptyDataTemplate>
+                                                                                    <Columns>
+                                                                                        <asp:TemplateField Visible="false">
+                                                                                            <ItemTemplate>
+                                                                                                <asp:Label ID="lblID" CssClass="h5" Text='<%# Eval("id") %>' runat="server" Visible="false"></asp:Label>
+                                                                                            </ItemTemplate>
+                                                                                        </asp:TemplateField>
+                                                                                        <asp:TemplateField>
+                                                                                            <HeaderTemplate>
+                                                                                                <asp:LinkButton ID="lblFullname" CssClass="h8" Text='Full Name' runat="server" CommandName="Sort"
+                                                                                                    CommandArgument="FullName"></asp:LinkButton><br />
+                                                                                                <asp:TextBox ID="txtSearchFullName" runat="server" OnTextChanged="txtItem_TextChanged"
+                                                                                                    Width="100%"></asp:TextBox>
+                                                                                            </HeaderTemplate>
+                                                                                            <ItemTemplate>
+                                                                                                <asp:Label ID="lblFullName" CssClass="" Text='<%# Eval("FullName") %>'
+                                                                                                    runat="server"></asp:Label>
+                                                                                            </ItemTemplate>
+                                                                                        </asp:TemplateField>
+                                                                                        <asp:TemplateField>
+                                                                                            <HeaderTemplate>
+                                                                                                <asp:LinkButton ID="lblCompany" CssClass="h8" Text='Company' runat="server" CommandName="Sort"
+                                                                                                    CommandArgument="Company"></asp:LinkButton><br />
+                                                                                                <asp:TextBox ID="txtSearchCompany" runat="server" OnTextChanged="txtItem_TextChanged"
+                                                                                                    Width="100%"></asp:TextBox>
+                                                                                            </HeaderTemplate>
+                                                                                            <ItemTemplate>
+                                                                                                <asp:Label ID="lblCompany" CssClass="" Text='<%# Eval("Company") %>'
+                                                                                                    runat="server"></asp:Label>
+                                                                                            </ItemTemplate>
+                                                                                        </asp:TemplateField>
+                                                                                        <asp:TemplateField>
+                                                                                            <HeaderTemplate>
+                                                                                                <span class="h8">W/
+                                                                            <br>
+                                                                                                    Compensation</span>
+                                                                                            </HeaderTemplate>
+                                                                                            <ItemTemplate>
+                                                                                                <asp:LinkButton ID="btnWCompensation" runat="server" ForeColor="Black" Font-Size="Large"
+                                                                                                    CommandName="WCompensation" CommandArgument='<%# Eval("id") %>'><i class="fa fa-pencil" ></i></asp:LinkButton>
+                                                                                                &nbsp;
+                                                                                            </ItemTemplate>
+                                                                                        </asp:TemplateField>
+                                                                                        <asp:TemplateField>
+                                                                                            <HeaderTemplate>
+                                                                                                <span class="h8">W/o
+                                                                            <br>
+                                                                                                    Compensation</span>
+                                                                                            </HeaderTemplate>
+                                                                                            <ItemTemplate>
+                                                                                                <asp:LinkButton ID="btnWOCompensation" runat="server" ForeColor="Black" Font-Size="Large"
+                                                                                                    CommandName="WOCompensation" CommandArgument='<%# Eval("id") %>'><i class="fa fa-pencil"></i></asp:LinkButton>
+                                                                                                &nbsp;
+                                                                                            </ItemTemplate>
+                                                                                        </asp:TemplateField>
+                                                                                        <asp:TemplateField>
+                                                                                            <HeaderTemplate>
+                                                                                                <span class="h8">Separated</span>
+                                                                                            </HeaderTemplate>
+                                                                                            <ItemTemplate>
+                                                                                                <asp:LinkButton ID="btnSeparated" runat="server" ForeColor="Black" Font-Size="Large"
+                                                                                                    CommandName="Separated" CommandArgument='<%# Eval("id") %>'><i class="fa fa-pencil"></i></asp:LinkButton>
+                                                                                                &nbsp;
+                                                                                            </ItemTemplate>
+                                                                                        </asp:TemplateField>
+                                                                                        <asp:TemplateField Visible="false">
+                                                                                            <HeaderTemplate>
+                                                                                                <span class="h8">Others</span>
+                                                                                            </HeaderTemplate>
+                                                                                            <ItemTemplate>
+                                                                                                <asp:LinkButton ID="btnOthers" runat="server" ForeColor="Black" Font-Size="Large"
+                                                                                                    CommandName="Others"><i class="fa fa-pencil"></i></asp:LinkButton>
+                                                                                                &nbsp;
+                                                                                            </ItemTemplate>
+                                                                                        </asp:TemplateField>
+                                                                                    </Columns>
+                                                                                </asp:GridView>
+                                                                            </div>
+                                                                        </asp:Panel>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <script type="text/javascript">
+                                            $(document).ready(function () {
+                                                $("#GridView1").prepend($("<thead></thead>").append($(this).find("tr:first"))).dataTable();
+                                            });
+                                        </script>
+                                        <%--</ContentTemplate>
+            </asp:UpdatePanel>--%>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+        <!-- /.row (main row) -->
+    </aside>
+    <div class="modal fade" id="listmodal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <asp:UpdatePanel ID="upListDetails" runat="server" ChildrenAsTriggers="False" UpdateMode="Conditional">
+                    <ContentTemplate>
+                        <div class="modal-header">
+                            <h4 class="modal-title">
+                                <asp:Label ID="Label3" runat="server" Text="Edit Information"></asp:Label></h4>
+                            <asp:LinkButton ID="lnkbtnXlist" CssClass="close" runat="server" OnClick="lnkbtnXlist_Click">
+                                <span>&times;</span>
+                            </asp:LinkButton>
+                        </div>
+                        <div class="modal-body">
+                            <asp:HiddenField ID="HiddenEmpID" runat="server" />
+                            <asp:HiddenField ID="hdnType" runat="server" />
+                            <div class="row">
+                                <!-- Date -->
+                                <div class="col-lg-10">
+                                    <label for="COEReason" class="required">
+                                        Reason<span class="required">*</span><asp:RequiredFieldValidator ID="RequiredFieldValidator1"
+                                            runat="server" ErrorMessage="Field Required" ControlToValidate="COEReason" ForeColor="Red"
+                                            ValidationGroup="AddReason"></asp:RequiredFieldValidator></label>
+                                    <div class="input-group date">
+                                        <input class="form-control" id="COEReason" name="txtCOEReason" type="text" runat="server" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <asp:Button ID="btnsaveUpdate" runat="server" Text="Generate" CssClass="btn btn-primary"
+                                OnClick="btnsaveUpdate_Click" OnClientClick="Confirm()" ValidationGroup="AddReason"></asp:Button>
+                        </div>
+                    </ContentTemplate>
+                    <Triggers>
+                        <asp:PostBackTrigger ControlID="btnsaveUpdate" />
+                    </Triggers>
+                </asp:UpdatePanel>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="sepmodal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <asp:UpdatePanel ID="upListSep" runat="server" ChildrenAsTriggers="False" UpdateMode="Conditional">
+                    <ContentTemplate>
+                        <div class="modal-header">
+                            <h4 class="modal-title">
+                                <asp:Label ID="Label1" runat="server" Text="Edit Information"></asp:Label></h4>
+                            <asp:LinkButton ID="lnkbtnClose" CssClass="close" runat="server" OnClick="lnkbtnClose_Click">
+                                <span>&times;</span>
+                            </asp:LinkButton>
+                        </div>
+                        <div class="modal-body">
+                            <asp:HiddenField ID="HiddenField1" runat="server" />
+                            <div class="row">
+                                <!-- Date -->
+                                <div class="col-lg-10">
+                                    <label for="" class="required">
+                                        Date<span class="required">*</span><%--<asp:RequiredFieldValidator ID="RequiredFieldValidator3"
+                                            runat="server" ErrorMessage="Field Required" ControlToValidate="txtDate" ForeColor="Red"
+                                            ValidationGroup="AddReason"></asp:RequiredFieldValidator>--%></label>
+                                    <div class="input-group date">
+                                        <input class="form-control" id="txtDate" name="txtDate" type="date" runat="server" />
+                                    </div>
+                                    <label for="" class="required">
+                                        Position<span class="required">*</span><%--<asp:RequiredFieldValidator ID="RequiredFieldValidator4"
+                                            runat="server" ErrorMessage="Field Required" ControlToValidate="txtPostion" ForeColor="Red"
+                                            ValidationGroup="AddReason"></asp:RequiredFieldValidator>--%></label>
+                                    <div class="input-group date">
+                                        <input class="form-control" id="txtPostion" name="txtCOEReason" type="text" runat="server" />
+                                    </div>
+                                    <label for="" class="required">
+                                        Date<span class="required">*</span><%--<asp:RequiredFieldValidator ID="RequiredFieldValidator2"
+                                            runat="server" ErrorMessage="Field Required" ControlToValidate="txtDate" ForeColor="Red"
+                                            ValidationGroup="AddReason"></asp:RequiredFieldValidator>--%></label>
+                                    <div class="input-group date">
+                                        <input class="form-control" id="txtFrom" name="txtDate" type="date" runat="server" />
+                                        <label>TO</label>
+                                        <input class="form-control" id="txtTo" name="txtDate" type="date" runat="server" />
+                                    </div>
+                                    <label for="COEReason" class="required">
+                                        Remarks</label>
+                                    <div class="input-group date">
+                                        <input class="form-control" id="txtRemarks" name="txtCOEReason" type="text" runat="server" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <asp:Button ID="btnSaveSep" runat="server" Text="Generate" CssClass="btn btn-primary"
+                                OnClick="btnSaveSep_Click" OnClientClick="Confirm()" ValidationGroup="AddReason"></asp:Button>
+                        </div>
+                    </ContentTemplate>
+                    <Triggers>
+                        <asp:PostBackTrigger ControlID="btnSaveSep" />
+                    </Triggers>
+                </asp:UpdatePanel>
+            </div>
+        </div>
+    </div>
+</asp:Content>

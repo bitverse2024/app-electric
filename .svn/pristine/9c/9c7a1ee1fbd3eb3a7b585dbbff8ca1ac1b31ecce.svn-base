@@ -1,0 +1,587 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace HRIS_APPELECTRIC.Pages.Admin.PayrollPages
+{
+    public partial class payslipview : System.Web.UI.Page
+    {
+        Common cm = new Common();
+        Payroll pr = new Payroll();
+        string cutoffid;
+        string empid = "";
+        public string bonus1 = "";
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            cutoffid = Request.QueryString["cid"];
+            empid = Request.QueryString["empid"];
+        }
+
+        public string printview()
+        {
+            return populatehtml(cutoffid, empid);
+
+
+        }
+
+        public string paysliphtml(Dictionary<string, string> loanentries)
+        {
+            string CL = "";
+            string SSS = "";
+            string PIL = "";
+            string PICL = "";
+            string SSSCL = "";
+            string CA = "";
+            if (loanentries != null && loanentries.Count > 0)
+            {
+                foreach (KeyValuePair<string, string> kvp in loanentries)
+                {
+                    if(kvp.Key == "Calamity Loan")
+                    {
+                        CL = pr.toRoundOff(kvp.Value);
+                    }
+                    else if (kvp.Key == "SSS Salary Loan")
+                    {
+                        SSS = pr.toRoundOff(kvp.Value);
+                    }
+                    else if (kvp.Key == "HDMF Loan")
+                    {
+                        PIL = pr.toRoundOff(kvp.Value);
+                    }
+                    else if (kvp.Key == "HDMF Calamity Loan")
+                    {
+                        PICL = pr.toRoundOff(kvp.Value);
+                    }
+                    else if (kvp.Key == "SSS Calamity Loan")
+                    {
+                        SSSCL = pr.toRoundOff(kvp.Value);
+                    }
+                    else if (kvp.Key == "Cash Advance")
+                    {
+                        CA = pr.toRoundOff(kvp.Value);
+                    }
+                    //build_html += "<tr><td colspan='2'></td><td colspan='2'></td><td colspan='1'>&ensp;</td>" +
+                    //       "<td colspan='2'>" + kvp.Key + "</td><td colspan='2' style='text-align:right'>" + pr.toRoundOff(kvp.Value) + "</td></tr>";
+                }
+            }
+            #region build_html
+            string build_html = "";
+            build_html += "<table id=\"yw2\" style=\"width:150%;font-family:Arial;\"><tr><td colspan='6'><span>APP ELECTRIC CORP</span></td></tr>";
+            build_html += "<tr><td colspan='6'><span>" + "{0}" + "</span> <span>" + "{1}" + "</span></td></tr></table>";
+            build_html += "<table id=\"yw2\" style=\"width:100%;font-family:Arial;\"><tr><td colspan='6' style=\"width: 70% \"></td><td colspan='2'></td></td><td colspan='2'><span>Date Covered: " +
+                "{2}" + "</span></td><td colspan='2'></tr>";
+            build_html += "<tr><td colspan='6'></td><td colspan='2'><td colspan='2'><span>Payroll Group: " +
+                "{3}" + "</span></td><td colspan='2'></tr>";
+            build_html += "<tr><td colspan='6'></td><td colspan='2'><td colspan='2'><span>Department: " +
+                "{4}" + "</span></td><td colspan='2'></tr></table>";
+            build_html += "<table id=\"yw2\" style=\"width:100%;font-family:Arial;\"><tr><td><br/></td></tr>";
+            build_html += "<tr><td colspan='1'></td><td colspan='2'><span>Amount</span></td>" +
+                "<td colspan='1'></td><td colspan='2'></td>" +
+                "<td colspan='1'></td><td colspan='2'></td><td colspan='2'></td><td colspan='1'><span>Loan Balance</span></td></tr>";
+            //put here the loan payment <span>Loan Balance</span>
+            build_html += "<tr>" +
+                "<td colspan='1'><span>Basic Pay</span><br/></td>" +
+                "<td colspan='2'><span>" + "{5}" + "</span></td>" +
+                "<td colspan='1'><span>SSS</span></td>" +
+                "<td colspan='2'><span> {6}</span></td>" +
+                "<td colspan='1'><span>CASH AD</span></td>" +
+                "<td colspan='2'><span>" + "{7}" + "</span></td>" +
+                "<td colspan='2'><span></span></td>" +
+                "<td colspan='1'></td></tr>";
+            build_html += "<tr>" +
+                "<td colspan='1'><span>Absences</span><br/></td>" +
+                "<td colspan='2'><span>" + "({9})" + "</span></td>" +
+                "<td colspan='1'><span>PhilHealth</span></td>" +
+                "<td colspan='2'><span>" + "{10}" + "</span></td>" +
+                "<td colspan='1'><span>Holiday Pay</span></td>" +
+                "<td colspan='2'><span>" + "{20}" + "</span></td>" +
+                "<td colspan='2'><span></span></td>" +
+                "<td colspan='1'></td></tr>";
+          
+            if(bonus1 != "" && bonus1 != "0.00")
+            {
+                build_html += "<tr>" +
+              "<td colspan='1'><span>Lates</span><br/></td>" +
+              "<td colspan='2'><span>" + "({11})" + "</span></td>" +
+              "<td colspan='1'><span>Pag-Ibig</span></td>" +
+              "<td colspan='2'><span>" + "{12}" + "</span></td>" +
+              "<td colspan='1'><span>13th Month</span></td>" +
+              "<td colspan='2'><span>{21}</span></td>" +
+              "<td colspan='2'><span></span></td>" +
+              "<td colspan='1'></td></tr>";
+            }
+            else
+            {
+                build_html += "<tr>" +
+              "<td colspan='1'><span>Lates</span><br/></td>" +
+              "<td colspan='2'><span>" + "({11})" + "</span></td>" +
+              "<td colspan='1'><span>Pag-Ibig</span></td>" +
+              "<td colspan='2'><span>" + "{12}" + "</span></td>" +
+              "<td colspan='1'><span></span></td>" +
+              "<td colspan='2'><span></span></td>" +
+              "<td colspan='2'><span></span></td>" +
+              "<td colspan='1'></td></tr>";
+            }
+            build_html += "<tr>" +
+             "<td colspan='1'><span>Undertime</span><br/></td>" +
+             "<td colspan='2'><span>" + "{18}" + "</span></td>" +
+             "<td colspan='1'><span>Leave Pay</span></td>" +
+             "<td colspan='2'><span>" + "{17}" + "</span></td>" +
+             "<td colspan='1'><span>Adjustment</span></td>" +
+             "<td colspan='2'><span>" + "{22}" + "</span></td>" +
+             "<td colspan='2'><span></span></td>" +
+             "<td colspan='1'></td></tr>";
+            if (bonus1 != "" && bonus1 != "0.00")
+            {
+                build_html += "<tr>" +
+             "<td colspan='1'><span>Overtime</span><br/></td>" +
+             "<td colspan='2'><span>" + "{19}" + "</span></td>" +
+             "<td colspan='1'><span>Remaining Leave Credit</span></td>" +
+             "<td colspan='2'><span>" + "({16})" + "</span></td>" +
+             "<td colspan='1'><span></span></td>" +
+             "<td colspan='2'><span></span></td>" +
+             "<td colspan='2'><span></span></td>" +
+             "<td colspan='1'></td></tr>";
+            }
+
+            //10/25/2021 Jan fix
+            build_html += "<tr>" +
+             "<td colspan='1'><span>Loan Balance</span><br/></td>" +
+             "<td colspan='2'><span>" + "{8}" + "</span></td>" +
+             "<td colspan='1'><span></span></td>" +
+             "<td colspan='2'><span></span></td>" +
+             "<td colspan='1'><span></span></td>" +
+             "<td colspan='2'><span></span></td>" +
+             "<td colspan='2'><span></span></td>" +
+             "<td colspan='1'></td></tr>";
+
+            build_html += "<tr><td><br/></td></tr></table><br/>";
+            build_html += "<table style=\"width:95%;font-family:Arial\"><tr>" +
+                "<td colspan='2' style=\"text-align:right;padding-right:20px;\"><span>Total Gross Income</span></td>" +
+                "<td colspan='1' style=\"text-align:right;border-top:solid;border-bottom:solid;border-width:thin;padding-top:10px;padding-bottom:5px;\">" +
+                "<span>" + "{13}" + "</span></td>" +
+                "<td colspan='6'><span></span></td>" +
+                "<td colspan='2' style=\"text-align:right;padding-right:20px;\"><span>Total Deduction</span></td>" +
+                "<td colspan='1' style=\"text-align:right;border-top:solid;border-bottom:solid;border-width:thin;padding-top:10px;padding-bottom:5px;\">" +
+                "<span>" + "{14}" + "</span></td></tr>";
+            build_html += "<tr>" +
+                "<td colspan='2'><span></span></td>" +
+                "<td colspan='1' style=\"border-top:solid;border-width:thin\"><span></span></td>" +
+                "<td colspan='6'><span></span></td>" +
+                "<td colspan='2'><span></span></td>" +
+                "<td colspan='1' style=\"border-top:solid;border-width:thin\"><span></span></td></tr>" +
+                "<tr><td><br/></td></tr>";
+            build_html += "<tr>" +
+               "<td colspan='2'><span></span></td>" +
+               "<td colspan='1'><span></span></td>" +
+               "<td colspan='6'><span></span></td>" +
+               "<td colspan='2' style=\"text-align:right;padding-right:70px;\"><span>Net Pay</span></td>" +
+               "<td colspan='1' style=\"text-align:right;border-top:solid;border-bottom:solid;border-width:thin;padding-top:10px;padding-bottom:5px;\">" +
+               "<span style=\"font-size:150%;font-weight:bold\">{15}</span></td></tr>"; ;
+            build_html += "<tr>" +
+                "<td colspan='2'><span></span></td>" +
+                "<td colspan='1'><span></span></td>" +
+                "<td colspan='6'><span></span></td>" +
+                "<td colspan='2'><span></span></td>" +
+                "<td colspan='1' style=\"border-top:solid;border-width:thin\"><span></span></td></tr>" +
+                "<tr><td><br/><br/></td></tr></table>";
+            build_html += "<table style=\"width:100%;font-family:Arial\"><tr>" +
+               "<td colspan='6'><span>I hereby ackowledge to have recived the sum as full payment of my service rendered.</span></td>" +
+               "<td colspan='6' style=\"text-align:right;\"><span>Signature _________________________</span></td>" +
+               "</tr>" +
+               "</table>";
+            build_html += "<table style=\"width:150%;font-family:Arial;border-bottom:dashed\">" +
+               "<tr><td><br/></td></tr></table>";
+            #endregion
+
+
+            //NEW
+            //build_html = "<table id=\"yw2\" style=\"width:100%;font-family:Arial;\">" +
+            //    "<tr>" +
+            //    "<td colspan='6'><span>APP ELECTRIC CORP</span></td>" +
+            //    "</tr>" +
+            //    "<tr>" +
+            //    "<td colspan='6'><span>{0}</span> <span>{1}</span></td>" +
+            //    "</tr>" +
+            //    "</table>" +
+            //    "<table id=\"yw2\" style=\"width:100%;font-family:Arial;\">" +
+            //    "<tr>" +
+            //    "<td colspan='6' style=\"width: 70% \"></td>" +
+            //    "<td colspan='2'></td>" +
+            //    "<td colspan='2'><span>Date Covered: {2}</span></td>" +
+            //    "<td colspan='2'>" +
+            //    "</tr>" +
+            //    "<tr>" +
+            //    "<td colspan='6'></td>" +
+            //    "<td colspan='2'>" +
+            //    "<td colspan='2'><span>Payroll Group: {3}</span></td>" +
+            //    "<td colspan='2'>" +
+            //    "</tr>" +
+            //    "<tr>" +
+            //    "<td colspan='6'></td>" +
+            //    "<td colspan='2'>" +
+            //    "<td colspan='2'><span>Department: {4}</span></td>" +
+            //    "<td colspan='2'>" +
+            //    "</tr>" +
+            //    "</table>" +
+            //    "<table id=\"yw2\" style=\"width:100%;font-family:Arial;\">" +
+            //    "<tr>" +
+            //    "<td><br/></td>" +
+            //    "</tr>" +
+            //    "<tr>" +
+            //    "<td colspan='1'></td>" +
+            //    "<td colspan='2'><span>Amount</span></td>" +
+            //    "<td colspan='1'></td>" +
+            //    "<td colspan='2'></td>" +
+            //    "<td colspan='1'></td>" +
+            //    "<td colspan='2'></td>" +
+            //    "</tr>" +
+            //    "<tr>" +
+            //    "<td colspan='1'><span>Basic Pay</span><br/></td>" +
+            //    "<td colspan='2'><span>{5}</span></td>" +
+            //    "<td colspan='1'><span>SSS</span></td>" +
+            //    "<td colspan='2'><span> {6}</span></td>" +
+            //    "<td colspan='1'><span>CASH AD</span></td>" +
+            //    "<td colspan='2'><span>{7}</span></td>" +
+            //    "<td colspan='2'><span></span></td>" +
+            //    "<td colspan='1'></td>" +
+            //    "</tr>" +
+            //    "<tr>" +
+            //    "<td colspan='1'><span>Absences</span>" +
+            //    "<br/>" +
+            //    "</td>" +
+            //    "<td colspan='2'><span>({9})</span></td>" +
+            //    "<td colspan='1'><span>PhilHealth</span></td>" +
+            //    "<td colspan='2'><span>{10}</span></td>" +
+            //    "<td colspan='1'><span>Holiday Pay</span></td>" +
+            //    "<td colspan='2'><span>{20}</span></td>" +
+            //    "<td colspan='2'><span></span></td>" +
+            //    "<td colspan='1'></td>" +
+            //    "</tr>" +
+            //    "<tr>" +
+            //    "<td colspan='1'><span>Lates</span><br/></td>" +
+            //    "<td colspan='2'><span>({11})</span></td>" +
+            //    "<td colspan='1'><span>Pag-Ibig</span></td>" +
+            //    "<td colspan='2'><span>{12}</span></td>" +
+            //    "<td colspan='1'><span></span></td>" +
+            //    "<td colspan='2'><span></span></td>" +
+            //    "<td colspan='2'><span></span></td>" +
+            //    "<td colspan='1'></td>" +
+            //    "</tr>" +
+            //    "<tr>" +
+            //    "<td colspan='1'><span>Undertime</span><br/></td>" +
+            //    "<td colspan='2'><span>{18}</span></td>" +
+            //    "<td colspan='1'><span>Leave Pay</span></td>" +
+            //    "<td colspan='2'><span>{17}</span></td>" +
+            //    "<td colspan='1'><span>Adjustment</span></td>" +
+            //    "<td colspan='2'><span>{22}</span></td>" +
+            //    "<td colspan='2'><span></span></td>" +
+            //    "<td colspan='1'></td>" +
+            //    "</tr>" +
+            //    "<tr>" +
+            //    "<td colspan='1'><span>Overtime</span><br/></td>" +
+            //    "<td colspan='2'><span>{19}</span></td>" +
+            //    "<td colspan='1'><span>Remaining Leave Credit</span></td>" +
+            //    "<td colspan='2'><span>({16})</span></td>" +
+            //    "<td colspan='1'><span></span></td>" +
+            //    "<td colspan='2'><span></span></td>" +
+            //    "<td colspan='2'><span></span></td>" +
+            //    "<td colspan='1'></td>" +
+            //    "</tr>" +
+            //    "<tr>" +
+            //    "<td colspan='1'><span>Loan Balance</span><br/></td>" +
+            //    "<td colspan='2'><span>{8}</span></td>" +
+            //    "<td colspan='1'><span></span></td>" +
+            //    "<td colspan='2'><span></span></td>" +
+            //    "<td colspan='1'><span></span></td>" +
+            //    "<td colspan='2'><span></span></td>" +
+            //    "<td colspan='2'><span></span></td>" +
+            //    "<td colspan='1'></td>" +
+            //    "</tr>" +
+            //    "<tr>" +
+            //    "<td><br/></td>" +
+            //    "</tr>" +
+            //    "</table>" +
+            //    "<br/>" +
+            //    "<table style=\"width:95%;font-family:Arial\">" +
+            //    "<tr>" +
+            //    "<td colspan='2' style=\"text-align:right;padding-right:20px;\"><span>Total Gross Income</span></td>" +
+            //    "<td colspan='1' style=\"text-align:right;border-top:solid;border-bottom:solid;border-width:thin;padding-top:10px;padding-bottom:5px;\"><span>{13}</span></td>" +
+            //    "<td colspan='6'><span></span></td><td colspan='2' style=\"text-align:right;padding-right:20px;\"><span>Total Deduction</span></td>" +
+            //    "<td colspan='1' style=\"text-align:right;border-top:solid;border-bottom:solid;border-width:thin;padding-top:10px;padding-bottom:5px;\"><span>{14}</span></td>" +
+            //    "</tr>" +
+            //    "<tr>" +
+            //    "<td colspan='2'><span></span></td><td colspan='1' style=\"border-top:solid;border-width:thin\"><span></span></td>" +
+            //    "<td colspan='6'><span></span></td><td colspan='2'><span></span></td>" +
+            //    "<td colspan='1' style=\"border-top:solid;border-width:thin\"><span></span></td>" +
+            //    "</tr>" +
+            //    "<tr>" +
+            //    "<td><br/></td>" +
+            //    "</tr>" +
+            //    "<tr><td colspan='2'><span></span></td><td colspan='1'><span></span></td>" +
+            //    "<td colspan='6'><span></span></td>" +
+            //    "<td colspan='2' style=\"text-align:right;padding-right:70px;\"><span>Net Pay</span></td>" +
+            //    "<td colspan='1' style=\"text-align:right;border-top:solid;border-bottom:solid;border-width:thin;padding-top:10px;padding-bottom:5px;\"><span style=\"font-size:150%;font-weight:bold\">{15}</span></td>" +
+            //    "</tr><tr>" +
+            //    "<td colspan='2'><span></span></td>" +
+            //    "<td colspan='1'><span></span></td>" +
+            //    "<td colspan='6'><span></span></td>" +
+            //    "<td colspan='2'><span></span></td>" +
+            //    "<td colspan='1' style=\"border-top:solid;border-width:thin\"><span></span></td>" +
+            //    "</tr>" +
+            //    "<tr>" +
+            //    "<td><br/><br/></td>" +
+            //    "</tr>" +
+            //    "</table>" +
+            //    "<table style=\"width:100%;font-family:Arial\">" +
+            //    "<tr>" +
+            //    "<td colspan='6'><span>I hereby ackowledge to have recived the sum as full payment of my service rendered.</span></td><td colspan='6' style=\"text-align:right;\"><span>Signature _________________________</span></td>" +
+            //    "</tr>" +
+            //    "</table>" +
+            //    "<table style=\"width:150%;font-family:Arial;border-bottom:dashed\">" +
+            //    "<tr>" +
+            //    "<td><br/></td>" +
+            //    "</tr>" +
+            //    "</table>";
+            return build_html;
+        }
+        public string paysliphtmlNew()
+        {
+            #region build_html
+            string build_html = "";
+            build_html += "<table id=\"yw2\" style=\"width:150%;font-family:Arial;\"><tr><td colspan='6'><span>APP ELECTRIC CORP</span></td></tr>";
+            build_html += "<tr><td colspan='6'><span>" + "{0}" + "</span> <span>" + "{1}" + "</span></td></tr>";
+            build_html += "<tr><td colspan='5'></td><td colspan='2'><span>Date Covered: " +
+                "{2}" + "</span></td></tr>";
+            build_html += "<tr><td colspan='5'></td><td colspan='2'><span>Payroll Group: " +
+                "{3}" + "</span></td></tr>";
+            build_html += "<tr><td colspan='5'></td><td colspan='2'><span>Department: " +
+                "{4}" + "</span></td></tr>";
+            build_html += "<tr><td><br/></td></tr>";
+            build_html += "<tr><td colspan='1'></td><td colspan='2'><span>Amount</span></td>" +
+                "<td colspan='1'></td><td colspan='2'></td>" +
+                "<td colspan='1'></td><td colspan='2'></td></tr>";
+            build_html += "<tr>" +
+                "<td colspan='1'><span>Basic Pay</span><br/></td>" +
+                "<td colspan='2'><span>" + "{5}" + "</span></td>" +
+                "<td colspan='1'><span>SSS</span></td>" +
+                "<td colspan='2'><span> {6}</span></td>" +
+                "<td colspan='1'><span>CASH AD</span></td>" +
+                "<td colspan='2'><span>" + "{7}" + "</span></td>" +
+                "</tr>";
+            build_html += "<tr>" +
+                "<td colspan='1'><span>Absences</span><br/></td>" +
+                "<td colspan='2'><span>" + "({9})" + "</span></td>" +
+                "<td colspan='1'><span>PhilHealth</span></td>" +
+                "<td colspan='2'><span>" + "{10}" + "</span></td>" +
+                "<td colspan='1'><span>Holiday Pay</span></td>" +
+                "<td colspan='2'><span>" + "{20}" + "</span></td>" +
+                "</tr>";
+
+            if (bonus1 != "" && bonus1 != "0.00")
+            {
+                build_html += "<tr>" +
+              "<td colspan='1'><span>Lates</span><br/></td>" +
+              "<td colspan='2'><span>" + "({11})" + "</span></td>" +
+              "<td colspan='1'><span>Pag-Ibig</span></td>" +
+              "<td colspan='2'><span>" + "{12}" + "</span></td>" +
+              "<td colspan='1'><span>13th Month</span></td>" +
+              "<td colspan='2'><span>{21}</span></td>" +
+              "</tr>";
+            }
+            else
+            {
+                build_html += "<tr>" +
+              "<td colspan='1'><span>Lates</span><br/></td>" +
+              "<td colspan='2'><span>" + "({11})" + "</span></td>" +
+              "<td colspan='1'><span>Pag-Ibig</span></td>" +
+              "<td colspan='2'><span>" + "{12}" + "</span></td>" +
+              "<td colspan='1'><span></span></td>" +
+              "<td colspan='2'><span></span></td>" +
+              "</tr>";
+            }
+            build_html += "<tr>" +
+             "<td colspan='1'><span>Undertime</span><br/></td>" +
+             "<td colspan='2'><span>" + "{18}" + "</span></td>" +
+             "<td colspan='1'><span>Leave Pay</span></td>" +
+             "<td colspan='2'><span>" + "{17}" + "</span></td>" +
+             "<td colspan='1'><span>Adjustment</span></td>" +
+             "<td colspan='2'><span>" + "{22}" + "</span></td>" +
+             "</tr>";
+            build_html += "<tr>" +
+             "<td colspan='1'><span>Overtime</span><br/></td>" +
+             "<td colspan='2'><span>" + "{19}" + "</span></td>" +
+             "<td colspan='1'><span>Remaining Leave Credit</span></td>" +
+             "<td colspan='2'><span>" + "({16})" + "</span></td>" +
+             "<td colspan='1'><span></span></td>" +
+             "<td colspan='2'><span></span></td>" +
+             "</tr>";
+
+            //10/25/2021 Jan fix
+            build_html += "<tr>" +
+             "<td colspan='1'><span>Loan Balance</span><br/></td>" +
+             "<td colspan='2'><span>" + "{8}" + "</span></td>" +
+             "<td colspan='1'><span></span></td>" +
+             "<td colspan='2'><span></span></td>" +
+             "<td colspan='1'><span></span></td>" +
+             "<td colspan='2'><span></span></td>" +
+             "</tr>";
+
+            build_html += "<tr><td><br/></td></tr></table><br/>";
+            build_html += "<table style=\"width:95%;font-family:Arial\"><tr>" +
+                "<td colspan='2' style=\"text-align:right;padding-right:20px;\"><span>Total Gross Income</span></td>" +
+                "<td colspan='1' style=\"text-align:right;border-top:solid;border-bottom:solid;border-width:thin;padding-top:10px;padding-bottom:5px;\">" +
+                "<span>" + "{13}" + "</span></td>" +
+                "<td colspan='6'><span></span></td>" +
+                "<td colspan='2' style=\"text-align:right;padding-right:20px;\"><span>Total Deduction</span></td>" +
+                "<td colspan='1' style=\"text-align:right;border-top:solid;border-bottom:solid;border-width:thin;padding-top:10px;padding-bottom:5px;\">" +
+                "<span>" + "{14}" + "</span></td></tr>";
+            build_html += "<tr>" +
+                "<td colspan='2'><span></span></td>" +
+                "<td colspan='1' style=\"border-top:solid;border-width:thin\"><span></span></td>" +
+                "<td colspan='6'><span></span></td>" +
+                "<td colspan='2'><span></span></td>" +
+                "<td colspan='1' style=\"border-top:solid;border-width:thin\"><span></span></td></tr>" +
+                "<tr><td><br/></td></tr>";
+            build_html += "<tr>" +
+               "<td colspan='2'><span></span></td>" +
+               "<td colspan='1'><span></span></td>" +
+               "<td colspan='6'><span></span></td>" +
+               "<td colspan='2' style=\"text-align:right;padding-right:70px;\"><span>Net Pay</span></td>" +
+               "<td colspan='1' style=\"text-align:right;border-top:solid;border-bottom:solid;border-width:thin;padding-top:10px;padding-bottom:5px;\">" +
+               "<span style=\"font-size:150%;font-weight:bold\">{15}</span></td></tr>"; ;
+            build_html += "<tr>" +
+                "<td colspan='2'><span></span></td>" +
+                "<td colspan='1'><span></span></td>" +
+                "<td colspan='6'><span></span></td>" +
+                "<td colspan='2'><span></span></td>" +
+                "<td colspan='1' style=\"border-top:solid;border-width:thin\"><span></span></td></tr>" +
+                "<tr><td><br/><br/></td></tr></table>";
+            build_html += "<table style=\"width:100%;font-family:Arial\"><tr>" +
+               "<td colspan='6'><span>I hereby ackowledge to have recived the sum as full payment of my service rendered.</span></td>" +
+               "<td colspan='6' style=\"text-align:right;\"><span>Signature _________________________</span></td>" +
+               "</tr>" +
+               "</table>";
+            build_html += "<table style=\"width:150%;font-family:Arial;border-bottom:dashed\">" +
+               "<tr><td><br/></td></tr></table>";
+            #endregion
+
+
+
+            return build_html;
+        }
+
+        public string populatehtml(string cutoffid, string empno)
+        {
+            string finalhtml = "";
+            #region string format for the html
+            /* Do not delete this
+             * This is the reference for the string format.
+                0 - empno
+                1 - name
+                2 - date covered
+                3 - payrollgroup
+                4 - department
+                5 - basic pay
+                6 - sss
+                7 - cash adv
+                8 - loan bal
+                9 - absentded
+                10 - philhealth
+                11 - lates
+                12 - pagibig
+                13 - total gross income
+                14 - total deduction
+                15 - net pay
+                16 - remainingleavescredit
+                17 - leave pay
+                18 - undertime
+                19 - overtime pay
+                20 - holiday pay
+                21 - bonus(13th month)
+
+                22 - adjustment //12/17/2021
+            */
+            #endregion string format for the html
+
+            if (empno == null || empno == "" || empno == "ALL")
+            {
+                List<Payroll.Payslip> listps = new List<Payroll.Payslip>();
+                listps = pr.GetPayslipBulk(cutoffid);
+                int i = 0;
+                foreach (Payroll.Payslip ps in listps)
+                {
+                    List<string> loanids = new List<string>();
+                    Dictionary<string, string> loan_name_amount = new Dictionary<string, string>();
+                    loanids = cm.GetListDataFromDB("TOP 3 loanEntryID", "TBL_LOANPAYMENTHISTORY", "where EmpID = '" + ps.empno + "' and CutoffID = '" + cutoffid + "'");
+                    foreach (string loanid in loanids)
+                    {
+                        string val1 = "", val2 = "";
+                        //cm.GetTwoDataFromDB("Name", "DedAmount", "TBL_LOANENTRIES", "where id = " + loanid + "", out val1, out val2);
+                        cm.GetTwoDataFromDB("A.Name", "B.AmountPaid", "TBL_LOANENTRIES A, TBL_LOANPAYMENTHISTORY B", "where A.id = B.loanEntryID AND A.id = " + loanid + " AND B.CutoffID = '" + cutoffid + "'", out val1, out val2);
+                        if (val1 != "" && val2 != "")
+                        {
+                            loan_name_amount.Add(val1, val2);
+                        }
+
+                    }
+                    if (ps.bonus != "")  bonus1 = pr.toRoundOff(ps.bonus);
+                    else bonus1 = "";
+                    i++;
+                    finalhtml += string.Format(paysliphtml(loan_name_amount), ps.empno, ps.empname, ps.date_covered, ps.payrollgroup,
+                    ps.department, pr.toRoundOff(ps.basicpay), pr.toRoundOff(ps.sss), ps.cash_adv, ps.loanbal, ps.absentded, pr.toRoundOff(ps.philhealth), pr.toRoundOff(ps.lates), pr.toRoundOff(ps.pagibig),
+                    pr.toRoundOff(ps.totalgrossincome), pr.toRoundOff(ps.totaldeduction),pr.toRoundOff(ps.netpay),ps.remainingleavecredit, pr.toRoundOff(ps.leavepay), pr.toRoundOff(ps.utded), pr.toRoundOff(ps.otpay), pr.toRoundOff(ps.holidaypay)
+                    , bonus1, pr.toRoundOff(ps.adjustment));
+                    if (i == 2)
+                    {
+                        finalhtml += "<h2 style = \"page-break-after:always\" ></h2>";
+                        i = 0;
+                    }
+
+                }
+            }
+            else
+            {                
+                Payroll.Payslip ps = new Payroll.Payslip();
+                List<string> loanids = new List<string>();
+                Dictionary<string, string> loan_name_amount = new Dictionary<string, string>();
+                loanids = cm.GetListDataFromDB("TOP 3 loanEntryID", "TBL_LOANPAYMENTHISTORY", "where EmpID = '" + ps.empno + "' and CutoffID = '" + cutoffid + "'");
+                foreach (string loanid in loanids)
+                {
+                    string val1 = "", val2 = "";
+                    //cm.GetTwoDataFromDB("Name", "DedAmount", "TBL_LOANENTRIES", "where id = " + loanid + "", out val1, out val2);
+                    cm.GetTwoDataFromDB("A.Name", "B.AmountPaid", "TBL_LOANENTRIES A, TBL_LOANPAYMENTHISTORY B", "where A.id = B.loanEntryID AND A.id = " + loanid + " AND B.CutoffID = '" + cutoffid + "'", out val1, out val2);
+                    if (val1 != "" && val2 != "")
+                    {
+                        loan_name_amount.Add(val1, val2);
+                    }
+
+                }
+                if (ps.bonus != "") bonus1 = pr.toRoundOff(ps.bonus);
+                else bonus1 = "";
+                ps = pr.GetPayslip(cutoffid, empno);
+                if (ps == null)
+                {
+                    return finalhtml = "";
+                }
+                finalhtml += string.Format(paysliphtml(loan_name_amount), ps.empno, ps.empname, ps.date_covered, ps.payrollgroup,
+                    ps.department, pr.toRoundOff(ps.basicpay), pr.toRoundOff(ps.sss), ps.cash_adv, ps.loanbal, ps.absentded, pr.toRoundOff(ps.philhealth), pr.toRoundOff(ps.lates), pr.toRoundOff(ps.pagibig),
+                    pr.toRoundOff(ps.totalgrossincome), pr.toRoundOff(ps.totaldeduction), pr.toRoundOff(ps.netpay), ps.remainingleavecredit, pr.toRoundOff(ps.leavepay), pr.toRoundOff(ps.utded), pr.toRoundOff(ps.otpay), pr.toRoundOff(ps.holidaypay)
+                    , bonus1, pr.toRoundOff(ps.adjustment));
+            }
+
+
+
+            return finalhtml;
+
+        }
+
+        protected void Export(object sender, EventArgs e)
+        {
+
+        }
+    }
+}

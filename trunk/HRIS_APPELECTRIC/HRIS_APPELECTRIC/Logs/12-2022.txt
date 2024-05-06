@@ -1,0 +1,6 @@
+INSERT INTO TBL_ACTIVERECORDLOG VALUES('User DEVELOPER Merged DTR for Pay Period:---Select Pay Period---','MERGE','x123','qwg-23','MERGE','12-05-2022','00000')
+INSERT INTO TBL_ACTIVERECORDLOG VALUES('User DEVELOPER Merged DTR for Pay Period:---Select Pay Period---','MERGE','x123','qwg-23','MERGE','12-05-2022','00000')
+INSERT INTO TBL_ACTIVERECORDLOG VALUES('User DEVELOPER Merged DTR for Pay Period:---Select Pay Period---','MERGE','x123','qwg-23','MERGE','12-07-2022','00000')
+INSERT INTO TBL_ACTIVERECORDLOG VALUES('User DEVELOPER Merged DTR for Pay Period:---Select Pay Period---','MERGE','x123','qwg-23','MERGE','12-12-2022','00000')
+INSERT INTO TBL_ACTIVERECORDLOG VALUES('User DEVELOPER Merged DTR for Pay Period:---Select Pay Period---','MERGE','x123','qwg-23','MERGE','12-13-2022','00000')
+INSERT INTO TBL_ACTIVERECORDLOG VALUES('User DEVELOPER Merged DTR for Pay Period:---Select Pay Period---','MERGE','x123','qwg-23','MERGE','12-29-2022','00000')

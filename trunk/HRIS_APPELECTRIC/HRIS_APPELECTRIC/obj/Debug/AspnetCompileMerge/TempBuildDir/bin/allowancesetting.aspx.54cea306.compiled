@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/Employees/201/AllowanceSetting.aspx" hash="fffffffb122f315e" filehash="e2fc173018398316" flags="110000" assembly="App_Web_ips2wyvm" type="ASP.pages_admin_employees_201_allowancesetting_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/Employees/201/AllowanceSetting.aspx" />
+    </filedeps>
+</preserve>

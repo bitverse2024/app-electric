@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/createlocation.aspx" hash="fffffffb122f315e" filehash="e2fc00e025e4dce1" flags="110000" assembly="App_Web_1gaze43t" type="ASP.pages_admin_createlocation_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/createlocation.aspx" />
+    </filedeps>
+</preserve>

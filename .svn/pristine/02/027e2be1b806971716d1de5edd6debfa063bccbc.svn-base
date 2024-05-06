@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/createPayClass.aspx" hash="2e7cb0847" filehash="fd3bb1926247b20" flags="110000" assembly="App_Web_ombe5zcw" type="ASP.pages_admin_createpayclass_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/createPayClass.aspx" />
+    </filedeps>
+</preserve>

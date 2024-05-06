@@ -1,0 +1,101 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace HRIS_APPELECTRIC.Pages.Admin.PayrollPages
+{
+    public partial class createded : System.Web.UI.Page
+    {
+        public string empno = "";
+        Employee emp = new Employee();
+        Common cm = new Common();
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            empno = Request.QueryString["empid"];
+            if (!IsPostBack)
+            {
+                ddlCutoff.Items.AddRange(emp.GetDropDownMenuList("TBL_CUTOFF", "CDesc"));
+                //refresh();
+            }
+
+        }
+        void clearfield()
+        {
+            ddlCutoff.SelectedValue = "";
+            txtSSS.Value = "";
+            txtPhilhealth.Value = "";
+            txtPagibig.Value = "";
+            //txtLates.Value = "";
+        }
+
+        protected void btnCreate_Click(object sender, EventArgs e)
+        {
+            if (!cm.ItemExist("TBL_DEDUCTIONADJ", "id", "where EmpID = '" + empno + "' and CutOffID =" + ddlCutoff.SelectedValue + "", ""))
+            {
+                string confirmValue = Request.Form["confirm_value"];
+                if (confirmValue == "Yes")
+                {
+                    if (emp.InsertQueryCommon(saveParam(), "TBL_DEDUCTIONADJ"))
+                    {
+                        ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully Save !!!');", true);
+                        clearfield();
+                        //cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " created CUT OFF " + CODesc.Value,
+                        //        "CREATE", "x123", "qwg-23", "CREATE", Session["EMP_ID"].ToString());
+                        //ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully Save !!!');", true);
+
+                    }
+                    else
+                    {
+                        ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Create Deduction Failed !!!');", true);
+                        clearfield();
+                    }
+                }
+            }
+            else
+            {
+                ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Deduction Exist!!!');", true);
+                clearfield();
+
+            }
+        }
+        Dictionary<string, string> saveParam()
+        {
+            
+            
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            param.Add("EmpID", "'" + empno + "'");
+            param.Add("CutOffID", "" + ddlCutoff.SelectedValue + "");
+            if (!string.IsNullOrEmpty(txtSSS.Value))
+            {
+                param.Add("SSSDed", ""+txtSSS.Value+"");
+
+            }
+            if (!string.IsNullOrEmpty(txtPhilhealth.Value))
+            {
+                param.Add("PhilDed", "" + txtPhilhealth.Value + "");
+
+            }
+            if (!string.IsNullOrEmpty(txtPagibig.Value))
+            {
+                param.Add("PagibigDed", "" + txtPagibig.Value + "");
+
+            }
+            
+            //    param.Add("SSSDed", txtSSS.Value == "" ? DBNull.Value : (object)txtSSS.Value)
+            ////param.Add("SSSDed", "" + txtSSS.Value == "" ? DBNull.Value : txtSSS.Value + "");
+            //param.Add("PhilDed", "" + txtPhilhealth.Value == "" ? DBNull.Value.ToString() : txtPhilhealth.Value + "");
+            //param.Add("PagibigDed", "" + txtPagibig.Value == "" ? DBNull.Value.ToString() : txtPagibig.Value + "");
+            //param.Add("LatesDed", "" + txtLates.Value == "" ? DBNull.Value.ToString() : txtLates.Value + "");
+
+            return param;
+        }
+
+        protected void btnReset_Click(object sender, EventArgs e)
+        {
+
+        }
+    }
+}

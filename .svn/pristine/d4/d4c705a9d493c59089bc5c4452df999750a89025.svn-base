@@ -1,0 +1,159 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+
+namespace HRIS_APPELECTRIC.Pages.Admin
+{
+    public partial class hrmrlist : System.Web.UI.Page
+    {
+        Timekeeping tk = new Timekeeping();
+        Employee emp = new Employee();
+        Common cm = new Common();
+        public int gridtotalcount = 0;
+        public string gridrangecount = "";
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                if (Session["ROLES"].ToString() != "admin")
+                {
+                    Response.Redirect("~/Pages/Login.aspx");
+                }
+                refresh();
+            }
+        }
+        public bool isrequestenabled(object tag, object daterequest)
+        {
+            //string reqdate = daterequest.ToString();
+
+            //DateTime dt = Convert.ToDateTime(daterequest.ToString());
+            DateTime dt = Convert.ToDateTime(cm.FormatDate(daterequest.ToString()));
+            //string dat = dt.ToString("dd/MM/yyyy");
+
+            double nodays = cm.get_days_Difference(DateTime.Now, dt);
+
+            string strtag = tag.ToString();
+            bool ret = true;
+            if (strtag.ToLowerInvariant() != "request")
+                ret = false;
+            if (nodays > 60 || nodays < 1)
+                ret = false;
+            return ret;
+
+        }
+
+        public bool ishiringenabled(object tag)
+        {
+            string strtag = tag.ToString();
+            bool ret = true;
+            if (strtag.ToLowerInvariant() != "hiring")
+                ret = false;
+            if (strtag.ToLowerInvariant() == "request")
+                ret = false;
+
+            return ret;
+
+        }
+        void refresh()
+        {
+            DataTable dt = new DataTable();
+            dt = emp.populateGridHRMR();
+            GridViewList.DataSource = dt;
+            GridViewList.DataBind();
+            ViewState["EMP_GRID"] = dt;
+            ViewState["SORTDR"] = null;
+            summary();
+        }
+        void summary()
+        {
+            gridtotalcount = ((DataTable)ViewState["EMP_GRID"]).Rows.Count;
+            int pageIndex = GridViewList.PageIndex;
+            int c = (pageIndex > 0 ? 10 * pageIndex : 0) + GridViewList.Rows.Count;
+            gridrangecount = (c > 0 ? c : 0) + " - " + gridtotalcount;
+        }
+        protected void sort_grid(string sort_args)
+        {
+            DataTable dt = (DataTable)ViewState["EMP_GRID"];
+            if (dt.Rows.Count > 0)
+            {
+                if (Convert.ToString(ViewState["SORTDR"]) == "Asc")
+                {
+                    dt.DefaultView.Sort = sort_args + " Desc";
+                    ViewState["SORTDR"] = "Desc";
+                }
+                else
+                {
+                    dt.DefaultView.Sort = sort_args + " Asc";
+                    ViewState["SORTDR"] = "Asc";
+                }
+
+                GridViewList.DataSource = dt;
+                GridViewList.DataBind();
+                summary();
+
+            }
+
+        }
+        protected void txtItem_TextChanged(object sender, EventArgs e)
+        {
+            //awong-retrieve textbox values from the grid control during runtime.
+            GridViewRow currentRow = (GridViewRow)((TextBox)sender).Parent.Parent;
+            string txtSearchDiv = ((TextBox)currentRow.FindControl("txtSearchDiv")).Text;
+            string txtSearchDept = ((TextBox)currentRow.FindControl("txtSearchDept")).Text;
+            string txtSearchPos = ((TextBox)currentRow.FindControl("txtSearchPos")).Text;
+            string txtSearchBdate = ((TextBox)currentRow.FindControl("txtSearchBdate")).Text;
+            string expr = emp.build_or_like_param(true, saveSearchParam(txtSearchDiv, txtSearchDept, txtSearchPos, txtSearchBdate));
+            //string expr = "and (license_type like '%" + lictype + "%' or license_no like '%" + licno + "%' or lic_expirydate like '%" + licdate + "%')";
+            //GridViewList.DataSource = emp.populateGridSearch((DataTable)ViewState["EMP_GRID"], expr);
+            GridViewList.DataSource = emp.populateGridHRMRCol(expr);
+            GridViewList.DataBind();
+
+
+
+        }
+        Dictionary<string, string> saveSearchParam(string txtSearchDiv, string txtSearchDept, string txtSearchPos, string txtSearchBdate)
+        {
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            param.Add("DivName", "'%" + txtSearchDiv + "%'");
+            param.Add("DeptName", "'%" + txtSearchDept + "%'");
+            param.Add("PositionName", "'%" + txtSearchPos + "%'");
+            param.Add("startmonth", "'%" + txtSearchBdate + "%'");
+
+            return param;
+
+
+        }
+        protected void GridViewList_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            GridViewList.PageIndex = e.NewPageIndex;
+            refresh();
+        }
+        protected void GridViewList_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (e.CommandName == "Sort")
+            {
+                sort_grid(e.CommandArgument.ToString());
+
+            }
+            if (e.CommandName == "req")
+            {
+                Response.Redirect("~/Pages/Admin/createmr.aspx?id=" + e.CommandArgument.ToString());
+
+            }
+            if (e.CommandName == "del")
+            {
+                emp.DeleteQuery("TBL_HRMR", "where id =" + e.CommandArgument.ToString() + "");
+                refresh();
+                ScriptManager.RegisterStartupScript(this, this.GetType(),
+                "alert",
+                "alert('Successfully Deleted');",
+                true);
+
+            }
+        }
+    }
+}

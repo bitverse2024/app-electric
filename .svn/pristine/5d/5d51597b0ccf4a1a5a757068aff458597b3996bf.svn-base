@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/Employees/CreateEmployee.aspx" hash="2e7cb0847" filehash="f02c4a5cfff29db9" flags="110000" assembly="App_Web_ge1h3b5w" type="ASP.pages_admin_employees_createemployee_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/Employees/CreateEmployee.aspx" />
+    </filedeps>
+</preserve>

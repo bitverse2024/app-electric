@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/PayrollPages/processpayroll.aspx" hash="2e7cb0847" filehash="fd3a772562311c6" flags="110000" assembly="App_Web_2pyfv1ip" type="ASP.pages_admin_payrollpages_processpayroll_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/PayrollPages/processpayroll.aspx" />
+    </filedeps>
+</preserve>

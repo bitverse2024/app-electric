@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+  For more information on how to configure your ASP.NET application, please visit
+  https://go.microsoft.com/fwlink/?LinkId=169433
+  -->
+<configuration>
+  <appSettings>
+    <!--<add key="201FileDirectory" value="C:\Users\Bitverse Developer\Desktop\Consultant Files\HRISASP\"/>-->
+    <add key="SMTP" value="smtp.gmail.com" />
+    <add key="mailUserName" value="bvhris.net@gmail.com" />
+    <add key="mailPassword" value="b!tVeRsE2o20" />
+    <!--<add key="mailUserName" value="ajwong029@gmail.com"/>
+    <add key="mailPassword" value="ajwong0411"/>-->
+    <add key="mailPort" value="587" />
+    <add key="passwordexpry" value="90" />
+    <!--<add key="SMTP" value="mail.bit-verse.com"/>
+    <add key="mailUserName" value="awong@bit-verse.com"/>
+    <add key="mailPassword" value="P@ssw0rd123"/>
+    <add key="mailPort" value="587"/>-->
+    <add key="SecretKey" value="6LfWK9gUAAAAAOz9_2IdKh7V43B9tQI1Ar5Q3pbP" />
+    <add key="ValidationSettings:UnobtrusiveValidationMode" value="None" />
+  </appSettings>
+
+  <connectionStrings>
+    <add name="conn" connectionString="Server=DESKTOP-KR2Q1CH\SQLEXPRESS01;Database=DB_A56D75_hrisappelectric;Trusted_Connection=True;" providerName="System.Data.SqlClient" />
+    <!--DO NOT MODIFY THIS CONNECTION . THIS CONNECTION IS USED FOR AZURE DEPLOYMENT-->
+    <add name="conn_azure" connectionString="Server=tcp:bitverse.database.windows.net,1433;Initial Catalog=HRIS_DB;Persist Security Info=False;User ID=BitverseAdmin;Password=Bv_bitverse111;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;" providerName="System.Data.SqlClient" />
+    <!--DO NOT MODIFY THIS CONNECTION . THIS CONNECTION IS USED FOR MYASP.NET DEPLOYMENT-->
+    <add name="conn1" connectionString="Data Source=sql5052.site4now.net;Initial Catalog=DB_A56D75_hrisappelectric;User Id=DB_A56D75_hrisappelectric_admin;Password=B3stASP#!;" providerName="System.Data.SqlClient" />
+    
+  </connectionStrings>
+  <system.web>
+    <customErrors mode="Off"/>
+    <compilation debug="true" targetFramework="4.6.1" />
+    <authentication mode="Forms">
+      <forms loginUrl="login.aspx">
+
+        <credentials passwordFormat="SHA1">
+
+          <user name="bitversecorp" password="5BAA61E4C9B93F3F0682250B6CF8331B7EE68FD8" />
+
+        </credentials>
+
+      </forms>
+
+    </authentication>
+    <httpRuntime targetFramework="4.6.1" />
+    <pages>
+      <namespaces>
+        <add namespace="System.Web.Optimization" />
+      </namespaces>
+      <controls>
+        <add assembly="Microsoft.AspNet.Web.Optimization.WebForms" namespace="Microsoft.AspNet.Web.Optimization.WebForms" tagPrefix="webopt" />
+      </controls>
+    </pages>
+  </system.web>
+  <runtime>
+    <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1"> 
+      <dependentAssembly>
+        <assemblyIdentity name="Antlr3.Runtime" publicKeyToken="eb42632606e9261f" />
+        <bindingRedirect oldVersion="0.0.0.0-3.5.0.2" newVersion="3.5.0.2" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="Newtonsoft.Json" publicKeyToken="30ad4fe6b2a6aeed" />
+        <bindingRedirect oldVersion="0.0.0.0-11.0.0.0" newVersion="11.0.0.0" />
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="WebGrease" publicKeyToken="31bf3856ad364e35" />
+        <bindingRedirect oldVersion="0.0.0.0-1.6.5135.21930" newVersion="1.6.5135.21930" />
+      </dependentAssembly>      
+    </assemblyBinding>
+  </runtime>
+  <system.codedom>
+    <compilers>
+      <compiler language="c#;cs;csharp" extension=".cs" type="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.CSharpCodeProvider, Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" warningLevel="4" compilerOptions="/langversion:default /nowarn:1659;1699;1701" />
+      <compiler language="vb;vbs;visualbasic;vbscript" extension=".vb" type="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.VBCodeProvider, Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" warningLevel="4" compilerOptions="/langversion:default /nowarn:41008 /define:_MYTYPE=\&quot;Web\&quot; /optionInfer+" />
+    </compilers>
+  </system.codedom>
+</configuration>

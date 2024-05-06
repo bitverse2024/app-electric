@@ -1,0 +1,354 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace HRIS_APPELECTRIC.Pages.Admin.TK
+{
+    public partial class EmployeeScheduler : System.Web.UI.Page
+    {
+        Employee emp = new Employee();
+        Common cm = new Common();
+        public int gridtotalcount = 0;
+        public string gridrangecount = "";
+        Timekeeping tk = new Timekeeping();
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                refresh();
+            }
+        }
+        public string getname()
+        {
+            string name = "";
+            name = emp.GetEmployeeName(Session["ACTIVE_EMPNO"].ToString());
+
+            return name;
+
+        }
+        void refresh()
+        {
+            DataTable dt = new DataTable();
+
+            dt = new DataTable();
+            dt = tk.populateGridFlexiSched(Session["ACTIVE_EMPNO"].ToString());
+            GridScheduleFiled.DataSource = dt;
+            GridScheduleFiled.DataBind();
+            ViewState["EMP_GRID1"] = dt;
+            ViewState["SORTDR_1"] = null;
+            summary();
+        }
+        void summary()
+        {
+            gridtotalcount = ((DataTable)ViewState["EMP_GRID1"]).Rows.Count;
+            int pageIndex = GridScheduleFiled.PageIndex;
+            int c = (pageIndex > 0 ? 15 * pageIndex : 0) + GridScheduleFiled.Rows.Count;
+            gridrangecount = (c > 0 ? c : 0) + " - " + gridtotalcount;
+        }
+        protected void btnCreate_Click(object sender, EventArgs e)
+        {
+            string confirmValue = Request.Form["confirm_value"];
+
+            if (confirmValue == "Yes")
+            {
+                if (cm.ItemExist("TBL_FLEXISCHED", "*", "where EmpID = '" + Session["ACTIVE_EMPNO"].ToString() + "' and BussDate = '" + txtDate.Value + "'", ""))
+                {
+                    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Duplicate schedule is not allowed.');", true);
+                    return;
+                }
+
+                if (cm.InsertQueryCommon(saveParam(), "TBL_FLEXISCHED"))
+                {
+
+
+                    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Schedule successfully added.');", true);
+                    reset();
+                    refresh();
+
+                    //Response.Redirect("~/Pages/Admin/TK/EmployeeScheduler.aspx");
+                    //Response.Redirect("~/Pages/Admin/TK/EmployeeListForScheduler.aspx");
+
+
+
+
+
+
+
+                }
+            }
+        }
+        private void addlogs()
+        {
+            string schedule = "";
+            if (cbRestday.Checked)
+            {
+                schedule = "Sched_TimeIn = 'RD' AND Sched_TimeOut = 'RD'";
+            }
+            else
+            {
+                schedule = "Sched_TimeIn = '" + txtTimeIn.Value + "' AND '" + txtTimeOut.Value + "'";
+            }
+            cm.AddLog("User " + Session["EMP_ID"].ToString() + " - " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " CREATE SCHEDULE FOR EMPLOYEE NUMBER" + Session["ACTIVE_EMPNO"].ToString() + " DATE = " + txtDate.Value + " SCHEDULE " + schedule + "",
+                    "CREATE", "x123", "qwg-23", "CREATE", Session["EMP_ID"].ToString());
+
+        }
+        Dictionary<string, string> saveParam()
+        {
+            Dictionary<string, string> param = new Dictionary<string, string>();
+
+            param.Add("EmpID", "'" + Session["ACTIVE_EMPNO"].ToString() + "'");
+            param.Add("BussDate", "'" + txtDate.Value + "'");
+            if (cbRestday.Checked)
+            {
+                param.Add("Sched_TimeIn", "'RD'");
+                param.Add("Sched_TimeOut", "'RD'");
+            }
+            else
+            {
+                param.Add("Sched_TimeIn", "'" + txtTimeIn.Value + "'");
+                param.Add("Sched_TimeOut", "'" + txtTimeOut.Value + "'");
+            }
+
+
+            return param;
+        }
+        void reset()
+        {
+            txtDate.Value = "";
+            txtTimeIn.Value = "10:00";
+            txtTimeOut.Value = "19:00";
+
+            cbRestday.Checked = false;
+            txtTimeIn.Disabled = false;
+            rfvTimeIn.Enabled = true;
+            txtTimeOut.Disabled = false;
+            rfvTimeOut.Enabled = true;
+
+
+        }
+        protected void btnReset_Click(object sender, EventArgs e)
+        {
+            reset();
+            refresh();
+        }
+        protected void GridScheduleFiled_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (e.CommandName == "Sort")
+            {
+                sort_grid(e.CommandArgument.ToString(), "EMP_GRID1", "SORTDR1", 1);
+
+            }
+            if (e.CommandName == "del")
+            {
+                string sched = cm.GetSpecificDataFromDB("Sched_TimeIn", "TBL_FLEXISCHED", "where id = " + e.CommandArgument.ToString() + "");
+                string schedout = cm.GetSpecificDataFromDB("Sched_TimeOut", "TBL_FLEXISCHED", "where id = " + e.CommandArgument.ToString() + "");
+                string emp = cm.GetSpecificDataFromDB("EmpID", "TBL_FLEXISCHED", "where id = " + e.CommandArgument.ToString() + "");
+                cm.DeleteQuery("TBL_FLEXISCHED", "where id =" + e.CommandArgument.ToString() + "");
+                cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " removed SCHEDULE " + sched + " - " + schedout + " for Employee " + emp + ".",
+                    "DELETE", "x123", "qwg-23", "DELETE", Session["EMP_ID"].ToString());
+                refresh();
+                ScriptManager.RegisterStartupScript(this, this.GetType(),
+                "alert",
+                "alert('Successfully Deleted');",
+                true);
+            }
+            if (e.CommandName == "upd")
+            {
+                HiddenEmpID.Value = e.CommandArgument.ToString();
+                populateUpdateField(e.CommandArgument.ToString());
+                openTransDetails();
+
+            }
+            
+
+        }
+        protected void lnkbtnXlist_Click(object sender, EventArgs e)
+        {
+            closeTransDetails();
+        }
+        public void closeTransDetails()
+        {
+            upListDetails.Update();
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append(@"<script type='text/javascript'>");
+            sb.Append(string.Format(@"$('#{0}').modal('hide')", "listmodal"));
+            sb.Append(@"</script>");
+
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "listmodal", sb.ToString(), false);
+
+        }
+        public void openTransDetails()
+        {
+            upListDetails.Update();
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append(@"<script type='text/javascript'>");
+            sb.Append(string.Format(@"$('#{0}').modal('show')", "listmodal"));
+            sb.Append(@"</script>");
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "listmodal", sb.ToString(), false);
+
+
+        }
+        public void populateUpdateField(string id)
+        {
+
+            updlbldate.Text = cm.FormatDateddMMMMyyyy(cm.GetSpecificDataFromDB("BussDate", "TBL_FLEXISCHED", "where id = " + id + ""));
+            updtxtTimeIn.Value = cm.GetSpecificDataFromDB("Sched_TimeIn", "TBL_FLEXISCHED", "where id = " + id + "");
+            updtxtTimeOut.Value = cm.GetSpecificDataFromDB("Sched_TimeOut", "TBL_FLEXISCHED", "where id = " + id + "");
+            if (updtxtTimeIn.Value == "RD" && updtxtTimeOut.Value == "RD")
+            {
+
+                rfvupdtimein.Enabled = false;
+                updtxtTimeIn.Disabled = true;
+                rfvupdtimeout.Enabled = false;
+                updtxtTimeOut.Disabled = true;
+                CheckBox1.Checked = true;
+            }
+            else
+            {
+
+                rfvupdtimein.Enabled = true;
+                updtxtTimeIn.Disabled = false;
+                rfvupdtimeout.Enabled = true;
+                updtxtTimeOut.Disabled = false;
+                CheckBox1.Checked = false;
+            }
+        }
+
+        protected void sort_grid(string sort_args, string viewstateindex, string viewsortDR, int gridno)
+        {
+            DataTable dt = (DataTable)ViewState[viewstateindex];
+            if (dt.Rows.Count > 0)
+            {
+                if (Convert.ToString(ViewState[viewsortDR]) == "Asc")
+                {
+                    dt.DefaultView.Sort = sort_args + " Desc";
+                    ViewState[viewsortDR] = "Desc";
+                }
+                else
+                {
+                    dt.DefaultView.Sort = sort_args + " Asc";
+                    ViewState[viewsortDR] = "Asc";
+                }
+
+                if (gridno == 1)
+                {
+                    GridScheduleFiled.DataSource = dt;
+                    GridScheduleFiled.DataBind();
+                }
+
+                summary();
+
+
+            }
+
+        }
+        protected void GridScheduleFiled_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            GridScheduleFiled.PageIndex = e.NewPageIndex;
+            refresh();
+        }
+        protected void OnCheckedChangedMethod(object sender, EventArgs e)
+        {
+            if (cbRestday.Checked)
+            {
+                txtTimeIn.Disabled = true;
+                rfvTimeIn.Enabled = false;
+                txtTimeOut.Disabled = true;
+                rfvTimeOut.Enabled = false;
+            }
+            else
+            {
+                txtTimeIn.Disabled = false;
+                rfvTimeIn.Enabled = true;
+                txtTimeOut.Disabled = false;
+                rfvTimeOut.Enabled = true;
+            }
+
+        }
+        protected void OnCheckedChangedMethod1(object sender, EventArgs e)
+        {
+            if (CheckBox1.Checked)
+            {
+                updtxtTimeIn.Disabled = true;
+                rfvupdtimein.Enabled = false;
+                updtxtTimeOut.Disabled = true;
+                rfvupdtimeout.Enabled = false;
+            }
+            else
+            {
+                updtxtTimeIn.Disabled = false;
+                rfvupdtimein.Enabled = true;
+                updtxtTimeOut.Disabled = false;
+                rfvupdtimeout.Enabled = true;
+            }
+
+        }
+        Dictionary<string, string> saveUpdateParam()
+        {
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            if (CheckBox1.Checked == false)
+            {
+                if (updtxtTimeIn.Value != "" && updtxtTimeOut.Value != "")
+                {
+                    param.Add("Sched_TimeIn", "'" + updtxtTimeIn.Value + "'");
+                    param.Add("Sched_TimeOut", "'" + updtxtTimeOut.Value + "'");
+                }
+            }
+            else
+            {
+                param.Add("Sched_TimeIn", "'RD'");
+                param.Add("Sched_TimeOut", "'RD'");
+            }
+
+            return param;
+
+        }
+        protected void btnsaveUpdate_Click(object sender, EventArgs e)
+        {
+            string confirmValue = Request.Form["confirm_value"];
+            if (confirmValue == "Yes")
+            {
+                string strbussdate = "", strschedtimein = "", strschedtimeout = "";
+                cm.GetThreeDataFromDB("BussDate", "Sched_TimeIn", "Sched_TimeOut", "TBL_FLEXISCHED", "where id = " + HiddenEmpID.Value + "", out strbussdate, out strschedtimein, out strschedtimeout);
+                if (cm.UpdateQueryCommon(saveUpdateParam(), "TBL_FLEXISCHED", "id = " + HiddenEmpID.Value + ""))
+                {
+                    cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " Update Schedule id = " + HiddenEmpID.Value + " ,From Date = " + strbussdate + " , Time-In = " + strschedtimein + " , Time-Out = " + strschedtimeout + "" +
+                        " To Time-In = " + (CheckBox1.Checked == true ? "RD" : updtxtTimeIn.Value) + ", Time-Out = " + (CheckBox1.Checked == true ? "RD" : updtxtTimeOut.Value) + "",
+                                                                           "UPDATE", "x123", "qwg-23", "UPDATE", Session["EMP_ID"].ToString());
+                    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Schedule Successfully updated');", true);
+                    closeTransDetails();
+                    refresh();
+                }
+                else
+                    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Fields should not be empty !!!');", true);
+
+
+
+
+
+            }
+        }
+        protected void MonthddlChange(object sender, EventArgs e)
+        {
+            refresh();
+            GridViewRow currentRow = (GridViewRow)((DropDownList)sender).Parent.Parent;
+            string month = ((DropDownList)currentRow.FindControl("ddlMonth")).SelectedItem.Value.ToString();
+            if (month != "")
+            {
+                DataTable dt = new DataTable();
+                dt = tk.populateGridFlexiSchedPermonth(Session["ACTIVE_EMPNO"].ToString(), month);
+                GridScheduleFiled.DataSource = dt;
+                GridScheduleFiled.DataBind();
+                ViewState["EMP_GRID1"] = dt;
+                ViewState["SORTDR_1"] = null;
+                summary();
+            }
+
+        }
+    }
+}

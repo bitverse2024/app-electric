@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/Employees/ChangePassword.aspx" hash="2e7cb0847" filehash="fd3af60c1fa55b3" flags="110000" assembly="App_Web_2y013yfe" type="ASP.pages_admin_employees_changepassword_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/Employees/ChangePassword.aspx" />
+    </filedeps>
+</preserve>

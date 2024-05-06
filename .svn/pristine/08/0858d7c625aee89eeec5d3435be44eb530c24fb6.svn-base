@@ -1,0 +1,97 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.IO;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
+using iTextSharp.text.html.simpleparser;
+
+namespace HRIS_APPELECTRIC.Pages.Admin.Reports
+{
+    public partial class forms : System.Web.UI.Page
+    {
+        Common cm = new Common();
+        protected void Page_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        protected void Button1_Click(object sender, EventArgs e)
+        {
+            Response.ContentType = "application/pdf";
+
+            Response.AddHeader("content-disposition",
+
+                "attachment;filename=claimedleavesform.pdf");
+
+            Response.Cache.SetCacheability(HttpCacheability.NoCache);
+
+            var pgSize = new iTextSharp.text.Rectangle(612, 936);
+            string text = "";
+            BaseFont font = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, false);
+            BaseFont font1 = BaseFont.CreateFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1252, false);
+            Font f1 = new Font(font1, 16, 0, BaseColor.BLACK);
+            Font f2 = new Font(font, 14, 0, BaseColor.BLACK);
+            Document document = new Document(PageSize.LEGAL, 60f, 60f, 60f, 60f);
+            HTMLWorker htmlparser = new HTMLWorker(document);
+            PdfWriter.GetInstance(document, Response.OutputStream);
+            //string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            //PdfWriter.GetInstance(document, new FileStream(path + "/claimedleavesform.pdf", FileMode.Create, FileAccess.Write));
+            document.Open();
+            PdfPTable table = new PdfPTable(1);
+            //table.SetWidths(new float[] { 391, 5, 396 });
+            table.WidthPercentage = 100;
+            string imgpath = Server.MapPath("../../../images");
+
+
+            iTextSharp.text.Image myimage1 = iTextSharp.text.Image.GetInstance(imgpath + "/9757-app_header.jpg");
+            myimage1.ScaleAbsolute(280f, 100f);
+            PdfPCell cell0 = new PdfPCell(myimage1);
+            cell0.BorderWidth = 0;
+            cell0.HorizontalAlignment = Element.ALIGN_CENTER;
+            table.AddCell(new PdfPCell(cell0));
+
+            Paragraph p0 = new Paragraph();
+            Chunk c0 = new Chunk("CLAIMED LEAVE APPROVAL FORM \n\n");
+            Chunk c1 = new Chunk("NAME: _______________________	    DATE TODAY:________________\n" +
+                "DEPARTMENT: _______________________                \n\n" +
+                "DATE OF CONCERN: ______________	FROM: ________ TO: ________ \n" +
+                "REASON:                                                \n" +
+                "   _____________________________________________________________\n" +
+                "______________________________________________________________\n" +
+                "______________________________________________________________\n" +
+                "WHO DID YOU INFORM? HOW?_________________________________\n" +
+                "WHEN & WHAT TIME DID YOU INFORM? ________________________\n\n" +
+                "                                                            		                   ______________________\n" +
+                "                                                                                       Signature of Employee\n" +
+                "Endorse by: _______________                     Approved by:_____________");
+            c0.Font = f1;
+            c1.Font = f2;
+            p0.Add(c0);
+            p0.Add(c1);            
+            PdfPCell cell1 = new PdfPCell(p0);
+            cell1.BorderWidth = 0;
+            cell1.HorizontalAlignment = Element.ALIGN_CENTER;            
+            table.AddCell(new PdfPCell(cell1));
+
+            table.SpacingAfter = 20f;
+            document.Add(table);
+            document.Add(table);
+            document.Close();
+            Response.Write(document);
+
+            cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " generated Claimed Leaves Forms",
+                "EXPORT", "x123", "qwg-23", "EXPORT", Session["EMP_ID"].ToString());
+
+            Response.End();
+        }
+
+        protected void Button2_Click(object sender, EventArgs e)
+        {
+
+        }
+    }
+}

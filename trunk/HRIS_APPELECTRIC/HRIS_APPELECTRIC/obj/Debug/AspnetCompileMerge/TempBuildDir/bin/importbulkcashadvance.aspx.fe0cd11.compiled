@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/ImportBulkCashAdvance.aspx" hash="fffffffb122f315e" filehash="1d03ca7e3bc669f1" flags="110000" assembly="App_Web_1gaze43t" type="ASP.pages_admin_importbulkcashadvance_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/ImportBulkCashAdvance.aspx" />
+    </filedeps>
+</preserve>

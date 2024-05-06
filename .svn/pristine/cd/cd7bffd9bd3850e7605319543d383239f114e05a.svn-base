@@ -1,0 +1,3405 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections;
+using System.Linq;
+using System.Web;
+using System.Data.SqlClient;
+using System.Data;
+using System.Web.UI.WebControls;
+using System.Configuration;
+
+/// <summary>
+/// Summary description for Employee
+/// </summary>
+public class Employee
+{
+    Common cm = new Common();
+    //Payroll pr = new Payroll();
+    static string connectionstring = ConfigurationManager.ConnectionStrings["conn"].ConnectionString;
+    //public string FileDirectory =  ConfigurationManager.AppSettings["201FileDirectory"].ToString(); 
+    public SqlCommand cmd = new SqlCommand();
+    public SqlConnection conn = new SqlConnection();
+    public SqlDataReader dread;
+    public SqlDataAdapter adpt = new SqlDataAdapter();
+    public DataTable dt = new DataTable();
+    //public string file201folder = @"201Files\";
+    public string file201folder = @"~/201Files/";
+
+    #region Create
+    /// <summary>
+    /// Add new employee to master
+    /// </summary>
+    /// <returns>Datatable</returns>
+    ////public void AddNewEmployee(List<string> param)
+    ////{
+    ////    string cols = "([emp_id],[emp_EmpID],[emp_Status],[emp_Surname],[emp_FirstName],[emp_MidName],[emp_Suffix],[emp_FullName],[emp_NickName],"+
+    ////       "[emp_AssignmentCode],[emp_DivisionCode],[emp_DeptCode],[emp_BACode],[emp_PositionCode],[emp_RankCode],[emp_Gender],[emp_EmpStatus],"+
+    ////       "[emp_SSSNo],[emp_TIN],[emp_PagibigNo],[PhilHealth_No],[emp_NationalIDNo],[emp_DateStart],[emp_Active],[emp_DateEncoded])";
+    ////    string base_query = "INSERT INTO TBL_EMPLOYEE_MASTER "+cols+" VALUES()";
+
+    //// string build_params ="";
+    ////    build_params += param[0] +",";
+
+
+    ////    dt = new DataTable();
+    ////    conn = new SqlConnection(connectionstring);
+    ////    conn.Open();
+    ////    cmd = new SqlCommand("", conn);
+    ////    cmd.ExecuteNonQuery();
+
+    ////    conn.Close();
+    ////}
+
+    public bool InsertQueryCommon(Dictionary<string, string> param, string tbl)
+    {
+
+        try
+        {
+            string cols = "";
+            string values = "";
+            bool isfirstItem = true;
+            foreach (KeyValuePair<string, string> kvp in param)
+            {
+                cols += (isfirstItem ? "" : ",") + kvp.Key;
+                values += (isfirstItem ? "" : ",") + kvp.Value;
+                isfirstItem = false;
+            }
+            string base_query = "INSERT INTO " + tbl + " (" + cols + ") VALUES(" + values + ")";
+
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+            cmd = new SqlCommand(base_query, conn);
+            cmd.ExecuteNonQuery();
+
+            conn.Close();
+            return true;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+    }
+    public bool AddFileToDB(string empno, string filename, string categ)
+    {
+        try
+        {
+            string base_query = "INSERT INTO TBL_201FILES VALUES('" + empno + "', '" + filename + "', '" + DateTime.Now.ToString("MM/dd/yyyy") + "','" + categ + "')";
+
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+            cmd = new SqlCommand(base_query, conn);
+            cmd.ExecuteNonQuery();
+
+            conn.Close();
+            return true;
+        }
+        catch
+        {
+            return false;
+
+        }
+
+    }
+    public bool IsCorrectOTP(string empno, string codegenstamp)
+    {
+        bool isCorrectOTP = false;
+        string qry = "Select * from TBL_EMAILAUTHEN where emp_EmpID = '" + empno + "' and codegenstamp = '" + codegenstamp + "'";
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        dread.Read();
+        if (dread.HasRows)
+            isCorrectOTP = true;
+
+        dread.Close();
+        conn.Close();
+
+
+        return isCorrectOTP;
+    }
+
+    public bool AddFileToDBEmpImage(string empno, string filename)
+    {
+        try
+        {
+            string base_query = "UPDATE TBL_EMPLOYEE_MASTER SET emp_Image = '" + filename + "' where emp_EmpID = '" + empno + "' ";
+
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+            cmd = new SqlCommand(base_query, conn);
+            cmd.ExecuteNonQuery();
+
+            conn.Close();
+            return true;
+        }
+        catch
+        {
+            return false;
+
+        }
+
+    }
+
+
+
+    #endregion Create
+
+    #region Read
+    /// <summary>
+    /// Get all employee from database
+    /// </summary>
+    /// <returns>Datatable</returns>
+    public DataTable populateGridAllEmployee()
+    {
+        dt = new DataTable();
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        adpt = new SqlDataAdapter("Select * from TBL_EMPLOYEE_MASTER", conn);
+        adpt.Fill(dt);
+
+        conn.Close();
+        return dt;
+    }
+
+    /// <summary>
+    /// Get all employee from database. 
+    /// Columns are programmatically defined
+    /// </summary>
+    /// <returns>Datatable</returns>
+    public DataTable populateGridEmployeeMaster()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[7] { new DataColumn("EmployeeNo"), new DataColumn("FullName"),
+            new DataColumn("Position"), new DataColumn("Department"), new DataColumn("Rank"), new DataColumn("Status"), new DataColumn("Active") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        //cmd = new SqlCommand("Select * from TBL_USERS where user_Status='ACTIVE'", conn);
+        cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER A ,TBL_DEPARTMENT B, TBL_POSITION C, TBL_RANK D, TBL_STATUS E where emp_Active !='A' AND A.emp_Department = B.id  AND A.emp_Position = C.id AND A.emp_Rank = D.id AND A.emp_Status = E.id Order by emp_EmpID", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            string active = "";
+            if (dread["emp_Active"].ToString() == "Y")
+                active = "ACTIVE";
+            else if (dread["emp_Active"].ToString() == "N")
+                active = "INACTIVE";
+            else if (dread["emp_Active"].ToString() == "A")
+                active = "ARCHIVED";
+            //string fullname = dread["emp_Surname"].ToString() + ", " + dread["emp_FirstName"].ToString() + " " + dread["emp_MidName"].ToString();
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString(),
+                dread["PositionName"].ToString(), dread["DeptName"].ToString(), dread["RankName"].ToString(), dread["StatusDesc"].ToString(), active);//TODO yung active na field
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+    }
+
+
+
+    /// <summary>
+    /// Get all employee from database in order. (Function sort) 
+    /// Columns are programmatically defined
+    /// </summary>
+    /// <returns>Datatable</returns>
+    public DataTable populateGridEmployeeMaster_Sorted(string sort_argument, string attrib)
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[5] { new DataColumn("EmployeeNo"), new DataColumn("FullName"),
+            new DataColumn("Position"), new DataColumn("Status"), new DataColumn("Active") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        //cmd = new SqlCommand("Select * from TBL_USERS where user_Status='ACTIVE'", conn);
+        cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER where emp_Active!='A' ORDER BY", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            string active = "";
+            if (dread["emp_Active"].ToString() == "Y")
+                active = "ACTIVE";
+            else if (dread["emp_Active"].ToString() == "N")
+                active = "INACTIVE";
+            else if (dread["emp_Active"].ToString() == "A")
+                active = "ARCHIVED";
+            //string fullname = dread["emp_Surname"].ToString() + ", " + dread["emp_FirstName"].ToString() + " " + dread["emp_MidName"].ToString();
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString(),
+                dread["emp_Position"].ToString(), dread["emp_Status"].ToString(), active);//TODO yung active na field
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+    }
+
+    public DataTable populateGridEmployeeBirthdate()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[2] { new DataColumn("EmployeeNo"), new DataColumn("FullName") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        string month = DateTime.Now.Month.ToString();
+        string day = DateTime.Now.Day.ToString();
+        int mcount = 0, dcount = 0;
+        foreach (char c in month)
+        {
+            mcount++;
+        }
+        foreach (char c in day)
+        {
+            dcount++;
+        }
+        if (mcount > 1)
+        {
+            cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER WHERE emp_Birthdate LIKE '%" + month + "-0" + day + "'", conn);
+        }
+        if (dcount > 1)
+        {
+            cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER WHERE emp_Birthdate LIKE '%0" + month + "-" + day + "'", conn);
+        }
+        if (mcount > 1 && dcount > 1)
+        {
+            cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER WHERE emp_Birthdate LIKE '%" + month + "-" + day + "'", conn);
+        }
+        if (mcount == 1 && dcount == 1)
+        {
+            cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER WHERE emp_Birthdate LIKE '%0" + month + "-0" + day + "'", conn);
+        }
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            //string fullname = dread["emp_Surname"].ToString() + ", " + dread["emp_Fi);//TODO yung active na field
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+    }
+
+    public DataTable populateGridEmployee3Mos()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[2] { new DataColumn("EmployeeNo"), new DataColumn("FullName") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select emp_FullName,emp_EmpID,DATEDIFF(DAY, emp_DateStart, GETDATE()) as DateDiff from TBL_EMPLOYEE_MASTER", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            if (Convert.ToInt32(dread["DateDiff"].ToString()) >= 90 && Convert.ToInt32(dread["DateDiff"].ToString()) <= 120)
+            {
+                dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString());
+            }
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+    }
+
+    public DataTable populateGridEmployeeContEnd()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[2] { new DataColumn("EmployeeNo"), new DataColumn("FullName") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select emp_FullName,emp_EmpID,DATEDIFF(DAY, emp_ContractEnd, GETDATE()) as DateDiff from TBL_EMPLOYEE_MASTER", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            if (dread["DateDiff"].ToString() != "")
+            {
+                if (Convert.ToInt32(dread["DateDiff"].ToString()) >= 1 && Convert.ToInt32(dread["DateDiff"].ToString()) <= 40)
+                {
+                    dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString());
+                }
+            }
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+    }
+
+    public DataTable populateGridEmployee5Mos()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[2] { new DataColumn("EmployeeNo"), new DataColumn("FullName") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select emp_FullName,emp_EmpID,DATEDIFF(DAY, emp_DateStart, GETDATE()) as DateDiff from TBL_EMPLOYEE_MASTER", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            if (Convert.ToInt32(dread["DateDiff"].ToString()) >= 150 && Convert.ToInt32(dread["DateDiff"].ToString()) <= 180)
+            {
+                dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString());
+            }
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+    }
+
+    public DataTable populateGridEmployeeAnniv()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[2] { new DataColumn("EmployeeNo"), new DataColumn("FullName") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        string month = DateTime.Now.Month.ToString();
+        string day = DateTime.Now.Day.ToString();
+        int mcount = 0, dcount = 0;
+        foreach (char c in month)
+        {
+            mcount++;
+        }
+        foreach (char c in day)
+        {
+            dcount++;
+        }
+        if (mcount > 1)
+        {
+            cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER WHERE emp_DateStart LIKE '%" + month + "-0" + day + "'", conn);
+        }
+        if (dcount > 1)
+        {
+            cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER WHERE emp_DateStart LIKE '%0" + month + "-" + day + "'", conn);
+        }
+        if (mcount > 1 && dcount > 1)
+        {
+            cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER WHERE emp_DateStart LIKE '%" + month + "-" + day + "'", conn);
+        }
+        if (mcount == 1 && dcount == 1)
+        {
+            cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER WHERE emp_DateStart LIKE '%0" + month + "-0" + day + "'", conn);
+        }
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            //string fullname = dread["emp_Surname"].ToString() + ", " + dread["emp_Fi);//TODO yung active na field
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+    }
+
+    /// <summary>
+    /// Get all employee from database based on the conditions of the query(This is for the search feature)
+    /// </summary>
+    /// <param name="user_EmpNo"></param>
+    /// <param name="user_Username"></param>
+    /// <param name="userFname"></param>
+    /// <param name="userMname"></param>
+    /// <param name="userLname"></param>
+    /// <returns></returns>
+    //public DataTable populateGridEmployeeListCol(string emp_EmpNo, string emp_fullname, string emp_position,string dept, string rnk, string emp_status, string emp_active)
+    //{
+    //    int sd = 0;
+    //    if (!int.TryParse(emp_EmpNo, out sd) || emp_EmpNo == "")
+    //    {
+    //        emp_EmpNo = "";
+
+    //    }
+
+    //    dt = new DataTable();
+    //    dt.Columns.AddRange(new DataColumn[7] { new DataColumn("EmployeeNo"), new DataColumn("FullName"),
+    //        new DataColumn("Position"), new DataColumn("Department"), new DataColumn("Rank"), new DataColumn("Status"), new DataColumn("Active") });
+    //    conn = new SqlConnection(connectionstring);
+    //    conn.Open();
+    //    cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER A ,TBL_DEPARTMENT B, TBL_POSITION C, TBL_RANK D, TBL_STATUS E where emp_Active!='A' AND A.emp_Department = B.id  AND A.emp_Position = C.id AND A.emp_Rank = D.id AND A.emp_Status = E.id Order by emp_EmpID", conn);
+    //    //cmd = new SqlCommand("Select * from TBL_USERS where user_Status='ACTIVE' and (user_EmpNo = '" + user_EmpNo + "' or user_Username = '" + user_Username + "' or user_FirstName = '" + userFname + "' or user_MiddleName = '" + userMname + "' or user_LastName = '" + userLname + "') ", conn);
+    //    //cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER where emp_EmpID = '" + emp_EmpNo + "' or emp_FullName = '" + emp_fullname + "' or emp_Position = '" + emp_position + "' or emp_Status = '" + emp_status + "'", conn);
+    //    dread = cmd.ExecuteReader();
+    //    while (dread.Read())
+    //    {
+    //        string active = "";
+    //        if (dread["emp_Active"].ToString() == "Y")
+    //            active = "ACTIVE";
+    //        else if (dread["emp_Active"].ToString() == "N")
+    //            active = "INACTIVE";
+    //        else if (dread["emp_Active"].ToString() == "A")
+    //            active = "ARCHIVED";
+    //        //dt.Rows.Add(dread["user_EmpNo"].ToString(), dread["user_Username"].ToString(),
+    //        //    dread["user_FirstName"].ToString(), dread["user_MiddleName"].ToString(), dread["user_LastName"].ToString());
+    //        dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString(),
+    //            dread["PositionName"].ToString(), dread["DeptName"].ToString(), dread["RankName"].ToString(), dread["StatusDesc"].ToString(), active);//TODO yung active na field
+    //    }
+    //    dread.Close();
+
+    //    conn.Close();
+    //    return dt;
+
+
+
+    //}
+
+
+    public DataTable populateGridEmployeelistCol(string expr)
+    {
+        string qry = "Select * from TBL_EMPLOYEE_MASTER A ,TBL_DEPARTMENT B, TBL_POSITION C, TBL_RANK D, TBL_STATUS E where emp_Active!='A' AND A.emp_Department = B.id  AND A.emp_Position = C.id AND A.emp_Rank = D.id AND A.emp_Status = E.id ";
+        qry += (expr == "" ? "" : expr);
+        string ordr = "Order by emp_EmpID";
+        qry += ordr;
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[7] { new DataColumn("EmployeeNo"), new DataColumn("FullName"),
+            new DataColumn("Position"), new DataColumn("Department"), new DataColumn("Rank"), new DataColumn("Status"), new DataColumn("Active") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        //cmd = new SqlCommand("Select * from TBL_USERS where user_Status='ACTIVE'", conn);
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            string active = "";
+            if (dread["emp_Active"].ToString() == "Y")
+                active = "ACTIVE";
+            else if (dread["emp_Active"].ToString() == "N")
+                active = "INACTIVE";
+            else if (dread["emp_Active"].ToString() == "A")
+                active = "ARCHIVED";
+            //string fullname = dread["emp_Surname"].ToString() + ", " + dread["emp_FirstName"].ToString() + " " + dread["emp_MidName"].ToString();
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString(),
+                dread["PositionName"].ToString(), dread["DeptName"].ToString(), dread["RankName"].ToString(), dread["StatusDesc"].ToString(), active);//TODO yung active na field
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+    }
+
+    public DataTable populateGridEmpDTR(string empNo)
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[7] { new DataColumn("Emp_Name"), new DataColumn("EmpID"),
+            new DataColumn("BussDate"), new DataColumn("DateIn"), new DataColumn("DTimeIn"), new DataColumn("DateOut"), new DataColumn("DTimeOut") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        //cmd = new SqlCommand("Select * from TBL_USERS where user_Status='ACTIVE'", conn);
+        cmd = new SqlCommand("Select * from TBL_DTR where EmpID = " + empNo + "", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+
+            dt.Rows.Add(dread["Emp_Name"].ToString(), dread["EmpID"].ToString(),
+                dread["BussDate"].ToString(), cm.FormatDate(dread["DateIn"].ToString()), dread["DTimeIn"].ToString(), cm.FormatDate(dread["DateOut"].ToString()), dread["DTimeOut"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+    }
+
+    public DataTable populateGridEmployeeUAM()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[4] { new DataColumn("emp_EmpID"), new DataColumn("emp_FullName"),
+            new DataColumn("datecreatep"), new DataColumn("validdays") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        //cmd = new SqlCommand("Select * from TBL_USERS where user_Status='ACTIVE'", conn);
+        cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER A ,TBL_USERS B where emp_Active !='A' AND A.emp_EmpID = B.empid Order by emp_EmpID", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString(),
+                cm.FormatDate(dread["datecreatep"].ToString()), dread["validdays"].ToString());//TODO yung active na field
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+    }
+
+    public DataTable populateGridEmployeeUAMCol(string expr)
+    {
+        string qry = "Select * from TBL_EMPLOYEE_MASTER A ,TBL_USERS B where emp_Active !='A' AND A.emp_EmpID = B.empid ";
+        qry += (expr == "" ? "" : expr);
+        string ordr = "Order by emp_EmpID";
+        qry += ordr;
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[4] { new DataColumn("emp_EmpID"), new DataColumn("emp_FullName"),
+            new DataColumn("datecreatep"), new DataColumn("validdays") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        //cmd = new SqlCommand("Select * from TBL_USERS where user_Status='ACTIVE'", conn);
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString(),
+                cm.FormatDate(dread["datecreatep"].ToString()), dread["validdays"].ToString());//TODO yung active na field
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+    }
+    public DataTable populateGridDependent(string empno)
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("Name"), new DataColumn("Relationship"),
+            new DataColumn("Birthdate"), new DataColumn("Age"), new DataColumn("Occupation"), new DataColumn("id") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        //cmd = new SqlCommand("Select * from TBL_USERS where user_Status='ACTIVE'", conn);
+        cmd = new SqlCommand("Select * from TBL_DEPENDENT where EmpID = '" + empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            //string active = "";
+            //if (dread["emp_Active"].ToString() == "Y")
+            //    active = "ACTIVE";
+            //else if (dread["emp_Active"].ToString() == "N")
+            //    active = "INACTIVE";
+            //else if (dread["emp_Active"].ToString() == "A")
+            //    active = "ARCHIVED";
+            //string fullname = dread["emp_Surname"].ToString() + ", " + dread["emp_FirstName"].ToString() + " " + dread["emp_MidName"].ToString();
+            dt.Rows.Add(dread["DName"].ToString() + " " + dread["DMidName"].ToString() + " " + dread["DSurname"].ToString(), dread["Relationship"].ToString(),
+                cm.FormatDate(dread["DOB"].ToString()), dread["Age"].ToString(), dread["Occupation"].ToString(), dread["id"].ToString());//TODO yung active na field
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridDependentListCol(string empno, string expr)
+    {
+        string base_query = "Select * from TBL_DEPENDENT where EmpID = '" + empno + "' " + expr + "";
+        base_query += (expr == "" ? "" : expr);
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("Name"), new DataColumn("Relationship"),
+            new DataColumn("Birthdate"), new DataColumn("Age"), new DataColumn("Occupation"), new DataColumn("id") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["DName"].ToString(), dread["Relationship"].ToString(),
+               cm.FormatDate(dread["DOB"].ToString()), dread["Age"].ToString(), dread["Occupation"].ToString(), dread["id"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridFiles(string empno)
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[3] { new DataColumn("FileID"), new DataColumn("Filename"),
+            new DataColumn("Category") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        //cmd = new SqlCommand("Select * from TBL_USERS where user_Status='ACTIVE'", conn);
+        cmd = new SqlCommand("Select * from TBL_201FILES where EmpID = '" + empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["Filename"].ToString(), dread["Category"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridFilesCol(string empno, string fileid, string fname, string categ)
+    {
+        string base_query = "Select * from TBL_201FILES where EmpID = '" + empno + "' and Filename = '" + fname + "'";
+        int id = 0;
+        if (int.TryParse(fileid, out id))
+        {
+            base_query += " or id = " + fileid + "";
+        }
+        int sd = 0;
+        if (!int.TryParse(empno, out sd) || empno == "")
+        {
+            empno = "";
+
+        }
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[3] { new DataColumn("FileID"), new DataColumn("Filename"),
+            new DataColumn("Category") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["Filename"].ToString(), dread["Category"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+
+    public DataTable populateGridMovement(string empno)
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[11] { new DataColumn("id"), new DataColumn("MovementTypeName"), new DataColumn("CoName"),
+            new DataColumn("DeptCode"), new DataColumn("PayClassCode"), new DataColumn("GroupCode"), new DataColumn("DivisionCode"), new DataColumn("EffectiveDate"), new DataColumn("Remarks"), new DataColumn("PositionName"), new DataColumn("WageType") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_MOVEMENT A, TBL_MOVEMENTTYPE B, TBL_COMPANY C, TBL_POSITION D where A.MovementTypeCode = B.id AND A.BranchCode = C.id AND A.PositionCode = D.id AND EmpID = '" + empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["MovementTypeName"].ToString(), dread["CoName"].ToString(), dread["DeptCode"].ToString(),
+                dread["PayClassCode"].ToString(), dread["GroupCode"].ToString(), dread["DivisionCode"].ToString(), cm.FormatDate(dread["EffectiveDate"].ToString()),
+                dread["Remarks"].ToString(), dread["PositionName"].ToString(), dread["WageType"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridMovementCol(string empno, string expr)
+    {
+        string qry = "Select * from TBL_MOVEMENT A, TBL_MOVEMENTTYPE B, TBL_COMPANY C, TBL_POSITION D where A.MovementTypeCode = B.id AND A.BranchCode = C.id AND A.PositionCode = D.id AND EmpID = '" + empno + "'";
+        qry += (expr == "" ? "" : expr);
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[11] { new DataColumn("id"), new DataColumn("MovementTypeName"), new DataColumn("CoName"),
+            new DataColumn("DeptCode"), new DataColumn("PayClassCode"), new DataColumn("GroupCode"), new DataColumn("DivisionCode"), new DataColumn("EffectiveDate"), new DataColumn("Remarks"), new DataColumn("PositionName"), new DataColumn("WageType") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["MovementTypeName"].ToString(), dread["CoName"].ToString(), dread["DeptCode"].ToString(),
+                dread["PayClassCode"].ToString(), dread["GroupCode"].ToString(), dread["DivisionCode"].ToString(), cm.FormatDate(dread["EffectiveDate"].ToString()),
+                dread["Remarks"].ToString(), dread["PositionName"].ToString(), dread["WageType"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridLoans(string empno)
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[21] { new DataColumn("id"), new DataColumn("DateFiled"), new DataColumn("EmpID"),
+            new DataColumn("Name"), new DataColumn("AssignmentCode"), new DataColumn("Reason"), new DataColumn("LoanDesc"), new DataColumn("LoanAmount"), new DataColumn("Schedule"), new DataColumn("DedAmount"), new DataColumn("DedStart"),new DataColumn("DedEnd"), new DataColumn("AmountPaid"), new DataColumn("Balance"),
+            new DataColumn("Loan_Close"), new DataColumn("NOP"), new DataColumn("Loan_Status"), new DataColumn("InterestRate"), new DataColumn("InterestCalculated"), new DataColumn("DateGranted"), new DataColumn("AmountOfLoan") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_LOANENTRIES A, TBL_LOANS B where A.LoanCode = B.id AND EmpID = '" + empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), cm.FormatDate(dread["DateFiled"].ToString()), dread["EmpID"].ToString(), dread["Name"].ToString(),
+                dread["AssignmentCode"].ToString(), dread["Reason"].ToString(), dread["LoanDesc"].ToString(), dread["LoanAmount"].ToString(),
+                dread["Schedule"].ToString(), dread["DedAmount"].ToString(), cm.FormatDate(dread["DedStart"].ToString()), dread["DedEnd"].ToString(), dread["AmountPaid"].ToString(), dread["Balance"].ToString()
+                , dread["Loan_Close"].ToString(), dread["NOP"].ToString(), dread["Loan_Status"].ToString(), dread["InterestRate"].ToString(), dread["InterestCalculated"].ToString(), dread["DateGranted"].ToString()
+                , dread["AmountOfLoan"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+    public DataTable populateGridLoansCol(string empno, string expr)
+    {
+        string qry = "Select * from TBL_LOANENTRIES A, TBL_LOANS B where A.LoanCode = B.id AND EmpID = '" + empno + "'";
+        qry += (expr == "" ? "" : expr);
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[21] { new DataColumn("id"), new DataColumn("DateFiled"), new DataColumn("EmpID"),
+            new DataColumn("Name"), new DataColumn("AssignmentCode"), new DataColumn("Reason"), new DataColumn("LoanDesc"), new DataColumn("LoanAmount"), new DataColumn("Schedule"), new DataColumn("DedAmount"), new DataColumn("DedStart"),new DataColumn("DedEnd"), new DataColumn("AmountPaid"), new DataColumn("Balance"),
+            new DataColumn("Loan_Close"), new DataColumn("NOP"), new DataColumn("Loan_Status"), new DataColumn("InterestRate"), new DataColumn("InterestCalculated"), new DataColumn("DateGranted"), new DataColumn("AmountOfLoan") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), cm.FormatDate(dread["DateFiled"].ToString()), dread["EmpID"].ToString(), dread["Name"].ToString(),
+                dread["AssignmentCode"].ToString(), dread["Reason"].ToString(), dread["LoanDesc"].ToString(), dread["LoanAmount"].ToString(),
+                dread["Schedule"].ToString(), dread["DedAmount"].ToString(), cm.FormatDate(dread["DedStart"].ToString()), dread["DedEnd"].ToString(), dread["AmountPaid"].ToString(), dread["Balance"].ToString()
+                , dread["Loan_Close"].ToString(), dread["NOP"].ToString(), dread["Loan_Status"].ToString(), dread["InterestRate"].ToString(), dread["InterestCalculated"].ToString(), dread["DateGranted"].ToString()
+                , dread["AmountOfLoan"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+    public DataTable populateGridLicense(string empno)
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[4] { new DataColumn("id"), new DataColumn("LicenseType"), new DataColumn("LicenseNo"),
+            new DataColumn("ExpiryDate") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_LICENSE where EmpID = '" + empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["license_type"].ToString(), dread["license_no"].ToString(), cm.FormatDate(dread["lic_expirydate"].ToString()));
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridLicenseCol(string empno, string expr)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[4] { new DataColumn("id"), new DataColumn("LicenseType"), new DataColumn("LicenseNo"),
+            new DataColumn("ExpiryDate") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["license_type"].ToString(), dread["license_no"].ToString(), cm.FormatDate(dread["lic_expirydate"].ToString()));
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridExpLicense()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[4] { new DataColumn("id"), new DataColumn("LicenseType"), new DataColumn("LicExp"),
+            new DataColumn("Lic_EmpName") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_LICENSE A,TBL_EMPLOYEE_MASTER B WHERE lic_expirydate < DATEADD(MONTH, 2, GETDATE()) AND a.EmpID = b.emp_EmpID", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["license_type"].ToString(), cm.FormatDate(dread["lic_expirydate"].ToString()), dread["emp_FullName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridCOE()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[3] { new DataColumn("id"), new DataColumn("FullName"), new DataColumn("Company") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER A , TBL_COMPANY B WHERE A.emp_Assignment = B.id", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["emp_Empid"].ToString(), dread["emp_FullName"].ToString(), dread["CoName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridCOECol(string expr)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string qry = "Select * from TBL_EMPLOYEE_MASTER";
+        qry += (expr == "" ? "" : expr);
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[3] { new DataColumn("id"), new DataColumn("FullName"), new DataColumn("Company") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["emp_FullName"].ToString(), dread["emp_Assignment"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridAsset(string empno)
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("id"), new DataColumn("item"), new DataColumn("serial_no"),
+            new DataColumn("model"), new DataColumn("brand"),
+            new DataColumn("quantity") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_ASSETS where EmpID = '" + empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["item"].ToString(), dread["serial_no"].ToString(), dread["model"].ToString(), dread["brand"].ToString(), dread["quantity"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridAssetCol(string empno, string expr)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from TBL_ASSETS where EmpID = '" + empno + "' " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("id"), new DataColumn("item"), new DataColumn("serial_no"),
+            new DataColumn("model"), new DataColumn("brand"),
+            new DataColumn("quantity") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["item"].ToString(), dread["serial_no"].ToString(), dread["model"].ToString(), dread["brand"].ToString(), dread["quantity"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridTraining(string empno)
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("id"), new DataColumn("TrainingCode"), new DataColumn("Topic"),
+            new DataColumn("DateTaken"), new DataColumn("Speaker"),
+            new DataColumn("Remarks") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_TRAINING where EmpID = '" + empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["TrainingCode"].ToString(), dread["Topic"].ToString(), cm.FormatDate(dread["DateTaken"].ToString()), dread["Speaker"].ToString(), dread["Remarks"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridTrainingCol(string empno, string expr)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from TBL_TRAINING where EmpID = '" + empno + "' " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("id"), new DataColumn("TrainingCode"), new DataColumn("Topic"),
+            new DataColumn("DateTaken"), new DataColumn("Speaker"),
+            new DataColumn("Remarks") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["TrainingCode"].ToString(), dread["Topic"].ToString(), cm.FormatDate(dread["DateTaken"].ToString()), dread["Speaker"].ToString(), dread["Remarks"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridExam(string empno)
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[4] { new DataColumn("id"), new DataColumn("DateTaken"), new DataColumn("ExamType"),
+            new DataColumn("Remarks") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_GOVTEXAM where EmpID = '" + empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), cm.FormatDate(dread["DateTaken"].ToString()), dread["ExamType"].ToString(), dread["Remarks"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridExamCol(string empno, string expr)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from TBL_GOVTEXAM where EmpID = '" + empno + "' " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[4] { new DataColumn("id"), new DataColumn("DateTaken"), new DataColumn("ExamType"),
+            new DataColumn("Remarks") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), cm.FormatDate(dread["DateTaken"].ToString()), dread["ExamType"].ToString(), dread["Remarks"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridEduc(string empno)
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[5] { new DataColumn("id"), new DataColumn("CourseName"), new DataColumn("SchoolName"), new DataColumn("IDate"),
+            new DataColumn("Remarks") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_EBGROUND A, TBL_COURSE B, TBL_SCHOOL C where EmpID = '" + empno + "' and A.SchoolCode = C.SchoolCode and A.CourseCode = B.CourseCode", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["CourseName"].ToString(), dread["SchoolName"].ToString(), dread["IDate"].ToString(), dread["Remarks"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridEducCol(string empno, string expr)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from TBL_EBGROUND A, TBL_COURSE B, TBL_SCHOOL C where EmpID = '" + empno + "' and A.SchoolCode = C.SchoolCode and A.CourseCode = B.CourseCode " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[5] { new DataColumn("id"), new DataColumn("CourseName"), new DataColumn("SchoolName"), new DataColumn("IDate"),
+            new DataColumn("Remarks") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["CourseName"].ToString(), dread["SchoolName"].ToString(), dread["IDate"].ToString(), dread["Remarks"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridEmployment(string empno)
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[5] { new DataColumn("id"), new DataColumn("From_Date"), new DataColumn("To_Date"),
+            new DataColumn("Company"), new DataColumn("Position") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_EHISTORY where EmpID = '" + empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["From_Date"].ToString(), dread["To_Date"].ToString(), dread["Company"].ToString(), dread["Position"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridEmploymentCol(string empno, string expr)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from TBL_EHISTORY where EmpID = '" + empno + "' " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[5] { new DataColumn("id"), new DataColumn("From_Date"), new DataColumn("To_Date"),
+            new DataColumn("Company"), new DataColumn("Position") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["From_Date"].ToString(), dread["To_Date"].ToString(), dread["Company"].ToString(), dread["Position"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridFamilyBG(string empno)
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("id"), new DataColumn("FName"), new DataColumn("Birthdate"),
+            new DataColumn("Age"), new DataColumn("Relationship"), new DataColumn("ContactNo") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_FAMILYBGROUND where EmpID = '" + empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["FName"].ToString() + " " + dread["MName"].ToString() + " " + dread["LName"].ToString(),
+                cm.FormatDate(dread["Birthdate"].ToString()), dread["Age"].ToString(), dread["Relationship"].ToString(),
+                dread["ContactNo"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridOffenses(string empno)
+    {
+        string offense = "";
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[11] { new DataColumn("id"), new DataColumn("EmpID"), new DataColumn("RecDate"),
+            new DataColumn("OffCode"), new DataColumn("Dates"), new DataColumn("EffectiveDate"), new DataColumn("DA"), new DataColumn("RemSuspDays"), new DataColumn("Remarks"), new DataColumn("Inspector"), new DataColumn("OffNo") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_EOFFENSES where EmpID = '" + empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            offense = cm.GetSpecificDataFromDB("offenseDesc", "TBL_OFFENSESTYPE", "where id = " + dread["OffNo"].ToString() + "");
+
+            dt.Rows.Add(dread["id"].ToString(), dread["EmpID"].ToString(), cm.FormatDate(dread["RecDate"].ToString()), dread["OffCode"].ToString(), dread["Dates"].ToString(),
+                cm.FormatDate(dread["EffectiveDate"].ToString()), dread["DA"].ToString(), dread["RemSuspDays"].ToString(), dread["Remarks"].ToString(), dread["Inspector"].ToString(), offense);
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridOffensesCol(string empno, string expr)
+    {
+        string offense = "";
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from TBL_EOFFENSES A, TBL_OFFENSESTYPE B where A.EmpID = '" + empno + "' AND A.OffNo = B.id " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[11] { new DataColumn("id"), new DataColumn("EmpID"), new DataColumn("RecDate"),
+            new DataColumn("OffCode"), new DataColumn("Dates"), new DataColumn("EffectiveDate"), new DataColumn("DA"), new DataColumn("RemSuspDays"), new DataColumn("Remarks"), new DataColumn("Inspector"), new DataColumn("OffNo") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            //if (dread["OffNo"].ToString() == "1")
+            //{
+            //    offense = "1st Offense";
+            //}
+            //if (dread["OffNo"].ToString() == "2")
+            //{
+            //    offense = "2nd Offense";
+            //}
+            //if (dread["OffNo"].ToString() == "3")
+            //{
+            //    offense = "3rd Offense";
+            //}
+            //if (dread["OffNo"].ToString() == "4")
+            //{
+            //    offense = "4th Offense";
+            //}
+            //if (dread["OffNo"].ToString() == "5")
+            //{
+            //    offense = "5th Offense";
+            //}
+            offense = cm.GetSpecificDataFromDB("offenseDesc", "TBL_OFFENSESTYPE", "where id = " + dread["OffNo"].ToString() + "");
+
+            dt.Rows.Add(dread["id"].ToString(), dread["EmpID"].ToString(), cm.FormatDate(dread["RecDate"].ToString()), dread["OffCode"].ToString(), dread["Dates"].ToString(),
+                cm.FormatDate(dread["EffectiveDate"].ToString()), dread["DA"].ToString(), dread["RemSuspDays"].ToString(), dread["Remarks"].ToString(), dread["Inspector"].ToString(), offense);
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+    public DataTable populateGridSuspension(string empno)
+    {
+        
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("id"), new DataColumn("empid"), new DataColumn("offenseid"), new DataColumn("renderedDtFrom"), new DataColumn("renderedDtTo"), new DataColumn("spdDays") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("SELECT * FROM TBL_SUSPENSION WHERE empid = '"+empno+"'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["empid"].ToString(), dread["offenseid"].ToString(), cm.FormatDate(dread["renderedDtFrom"].ToString()), cm.FormatDate(dread["renderedDtTo"].ToString()), dread["spdDays"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridSuspensionCol(string empno, string expr)
+    {
+        string offense = "";
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "SELECT * FROM TBL_SUSPENSION WHERE empid ='" + empno + "' " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("id"), new DataColumn("empid"), new DataColumn("offenseid"), new DataColumn("renderedDtFrom"), new DataColumn("renderedDtTo"), new DataColumn("spdDays") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["empid"].ToString(), dread["offenseid"].ToString(), cm.FormatDate(dread["renderedDtFrom"].ToString()), cm.FormatDate(dread["renderedDtTo"].ToString()), dread["spdDays"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+
+
+    public DataTable populateGridFamilyBGCol(string empno, string expr)
+    {
+        string qry = "Select * from TBL_FAMILYBGROUND where EmpID = '" + empno + "'";
+        qry += (expr == "" ? "" : expr);
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("id"), new DataColumn("FName"), new DataColumn("Birthdate"),
+            new DataColumn("Age"), new DataColumn("Relationship"), new DataColumn("ContactNo") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["FName"].ToString(), cm.FormatDate(dread["Birthdate"].ToString()),
+                dread["Age"].ToString(), dread["Relationship"].ToString(), dread["ContactNo"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridOBTMaster()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[2] { new DataColumn("empid"), new DataColumn("FullName") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER where emp_Active!='A'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+
+    public DataTable populateGridOBTMasterCol(string fname)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from TBL_EMPLOYEE_MASTER where emp_Active!='A' and emp_FullName like '%" + fname + "%'";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[2] { new DataColumn("empid"), new DataColumn("FullName") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+    public DataTable populateGridLeaveMaster()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[2] { new DataColumn("empid"), new DataColumn("FullName") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER where emp_Active!='A'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+
+    public DataTable populateGridLeaveMasterCol(string fname)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from TBL_EMPLOYEE_MASTER where emp_Active!='A' and emp_FullName like '%" + fname + "%'";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[2] { new DataColumn("empid"), new DataColumn("FullName") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+    public DataTable populateGridPayReg()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[2] { new DataColumn("empid"), new DataColumn("FullName") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_PAYREG where (emp_Rank = '16' OR emp_Rank = '31' OR emp_Rank = '32' OR emp_Rank = '33')", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridDTSMaster()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[3] { new DataColumn("empid"), new DataColumn("FullName"), new DataColumn("Company") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER A, TBL_COMPANY B where emp_Active!='A' AND A.emp_Assignment = B.id", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString(), dread["CoName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridDTSMasterCol(string expr)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string qry = "Select * from TBL_EMPLOYEE_MASTER where emp_Active!='A' ";
+        qry += (expr == "" ? "" : expr);
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[3] { new DataColumn("empid"), new DataColumn("FullName"), new DataColumn("Company") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+    public DataTable populateGridAdjustmentMaster()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[3] { new DataColumn("empid"), new DataColumn("FullName"), new DataColumn("Company") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER A, TBL_COMPANY B where emp_Active!='A' AND A.emp_Assignment = B.id", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString(), dread["CoName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridAdjustmentMasterCol(string expr)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string qry = "Select * from TBL_EMPLOYEE_MASTER where emp_Active!='A' ";
+        qry += (expr == "" ? "" : expr);
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[3] { new DataColumn("empid"), new DataColumn("FullName"), new DataColumn("Company") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+    public string toRoundOff(string num)
+    {
+        string numtoround = "";
+        numtoround = string.Format("{0:#,0.00}", double.Parse(num));
+        return numtoround;
+
+
+    }
+    public DataTable populateGridEmployeeAdjustment(string empno)
+    {
+        string Cutoff = "";
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("id"), new DataColumn("EmpID"), new DataColumn("CutOffID"), new DataColumn("SSSDed"), new DataColumn("PhilDed"), new DataColumn("PagibigDed") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_DEDUCTIONADJ where EmpID = '"+ empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            Cutoff = cm.GetSpecificDataFromDB("CDesc", "TBL_CUTOFF", "where id = " + dread["CutOffID"].ToString() + "");
+            dt.Rows.Add(dread["id"].ToString(), dread["EmpID"].ToString(), Cutoff, dread["SSSDed"] == DBNull.Value ? "No Adjustment" : toRoundOff(dread["SSSDed"].ToString()), dread["PhilDed"] == DBNull.Value ? "No Adjustment" : toRoundOff(dread["PhilDed"].ToString()), dread["PagibigDed"] == DBNull.Value ? "No Adjustment" : toRoundOff(dread["PagibigDed"].ToString()));
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridEmployeeAdjustmentCol(string expr, string empno)
+    {
+        string Cutoff = "";
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string qry = "Select * from TBL_DEDUCTIONADJ where EmpID = '"+empno+"' ";
+        qry += (expr == "" ? "" : expr);
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("id"), new DataColumn("EmpID"), new DataColumn("CutOffID"), new DataColumn("SSSDed"), new DataColumn("PhilDed"), new DataColumn("PagibigDed") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            Cutoff = cm.GetSpecificDataFromDB("CDesc", "TBL_CUTOFF", "where id = " + dread["CutOffID"].ToString() + "");
+            dt.Rows.Add(dread["id"].ToString(), dread["EmpID"].ToString(), Cutoff, dread["SSSDed"] == DBNull.Value ? "No Adjustment" : toRoundOff(dread["SSSDed"].ToString()), dread["PhilDed"] == DBNull.Value ? "No Adjustment" : toRoundOff(dread["PhilDed"].ToString()), dread["PagibigDed"] == DBNull.Value ? "No Adjustment" : toRoundOff(dread["PagibigDed"].ToString()));
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+    public DataTable populateGridEmployeeCashAdvance(string empno)
+    {
+        string Cutoff = "";
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[5] { new DataColumn("id"), new DataColumn("EmpID"), new DataColumn("CutOffID"), new DataColumn("CashAdvance"), new DataColumn("LoanBalance") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_CASHADVANCE where EmpID = '" + empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            Cutoff = cm.GetSpecificDataFromDB("CDesc", "TBL_CUTOFF", "where id = " + dread["CutOffID"].ToString() + "");
+            dt.Rows.Add(dread["id"].ToString(), dread["EmpID"].ToString(), Cutoff, dread["CashAdvance"] == DBNull.Value ? "No Cash Advance" : toRoundOff(dread["CashAdvance"].ToString()), dread["LoanBalance"] == DBNull.Value ? "No Loan Balance" : toRoundOff(dread["LoanBalance"].ToString()));
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+    public DataTable populateGridEmployeeCashAdvanceCol(string expr, string empno)
+    {
+        string Cutoff = "";
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string qry = "Select * from TBL_CASHADVANCE where EmpID = '" + empno + "' ";
+        qry += (expr == "" ? "" : expr);
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[5] { new DataColumn("id"), new DataColumn("EmpID"), new DataColumn("CutOffID"), new DataColumn("CashAdvance"), new DataColumn("LoanBalance") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            Cutoff = cm.GetSpecificDataFromDB("CDesc", "TBL_CUTOFF", "where id = " + dread["CutOffID"].ToString() + "");
+            dt.Rows.Add(dread["id"].ToString(), dread["EmpID"].ToString(), Cutoff, dread["CashAdvance"] == DBNull.Value ? "No Cash Advance" : toRoundOff(dread["CashAdvance"].ToString()), dread["LoanBalance"] == DBNull.Value ? "No Loan Balance" : toRoundOff(dread["LoanBalance"].ToString()));
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridMedical(string empno)
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[4] { new DataColumn("id"), new DataColumn("RefDate"), new DataColumn("FName"),
+            new DataColumn("Diagnosis") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_MEDICAL where EmpID = '" + empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), cm.FormatDate(dread["RefDate"].ToString()), dread["FName"].ToString(), dread["Diagnosis"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridMedicalCol(string empno, string expr)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from TBL_MEDICAL where EmpID = '" + empno + "' " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[4] { new DataColumn("id"), new DataColumn("RefDate"), new DataColumn("FName"),
+            new DataColumn("Diagnosis") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), cm.FormatDate(dread["RefDate"].ToString()), dread["FName"].ToString(), dread["Diagnosis"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridSearch(DataTable dt, string expr)
+    {
+        DataRow[] dtrows = dt.Select(expr);
+        dt.Rows.Clear();
+        foreach (DataRow row in dtrows)
+        {
+            dt.Rows.Add(row);
+        }
+        return dt;
+    }
+
+
+
+    public DataTable populateGridCompany()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[2] { new DataColumn("id"), new DataColumn("CoName") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_COMPANY", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["CoName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridCompanyCol(string expr)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from TBL_COMPANY where " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[2] { new DataColumn("id"), new DataColumn("CoName") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["CoName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridDepartment(string divId)
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[2] { new DataColumn("id"), new DataColumn("DivName") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_DEPARTMENT where DivCode = " + divId + "", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["DeptName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridDepartmentCol(string divId, string expr)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from TBL_DEPARTMENT where DivCode = " + divId + " " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[2] { new DataColumn("id"), new DataColumn("DivName") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["DeptName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridPosition(string deptid)
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[2] { new DataColumn("id"), new DataColumn("PositionName") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_POSITION where DeptID = " + deptid + "", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["PositionName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridPositionCol(string deptid, string expr)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from TBL_POSITION where DeptID = " + deptid + " " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[2] { new DataColumn("id"), new DataColumn("PositionName") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["PositionName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridHRMR()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("id"), new DataColumn("DivName"), new DataColumn("DeptName"),
+            new DataColumn("PositionName"), new DataColumn("startmonth"), new DataColumn("hrmr_status") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from VIEW_HRMRLIST", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["DivName"].ToString(), dread["DeptName"].ToString(),
+                dread["PositionName"].ToString(), dread["startmonth"].ToString(), dread["hrmr_status"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridHRMRCol(string expr)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from VIEW_HRMRLIST where " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("id"), new DataColumn("DivName"), new DataColumn("DeptName"),
+            new DataColumn("PositionName"), new DataColumn("startmonth"), new DataColumn("hrmr_status") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["DivName"].ToString(), dread["DeptName"].ToString(),
+                dread["PositionName"].ToString(), dread["startmonth"].ToString(), dread["hrmr_status"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridMR()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("id"), new DataColumn("DivName"), new DataColumn("PositionName"),
+            new DataColumn("workexperience"), new DataColumn("skills"), new DataColumn("requestedby") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from VIEW_MR", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["DivName"].ToString(), dread["PositionName"].ToString(),
+                dread["workexperience"].ToString(), dread["skills"].ToString(), dread["requestedby"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridMRCol(string expr)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from VIEW_MR where " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("id"), new DataColumn("DivName"), new DataColumn("PositionName"),
+            new DataColumn("workexperience"), new DataColumn("skills"), new DataColumn("requestedby") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["id"].ToString(), dread["DivName"].ToString(), dread["PositionName"].ToString(),
+                dread["workexperience"].ToString(), dread["skills"].ToString(), dread["requestedby"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public string build_or_like_param(Dictionary<string, string> param)
+    {
+        return build_or_like_param(false, param);
+    }
+    public string build_or_like_param(bool IsFirstCondition, Dictionary<string, string> param)
+    {
+
+        string values = (IsFirstCondition ? "" : "and (");
+        bool isfirstItem = true;
+        string query_optr = "";
+        foreach (KeyValuePair<string, string> kvp in param)
+        {
+            if (kvp.Value == "" || kvp.Value == "'%%'") continue;
+            query_optr = (kvp.Value.Contains("'") ? "LIKE" : "=");
+            values += (isfirstItem ? "" : " or ") + kvp.Key + " " + query_optr + " " + kvp.Value;
+            isfirstItem = false;
+        }
+
+        values += (IsFirstCondition ? "" : " )");
+
+
+
+        return values;
+
+    }
+
+
+
+
+
+
+
+    /// <summary>
+    /// Get all data from TBL_EMPLOYEE_MASTER
+    /// </summary>
+    /// <param name="empNo"></param>
+    /// <returns>DataTable</returns>
+    public DataTable GetEmployeeInfo_Table(string empNo)
+    {
+        dt = new DataTable();
+        try
+        {
+
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+
+            cmd = new SqlCommand();
+            adpt = new SqlDataAdapter("Select * from TBL_EMPLOYEE_MASTER where emp_EmpID ='" + empNo + "'", conn);
+            adpt.Fill(dt);
+
+            conn.Close();
+            return dt;
+
+
+        }
+        catch
+        {
+
+            conn.Close();
+        }
+        conn.Close();
+        return null;
+
+
+
+    }
+    /// <summary>
+    /// Get all data from TBL_EMPLOYEE_MASTER
+    /// </summary>
+    /// <param name="empNo"></param>
+    /// <returns>HTML string build</returns>
+    public string[] GetEmployeeInfo(string empNo)
+    {
+        string[] infoarr = new string[20];
+        try
+        {
+
+
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+            bool has_init_company_tbl = true;
+            //cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER E, TBL_USERS U where E.emp_EmpID =" + empNo + " and E.emp_EmpID = U.empid", conn);
+            //cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER where emp_EmpID =" + empNo , conn);
+            cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER, TBL_COMPANY where emp_EmpID = '" + empNo + "' and TBL_EMPLOYEE_MASTER.emp_Assignment = TBL_COMPANY.id", conn);
+            dread = cmd.ExecuteReader();
+            if (!dread.HasRows)
+            {
+                dread.Close();
+                has_init_company_tbl = false;
+                cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER where emp_EmpID = '" + empNo + "' ", conn);
+                dread = cmd.ExecuteReader();
+
+            }
+
+            while (dread.Read())
+            {
+                infoarr[0] = dread["emp_BiometricsID"].ToString();
+                infoarr[1] = dread["emp_Surname"].ToString();
+                infoarr[2] = dread["emp_FirstName"].ToString();
+                infoarr[3] = dread["emp_MidName"].ToString();
+                infoarr[4] = dread["emp_FullName"].ToString();
+                infoarr[5] = cm.FormatDate(dread["emp_Birthdate"].ToString());
+                infoarr[6] = dread["emp_Gender"].ToString();
+                //infoarr[7] = GetSpecificData("CoName", "TBL_COMPANY", "where id = '" + dread["emp_Assignment"].ToString() + "'");
+                infoarr[7] = (has_init_company_tbl ? dread["CoName"].ToString() : "Not Set");
+                infoarr[8] = dread["emp_Position"].ToString();
+                infoarr[9] = dread["emp_Rank"].ToString();
+                infoarr[10] = dread["emp_Status"].ToString();
+                infoarr[11] = dread["emp_Department"].ToString();
+                infoarr[12] = dread["emp_Approver1"].ToString();
+                infoarr[13] = dread["emp_Approver2"].ToString();
+                infoarr[14] = dread["emp_SSSNo"].ToString();
+                infoarr[15] = dread["emp_TIN"].ToString();
+                infoarr[16] = dread["emp_PagibigNo"].ToString();
+                infoarr[17] = dread["PhilHealth_No"].ToString();
+                infoarr[18] = cm.FormatDate(dread["emp_DateStart"].ToString());
+                infoarr[19] = cm.FormatDate(dread["emp_DateSeparated"].ToString());
+
+
+                //infoarr[0] = dread["E.emp_EmpID"].ToString();
+                //infoarr[1] = dread["E.emp_Surname"].ToString();
+                //infoarr[2] = dread["E.emp_FirstName"].ToString();
+                //infoarr[3] = dread["E.emp_MidName"].ToString();
+                //infoarr[4] = dread["E.emp_FullName"].ToString();
+                //infoarr[5] = dread["E.emp_Birthdate"].ToString();
+                //infoarr[6] = dread["E.emp_Gender"].ToString();
+                //infoarr[7] = dread["E.emp_Company"].ToString();
+                //infoarr[8] = dread["E.emp_PositionCode"].ToString();
+                //infoarr[9] = dread["E.emp_RankCode"].ToString();
+                //infoarr[10] = dread["E.emp_Status"].ToString();
+                //infoarr[11] = dread["E.emp_Department"].ToString();
+                //infoarr[12] = dread["U.approver"].ToString();
+                //infoarr[13] = "";
+                //infoarr[14] = dread["E.emp_SSSNo"].ToString();
+                //infoarr[15] = dread["E.emp_TIN"].ToString();
+                //infoarr[16] = dread["E.emp_PagibigNo"].ToString();
+                //infoarr[17] = dread["PhilHealth_No"].ToString();
+                //infoarr[18] = dread["E.emp_DateStart"].ToString();
+                //infoarr[19] = dread["E.emp_DateSeparated"].ToString();
+
+            }
+            conn.Close();
+            return infoarr;
+
+
+        }
+        catch
+        {
+
+            conn.Close();
+        }
+        conn.Close();
+        return null;
+
+
+
+    }
+
+    //public string[] GetEmployeeInfoCommon(string empNo, Dictionary<string,string> param)
+    //{
+    //    int dictCount = param.Count;
+    //    string[] infoarr = new string[dictCount];
+    //    try
+    //    {
+
+
+    //        conn = new SqlConnection(connectionstring);
+    //        conn.Open();
+
+    //        //cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER E, TBL_USERS U where E.emp_EmpID =" + empNo + " and E.emp_EmpID = U.empid", conn);
+    //        cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER where emp_EmpID =" + empNo, conn);
+    //        dread = cmd.ExecuteReader();
+
+    //        foreach(KeyValuePair<string,string>
+    //        while (dread.Read())
+    //        {
+    //            infoarr[0] = dread["emp_BiometricsID"].ToString();
+    //            infoarr[1] = dread["emp_Surname"].ToString();
+    //            infoarr[2] = dread["emp_FirstName"].ToString();
+    //            infoarr[3] = dread["emp_MidName"].ToString();
+    //            infoarr[4] = dread["emp_FullName"].ToString();
+    //            infoarr[5] = dread["emp_Birthdate"].ToString();
+    //            infoarr[6] = dread["emp_Gender"].ToString();
+    //            infoarr[7] = "";//dread["emp_Company"].ToString();
+    //            infoarr[8] = dread["emp_Position"].ToString();
+    //            infoarr[9] = dread["emp_Rank"].ToString();
+    //            infoarr[10] = dread["emp_Status"].ToString();
+    //            infoarr[11] = dread["emp_Department"].ToString();
+    //            infoarr[12] = dread["emp_Approver1"].ToString();
+    //            infoarr[13] = dread["emp_Approver2"].ToString();
+    //            infoarr[14] = dread["emp_SSSNo"].ToString();
+    //            infoarr[15] = dread["emp_TIN"].ToString();
+    //            infoarr[16] = dread["emp_PagibigNo"].ToString();
+    //            infoarr[17] = dread["PhilHealth_No"].ToString();
+    //            infoarr[18] = dread["emp_DateStart"].ToString();
+    //            infoarr[19] = dread["emp_DateSeparated"].ToString();
+
+
+    //            //infoarr[0] = dread["E.emp_EmpID"].ToString();
+    //            //infoarr[1] = dread["E.emp_Surname"].ToString();
+    //            //infoarr[2] = dread["E.emp_FirstName"].ToString();
+    //            //infoarr[3] = dread["E.emp_MidName"].ToString();
+    //            //infoarr[4] = dread["E.emp_FullName"].ToString();
+    //            //infoarr[5] = dread["E.emp_Birthdate"].ToString();
+    //            //infoarr[6] = dread["E.emp_Gender"].ToString();
+    //            //infoarr[7] = dread["E.emp_Company"].ToString();
+    //            //infoarr[8] = dread["E.emp_PositionCode"].ToString();
+    //            //infoarr[9] = dread["E.emp_RankCode"].ToString();
+    //            //infoarr[10] = dread["E.emp_Status"].ToString();
+    //            //infoarr[11] = dread["E.emp_Department"].ToString();
+    //            //infoarr[12] = dread["U.approver"].ToString();
+    //            //infoarr[13] = "";
+    //            //infoarr[14] = dread["E.emp_SSSNo"].ToString();
+    //            //infoarr[15] = dread["E.emp_TIN"].ToString();
+    //            //infoarr[16] = dread["E.emp_PagibigNo"].ToString();
+    //            //infoarr[17] = dread["PhilHealth_No"].ToString();
+    //            //infoarr[18] = dread["E.emp_DateStart"].ToString();
+    //            //infoarr[19] = dread["E.emp_DateSeparated"].ToString();
+
+    //        }
+    //        conn.Close();
+    //        return infoarr;
+
+
+    //    }
+    //    catch
+    //    {
+
+    //        conn.Close();
+    //    }
+    //    conn.Close();
+    //    return null;
+
+
+
+    //}
+
+    public Dictionary<string, string> GetEmployeeInfoDict(string empNo)
+    {
+        Dictionary<string, string> empInfo = new Dictionary<string, string>();
+        List<string> cols = new List<string>();
+        try
+        {
+
+
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+            cmd = new SqlCommand("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'TBL_EMPLOYEE_MASTER' ORDER BY ORDINAL_POSITION", conn);
+            dread = cmd.ExecuteReader();
+
+            while (dread.Read())
+            {
+                cols.Add(dread["COLUMN_NAME"].ToString());
+            }
+            dread.Close();
+
+            //cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER E, TBL_USERS U where E.emp_EmpID =" + empNo + " and E.emp_EmpID = U.empid", conn);
+            //cmd = new SqlCommand("SELECT * from TBL_EMPLOYEE_MASTER E, TBL_POSITION P where E.emp_EmpID = '"+empNo+"' and P.PositionCode = E.emp_Position", conn);
+            cmd = new SqlCommand("SELECT * from TBL_EMPLOYEE_MASTER where emp_EmpID = '" + empNo + "'", conn);
+            dread = cmd.ExecuteReader();
+
+            while (dread.Read())
+            {
+                foreach (string strcols in cols)
+                {
+                    empInfo.Add(strcols, dread[strcols].ToString());
+
+                }
+            }
+            dread.Close();
+
+            //Add position to dictionary
+            cols.Add("PositionName");
+
+
+            cmd = new SqlCommand("SELECT * from TBL_EMPLOYEE_MASTER E, TBL_POSITION P where E.emp_EmpID = '" + empNo + "' and P.id = E.emp_Position", conn);
+            dread = cmd.ExecuteReader();
+
+            dread.Read();
+
+            if (dread.HasRows)
+                empInfo.Add("PositionName", dread["PositionName"].ToString());
+            else
+                empInfo.Add("PositionName", "Employee");
+
+            conn.Close();
+            return empInfo;
+        }
+        catch (Exception e)
+        {
+            return empInfo;
+        }
+
+    }
+    public Dictionary<string, string> GetEmployeeInfoDictNew(string empNo)
+    {
+        Dictionary<string, string> empInfo = new Dictionary<string, string>();
+        List<string> cols = new List<string>();
+        try
+        {
+
+
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+            cmd = new SqlCommand("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'TBL_EMPLOYEE_MASTER' ORDER BY ORDINAL_POSITION", conn);
+            dread = cmd.ExecuteReader();
+
+            while (dread.Read())
+            {
+                cols.Add(dread["COLUMN_NAME"].ToString());
+            }
+            dread.Close();
+
+            //cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER E, TBL_USERS U where E.emp_EmpID =" + empNo + " and E.emp_EmpID = U.empid", conn);
+            //cmd = new SqlCommand("SELECT * from TBL_EMPLOYEE_MASTER E, TBL_POSITION P where E.emp_EmpID = '"+empNo+"' and P.PositionCode = E.emp_Position", conn);
+            cmd = new SqlCommand("SELECT * from TBL_EMPLOYEE_MASTER where emp_EmpID = '" + empNo + "'", conn);
+            dread = cmd.ExecuteReader();
+
+            while (dread.Read())
+            {
+                foreach (string strcols in cols)
+                {
+                    empInfo.Add(strcols, dread[strcols].ToString());
+
+                }
+            }
+            dread.Close();
+
+            //Add position to dictionary
+            cols.Add("PositionName");
+
+
+            cmd = new SqlCommand("SELECT * from TBL_EMPLOYEE_MASTER E, where E.emp_EmpID = '" + empNo + "'", conn);
+            dread = cmd.ExecuteReader();
+
+            dread.Read();
+
+            if (dread.HasRows)
+                empInfo.Add("PositionName", dread["PositionName"].ToString());
+            else
+                empInfo.Add("PositionName", "Employee");
+
+            conn.Close();
+            return empInfo;
+        }
+        catch (Exception e)
+        {
+            return empInfo;
+        }
+
+    }
+    public ListItem[] GetDropDownMenuList(string tbl, string col)
+    {
+        return GetDropDownMenuList(tbl, col, "");
+    }
+    public ListItem[] GetDropDownMenuList(string tbl, string col, string specificID)
+    {
+        Dictionary<string, string> ddlist = new Dictionary<string, string>();
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+
+        cmd = new SqlCommand("Select * from " + tbl, conn);
+        dread = cmd.ExecuteReader();
+
+
+        while (dread.Read())
+        {
+
+            ddlist.Add(dread[col].ToString(), (specificID == "" ? dread[0].ToString() : dread[specificID].ToString()));
+
+
+        }
+        conn.Close();
+        int listcount = 0;
+        listcount = ddlist.Count;
+        ListItem[] ddlistitem = new ListItem[listcount];
+        int i = 0;
+        foreach (KeyValuePair<string, string> kvp in ddlist)
+        {
+            ddlistitem[i] = new ListItem(kvp.Key, kvp.Value);
+            i++;
+        }
+        return ddlistitem;
+    }
+    
+    public ListItem[] GetDropDownMenuOffenseType(string tbl, string col, string condition, string specificID)
+    {
+        Dictionary<string, string> ddlist = new Dictionary<string, string>();
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+
+        cmd = new SqlCommand("Select * from "+tbl+" "+condition+"", conn);
+        dread = cmd.ExecuteReader();
+
+
+        while (dread.Read())
+        {
+
+            ddlist.Add(dread[col].ToString(), (specificID == "" ? dread[0].ToString() : dread[specificID].ToString()));
+
+
+        }
+        conn.Close();
+        int listcount = 0;
+        listcount = ddlist.Count;
+        ListItem[] ddlistitem = new ListItem[listcount];
+        int i = 0;
+        foreach (KeyValuePair<string, string> kvp in ddlist)
+        {
+            ddlistitem[i] = new ListItem(kvp.Key, kvp.Value);
+            i++;
+        }
+        return ddlistitem;
+    }
+
+    public ListItem[] GetDropDownMenuListEmployee()
+    {
+        Dictionary<string, string> ddlist = new Dictionary<string, string>();
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+
+        cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER", conn);
+        dread = cmd.ExecuteReader();
+
+
+        while (dread.Read())
+        {
+
+            ddlist.Add(""+dread["emp_EmpID"].ToString()+" - "+ dread["emp_FullName"].ToString() + "", dread["emp_EmpID"].ToString());
+
+
+        }
+        conn.Close();
+        int listcount = 0;
+        listcount = ddlist.Count;
+        ListItem[] ddlistitem = new ListItem[listcount];
+        int i = 0;
+        foreach (KeyValuePair<string, string> kvp in ddlist)
+        {
+            ddlistitem[i] = new ListItem(kvp.Key, kvp.Value);
+            i++;
+        }
+        return ddlistitem;
+    }
+    public ListItem[] GetDropDownMenuListApprover(string tbl, string col)
+    {
+        return GetDropDownMenuListApprover(tbl, col, "");
+    }
+    public ListItem[] GetDropDownMenuListApprover(string tbl, string col, string specificID)
+    {
+        Dictionary<string, string> ddlist = new Dictionary<string, string>();
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+
+        cmd = new SqlCommand("Select * from " + tbl, conn);
+        dread = cmd.ExecuteReader();
+
+
+        while (dread.Read())
+        {
+
+            ddlist.Add(dread[col].ToString(), (specificID == "" ? dread[5].ToString() : dread[specificID].ToString()));
+
+
+        }
+        conn.Close();
+        int listcount = 0;
+        listcount = ddlist.Count;
+        ListItem[] ddlistitem = new ListItem[listcount];
+        int i = 0;
+        foreach (KeyValuePair<string, string> kvp in ddlist)
+        {
+            ddlistitem[i] = new ListItem(kvp.Key, kvp.Value);
+            i++;
+        }
+        return ddlistitem;
+    }
+    public ListItem[] GetDropDownMenuListPayrollReg(string tbl, string col)
+    {
+        Dictionary<string, string> ddlist = new Dictionary<string, string>();
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+
+        cmd = new SqlCommand("Select * from " + tbl, conn);
+        dread = cmd.ExecuteReader();
+
+
+        while (dread.Read())
+        {
+
+            ddlist.Add(dread[col].ToString(), cm.FormatDatePayroll(dread[1].ToString()));
+
+
+        }
+        conn.Close();
+        int listcount = 0;
+        listcount = ddlist.Count;
+        ListItem[] ddlistitem = new ListItem[listcount];
+        int i = 0;
+        foreach (KeyValuePair<string, string> kvp in ddlist)
+        {
+            ddlistitem[i] = new ListItem(kvp.Key, kvp.Value);
+            i++;
+        }
+        return ddlistitem;
+    }
+
+    public ListItem[] GetDropDownMenuListRank(string tbl, string col)
+    {
+        return GetDropDownMenuListRank(tbl, col, "");
+    }
+    public ListItem[] GetDropDownMenuListRank(string tbl, string col, string specificID)
+    {
+        Dictionary<string, string> ddlist = new Dictionary<string, string>();
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+
+        cmd = new SqlCommand("Select * from " + tbl + " where RankStatus = 'Y'", conn);
+        dread = cmd.ExecuteReader();
+
+
+        while (dread.Read())
+        {
+
+            ddlist.Add(dread[col].ToString(), (specificID == "" ? dread[0].ToString() : dread[specificID].ToString()));
+
+
+        }
+        conn.Close();
+        int listcount = 0;
+        listcount = ddlist.Count;
+        ListItem[] ddlistitem = new ListItem[listcount];
+        int i = 0;
+        foreach (KeyValuePair<string, string> kvp in ddlist)
+        {
+            ddlistitem[i] = new ListItem(kvp.Key, kvp.Value);
+            i++;
+        }
+        return ddlistitem;
+    }
+
+    public string GetScheduleShiftName(string schedID)
+    {
+        string ShiftName = "";
+        int schedIDnum = 0;
+        if (!int.TryParse(schedID, out schedIDnum))
+            return "N/A";
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+
+        cmd = new SqlCommand("Select ShiftName from TBL_SCHEDULE where id = " + schedID + "", conn);
+        dread = cmd.ExecuteReader();
+
+        while (dread.Read())
+        {
+            ShiftName = dread["ShiftName"].ToString();
+        }
+        conn.Close();
+
+        if (ShiftName == "")
+            ShiftName = "Restday";
+        return ShiftName;
+
+
+    }
+    //public string GetSchedTimeInOut(string empno,string OTdt,string timein, string timeout, out bool IsOTAllowed)
+    //{
+    //    IsOTAllowed = false;
+    //    string schedTimeIn = "";
+    //    string schedTimeOut = "";
+    //    TimeSpan checktimein = TimeSpan.Parse(timein);
+    //    TimeSpan checktimeout = TimeSpan.Parse(timeout);
+    //    TimeSpan schedTimeIn1 = TimeSpan.Parse("08:00");
+    //    TimeSpan schedTimeOut1 = TimeSpan.Parse("17:00");
+    //    TimeSpan schedTimeIn2 = TimeSpan.Parse("08:30");
+    //    TimeSpan schedTimeOut2 = TimeSpan.Parse("17:00");
+    //    DateTime bussDt = Convert.ToDateTime(OTdt);
+    //    Dictionary<string, string> empInfo = new Dictionary<string, string>();
+    //    empInfo = GetEmployeeInfoDict(empno);
+    //    if (bussDt.DayOfWeek == DayOfWeek.Monday)
+    //    {
+    //        if (empInfo["emp_Monday"].ToString() == "2")
+    //        {
+    //            if(checktimein > schedTimeOut2)
+                
+    //        }
+    //    }
+    //    conn = new SqlConnection(connectionstring);
+    //    conn.Open();
+
+    //    cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER where EmpID = '" + empno + "'", conn);
+    //    dread = cmd.ExecuteReader();
+
+    //    while (dread.Read())
+    //    {
+    //        ShiftName = dread["ShiftName"].ToString();
+    //    }
+    //    conn.Close();
+
+    //    if (ShiftName == "")
+    //        ShiftName = "Restday";
+    //    return ShiftName;
+
+
+    //}
+
+    public Dictionary<string, string> getValuesToUpdate(Dictionary<string, string> dict, string empNo)
+    {
+        string vali = "";
+        Dictionary<string, string> values = new Dictionary<string, string>();
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER where emp_EmpID = '" + empNo + "'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            foreach (KeyValuePair<string, string> kvp in dict)
+            {
+                vali = dread[kvp.Key].ToString();
+                //string val = (kvp.Key == "emp_LicExpDate"? cm.FormatDate(dread[kvp.Key].ToString()): dread[kvp.Key].ToString());
+                //values.Add(kvp.Key, val);
+                //string StartDate = (kvp.Key == "emp_DateStart" ? cm.FormatDate(dread[kvp.Key].ToString()) : dread[kvp.Key].ToString());
+                //values.Add(kvp.Key, StartDate);
+
+                //if (kvp.Key == "emp_LicExpDate" || kvp.Key == "emp_DateStart")
+                //{
+                //    vali = cm.FormatDate(dread[kvp.Key].ToString());
+                //}
+                values.Add(kvp.Key, vali);
+            }
+
+        }
+
+        conn.Close();
+        return values;
+
+    }
+
+    public string Get201FilePath(string FileDirectory, string fileID)
+    {
+        string fpath = "";
+        string fdirectory = FileDirectory;
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+
+        cmd = new SqlCommand("Select * from TBL_201Files where id = " + fileID + "", conn);
+        dread = cmd.ExecuteReader();
+
+        while (dread.Read())
+        {
+            if (dread["Category"].ToString().ToLowerInvariant() != "")
+                fpath = dread["Category"].ToString() + @"\" + dread["Filename"].ToString();
+            else
+                fpath = dread["Filename"].ToString();
+        }
+        conn.Close();
+        fpath = fdirectory + fpath;
+        return fpath;
+
+    }
+
+    public int GetNewID(string field, string tbl)
+    {
+        int id = 0;
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+
+        cmd = new SqlCommand("Select MAX(" + field + ") from " + tbl + "", conn);
+        dread = cmd.ExecuteReader();
+        dread.Read();
+        if (dread.HasRows)
+        {
+            bool valid = int.TryParse(dread[0].ToString(), out id);
+        }
+        conn.Close();
+        return id++;
+
+    }
+
+    public string GetEmployeeName(string empno)
+    {
+        string name = "";
+        if (empno == "00000")
+        {
+            name = "Developer";
+            goto EXIT;
+
+        }
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+
+        cmd = new SqlCommand("Select emp_FullName from TBL_EMPLOYEE_MASTER where emp_EmpID = '" + empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        dread.Read();
+        if (dread.HasRows)
+        {
+            name = dread[0].ToString();
+        }
+        conn.Close();
+
+    EXIT:
+        return name.ToUpperInvariant();
+
+    }
+
+    public string GetSpecificData(string field, string tbl, string condition)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("Select " + field + " from " + tbl + " " + condition + "", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+    public string GetSpecificEmpID(string field, string tbl, string condition)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        if (condition == "")
+        {
+            rec = "";
+        }
+        else
+        {
+            SqlCommand cmd1 = new SqlCommand("Select " + field + " from " + tbl + " where emp_id = " + condition + "", conn_fn);
+            dread_fn = cmd1.ExecuteReader();
+            dread_fn.Read();
+            if (dread_fn.HasRows)
+            {
+                rec = dread_fn[0].ToString();
+                dread_fn.Close();
+                conn_fn.Close();
+            }
+        }
+
+        return rec;
+
+    }
+    public string GetSpecificDeptID(string field, string tbl, string condition)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        if (condition == "")
+        {
+            rec = "";
+        }
+        else
+        {
+            SqlCommand cmd1 = new SqlCommand("Select " + field + " from " + tbl + " where id = " + condition + "", conn_fn);
+            dread_fn = cmd1.ExecuteReader();
+            dread_fn.Read();
+            if (dread_fn.HasRows)
+            {
+                rec = dread_fn[0].ToString();
+                dread_fn.Close();
+                conn_fn.Close();
+            }
+        }
+
+        return rec;
+
+    }
+
+    public List<string> GetApprovers(string empno)
+    {
+        List<string> approver = new List<string>();
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select emp_Approver1 ,emp_Approver2 ,emp_Approver3 ,emp_Approver4 from TBL_EMPLOYEE_MASTER where emp_EmpID = '" + empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            approver.Add(dread["emp_Approver1"].ToString());
+            approver.Add(dread["emp_Approver2"].ToString());
+            approver.Add(dread["emp_Approver3"].ToString());
+            approver.Add(dread["emp_Approver4"].ToString());
+        }
+        dread.Close();
+        conn.Close();
+        return approver;
+    }
+
+    public string GetEmployeePositionName(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("SELECT PositionName from TBL_EMPLOYEE_MASTER E, TBL_POSITION P where E.emp_EmpID = '" + empno + "' and P.id = E.emp_Position", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    public string GetEmployeeFirstName(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("SELECT emp_FirstName from TBL_EMPLOYEE_MASTER  where emp_EmpID = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+    public string GetEmployeeFullName(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("SELECT emp_FullName from TBL_EMPLOYEE_MASTER  where emp_EmpID = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+
+    public string GetEmployeeLastName(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("SELECT emp_Surname from TBL_EMPLOYEE_MASTER  where emp_EmpID = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    public string GetEmployeeBirthday(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("SELECT emp_Birthdate from TBL_EMPLOYEE_MASTER  where emp_EmpID = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    public string GetEmployeeRole(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("SELECT roles from TBL_USERS where empid = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    public string GetEmployeeRnk(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("SELECT Ot from TBL_EMPLOYEE_MASTER E, TBL_RANK P where E.emp_EmpID = '" + empno + "' and P.id = E.emp_Rank", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    public string GetEmployeeRnkOT(string rankID)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("SELECT Ot from TBL_RANK P P.id = " + rankID + "", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    public string GetEmployeeStatus(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("SELECT StatusDesc from TBL_EMPLOYEE_MASTER E, TBL_STATUS P where E.emp_EmpID = '" + empno + "' and P.id = E.emp_Status", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    public string GetEmployeeApprover1(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        //SqlCommand cmd1 = new SqlCommand("SELECT B.emp_FullName from TBL_EMPLOYEE_MASTER E, TBL_EMPLOYEE_MASTER B where E.emp_Approver1 = B.emp_id AND E.emp_EmpID = '" + empno + "' ", conn_fn);
+        SqlCommand cmd1 = new SqlCommand("SELECT B.emp_FullName from TBL_EMPLOYEE_MASTER E, TBL_EMPLOYEE_MASTER B where E.emp_Approver1 = B.emp_EmpID AND E.emp_EmpID = '" + empno + "' ", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    public string GetEmployeeApprover2(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("SELECT B.emp_FullName from TBL_EMPLOYEE_MASTER E, TBL_EMPLOYEE_MASTER B where E.emp_Approver2 = B.emp_EmpID AND E.emp_EmpID = '" + empno + "' ", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    public string GetEmployeeMovementName(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("Select MovementTypeCode from TBL_MOVEMENT A, TBL_MOVEMENTTYPE B where A.MovementTypeCode = B.id AND A.id = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+    public string GetEmployeeValidDays(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("Select validdays from TBL_USERS  where empid = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    public string GetEmployeeValidTil(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("Select datecreatep from TBL_USERS  where empid = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    public string GetEmployeeBranchName(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("Select BranchCode from TBL_MOVEMENT A, TBL_COMPANY B where A.BranchCode = B.id AND A.id = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+    public string ValidateID(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("Select COUNT (emp_EmpID) from TBL_EMPLOYEE_MASTER A where A.emp_EmpID = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    public string ValidateBioID(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("Select COUNT (emp_EmpID) from TBL_EMPLOYEE_MASTER A where A.emp_BiometricsID = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+    public string GetEmployeeMovementDeptName(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("Select DeptCode from TBL_MOVEMENT A, TBL_DEPARTMENT B where A.DeptCode = B.id AND A.id = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+    public string GetEmployeeMovementPositionName(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("Select PositionCode from TBL_MOVEMENT A, TBL_POSITION B where A.PositionCode = B.id AND A.id = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+    public string GetEmployeeMovementPayClassName(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("Select A.PayClassCode from TBL_MOVEMENT A, TBL_PAYCLASS B where A.PayClassCode = B.id AND A.id = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    public string GetEmployeeMovementLocationName(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("Select GroupCode from TBL_MOVEMENT A, TBL_LOCATION B where A.GroupCode = B.id AND A.id = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    public string GetEmployeeMovementDivisionName(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("Select DivisionCode from TBL_MOVEMENT A, TBL_DIVISION B where A.DivisionCode = B.id AND A.id = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+
+    public string GetEmployeeDeptName(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("SELECT DeptName from TBL_EMPLOYEE_MASTER E, TBL_DEPARTMENT P where E.emp_EmpID = '" + empno + "' and P.id = E.emp_Department", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+    public string GetEmployeeEmail(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("SELECT emp_Email from TBL_EMPLOYEE_MASTER where emp_EmpID = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    public string GetEmployeeDivisionID(string deptID)
+    {
+        string rec = "0";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("SELECT DivCode from TBL_DEPARTMENT where id = " + deptID + "", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    public string GetEmployeeLoanName(string empno)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("Select LoanCode from TBL_LOANENTRIES A, TBL_LOANS B where A.LoanCode = B.id AND A.id = '" + empno + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    public DataTable populateGridDeploymentCol(string expr)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from TBL_POSITION A, TBL_EMPLOYEE_MASTER B where B.emp_Position = A.id and " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("LastName"), new DataColumn("Suffix"), new DataColumn("FirstName"), new DataColumn("MiddleName"), new DataColumn("StartDate"), new DataColumn("Position") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["emp_Surname"].ToString(), dread["emp_Suffix"].ToString(), dread["emp_FirstName"].ToString(), dread["emp_MidName"].ToString(), cm.FormatDate(dread["emp_DateStart"].ToString()), dread["PositionName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridActiveEmpsCol()
+    {
+        TimeSpan time;
+        DateTime zeroTime = new DateTime(1, 1, 1);
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from TBL_STATUS A, TBL_EMPLOYEE_MASTER B where B.emp_Status = A.id and B.emp_Active ='Y'";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("LastName"), new DataColumn("Suffix"), new DataColumn("FirstName"),
+            new DataColumn("MiddleName"), new DataColumn("StartDate"), new DataColumn("Status") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            string date = dread["emp_DateStart"].ToString();
+            if (Convert.ToDateTime(dread["emp_DateStart"].ToString()) > DateTime.Now)
+            {
+                int years = 0;
+                dt.Rows.Add(dread["emp_Surname"].ToString(), dread["emp_Suffix"].ToString(), dread["emp_FirstName"].ToString(),
+                    dread["emp_MidName"].ToString(), years, dread["StatusDesc"].ToString());
+            }
+            else
+            {
+                time = DateTime.Now - Convert.ToDateTime(dread["emp_DateStart"].ToString());
+                int years = (zeroTime + time).Year - 1;
+                dt.Rows.Add(dread["emp_Surname"].ToString(), dread["emp_Suffix"].ToString(), dread["emp_FirstName"].ToString(),
+                    dread["emp_MidName"].ToString(), years, dread["StatusDesc"].ToString());
+            }
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populategridprobcont(string expr)
+    {
+        TimeSpan time;
+        DateTime zeroTime = new DateTime(1, 1, 1);
+        //expr = "";
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        //string base_query = "Select * from TBL_STATUS A, TBL_EMPLOYEE_MASTER B where B.emp_Status = A.id and B.emp_Status = '1'";
+        string base_query = "Select emp_Surname, emp_Suffix, emp_FirstName, emp_Midname, emp_DateStart,StatusDesc, DATEDIFF(DAY, emp_DateStart, GETDATE()) as DateDiff from TBL_EMPLOYEE_MASTER A, TBL_STATUS B, TBL_COMPANY C, TBL_DEPARTMENT D where A.emp_Assignment = C.id and A.emp_Department=d.id and A.emp_Status = B.id and " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("LastName"), new DataColumn("Suffix"), new DataColumn("FirstName"),
+            new DataColumn("MiddleName"), new DataColumn("StartDate"), new DataColumn("Status")});
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            string date = dread["emp_DateStart"].ToString();
+            if (dread["DateDiff"].ToString() != "")
+            {
+                int datediff = Convert.ToInt32(dread["DateDiff"].ToString());
+                if (Convert.ToInt32(dread["DateDiff"].ToString()) >= 150 && Convert.ToInt32(dread["DateDiff"].ToString()) <= 180)
+                {
+                    if (Convert.ToDateTime(dread["emp_DateStart"].ToString()) > DateTime.Now)
+                    {
+                        int years = 0;
+                        dt.Rows.Add(dread["emp_Surname"].ToString(), dread["emp_Suffix"].ToString(), dread["emp_FirstName"].ToString(),
+                            dread["emp_MidName"].ToString(), dread["emp_DateStart"], dread["StatusDesc"].ToString());
+                    }
+                    else
+                    {
+                        time = DateTime.Now - Convert.ToDateTime(dread["emp_DateStart"].ToString());
+                        int years = (zeroTime + time).Year - 1;
+                        dt.Rows.Add(dread["emp_Surname"].ToString(), dread["emp_Suffix"].ToString(), dread["emp_FirstName"].ToString(),
+                            dread["emp_MidName"].ToString(), dread["emp_DateStart"], dread["StatusDesc"].ToString());
+                    }
+                }
+            }
+
+
+        }
+        dread.Close();
+        conn.Close();
+        return dt;
+    }
+
+    public DataTable populateGridResigneeCol(string expr)
+    {
+        //string base_query = "Select * from TBL_LICENSE where EmpID = '" + empno + "' and (license_type = '" + lictype + "' or license_no = '" + licno + "' or lic_expirydate = '" + licdate + "')";
+        string base_query = "Select * from TBL_POSITION A, TBL_EMPLOYEE_MASTER B, TBL_COMPANY C WHERE B.emp_Position = A.id and B.emp_Assignment = C.id and " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("SSS"), new DataColumn("EffectiveDate"), new DataColumn("Name"),
+            new DataColumn("Birthdate"), new DataColumn("Position"), new DataColumn("Assignment") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["emp_SSSNo"].ToString(), cm.FormatDate(dread["emp_DateSeparated"].ToString()), dread["emp_FullName"].ToString(),
+                cm.FormatDate(dread["emp_Birthdate"].ToString()), dread["PositionName"].ToString(), dread["CoName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;             
+    }
+
+    public string getempcount()
+    {
+        string row = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("SELECT COUNT(*) FROM TBL_USERS", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            row = dread_fn[0].ToString();
+        }
+
+        dread_fn.Close();
+        conn_fn.Close();
+        return row;
+    }
+
+    #endregion Read
+
+    #region Update
+
+
+    /// <summary>
+    /// Update active status to database
+    /// </summary>
+    /// <param name="empNo"></param>
+    /// <param name="fname"></param>
+    /// <param name="mname"></param>
+    /// <param name="lname"></param>
+    public bool updateEmployeeActiveStatus(string empNo, string active)
+    {
+        try
+        {
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+
+            cmd = new SqlCommand("Update TBL_EMPLOYEE_MASTER SET emp_Active = '" + active + "' where emp_EmpID='" + empNo + "'", conn);
+            cmd.ExecuteNonQuery();
+            conn.Close();
+            return true;
+        }
+        catch
+        {
+            conn.Close();
+            return false;
+        }
+        conn.Close();
+
+    }
+
+    public bool UpdateQueryCommon(Dictionary<string, string> param, string whereCondition)//TODO add table for more flexibility
+    {
+
+        try
+        {
+            string setval = "";
+            bool isfirstItem = true;
+            foreach (KeyValuePair<string, string> kvp in param)
+            {
+                setval += (isfirstItem ? "" : ",") + kvp.Key + " = " + kvp.Value;
+
+
+                isfirstItem = false;
+            }
+            string base_query = "UPDATE TBL_EMPLOYEE_MASTER SET " + setval + " where " + whereCondition;
+
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+            cmd = new SqlCommand(base_query, conn);
+            cmd.ExecuteNonQuery();
+
+            conn.Close();
+            return true;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+    }
+
+    #endregion Update
+
+    #region DELETE/ARCHIVE
+    public void archiveUser(string empno)
+    {
+        try
+        {
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+
+            cmd = new SqlCommand("Update TBL_USERS SET user_Status = 'ARCHIVED' where user_EmpNo='" + empno + "'", conn);
+            cmd.ExecuteNonQuery();
+        }
+        catch
+        {
+            conn.Close();
+        }
+        conn.Close();
+
+
+    }
+
+    public void DeleteEmployee(string empno)
+    {
+        try
+        {
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+
+            cmd = new SqlCommand("DELETE from TBL_EMPLOYEE_MASTER where emp_EmpID='" + empno + "'", conn);
+            cmd.ExecuteNonQuery();
+            cmd = new SqlCommand("DELETE from TBL_USERS where empid='" + empno + "'", conn);
+            cmd.ExecuteNonQuery();
+        }
+        catch
+        {
+            conn.Close();
+        }
+        conn.Close();
+
+
+    }
+
+    public void DeleteQuery(string tbl, string where)
+    {
+        try
+        {
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+
+            cmd = new SqlCommand("DELETE from " + tbl + " " + where + "", conn);
+            cmd.ExecuteNonQuery();
+        }
+        catch
+        {
+            conn.Close();
+        }
+        conn.Close();
+
+
+    }
+    #endregion DELETE/ARCHIVE
+    #region NEW_SPECS
+    public DataTable populateGridForEmpScheduler(string company)
+    {
+        List<string> cols = new List<string>();
+        string qry = "";
+        string expr = "";
+        qry = "Select * from TBL_EMPLOYEE_MASTER A, TBL_COMPANY B where emp_Active = 'Y' AND A.emp_Assignment = B.id";
+        //string ordr = "Order by emp_EmpID";
+        //qry += ordr;
+        if (company != "")
+        {
+            expr = " AND (emp_Assignment = " + company + "";
+            expr += ")";
+            qry += expr;
+        }
+
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[3] { new DataColumn("empid"), new DataColumn("FullName"), new DataColumn("Company") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString(), dread["CoName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridForEmpSchedulerCol(string company, string expr)
+    {
+        List<string> cols = new List<string>();
+        
+        string exprplus = "";
+        string qry = "Select * from TBL_EMPLOYEE_MASTER A, TBL_COMPANY B, TBL_BRANCH C where emp_Active ='Y' AND A.emp_Assignment = B.id AND a.emp_BranchCode = C.BranchCode ";
+        if (company != "")
+        {
+            exprplus = " AND (emp_BranchCode = '" + company + "' ";
+            exprplus += ") ";
+            qry += exprplus;
+        }
+        qry += (expr == "" ? "" : expr);
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[3] { new DataColumn("empid"), new DataColumn("FullName"), new DataColumn("Company") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["emp_EmpID"].ToString(), dread["emp_FullName"].ToString(), dread["CoName"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+    #endregion NEW_SPECS
+
+}

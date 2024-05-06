@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/AdminKiosk/adminusermanagement.aspx" hash="2e7cb0847" filehash="fd3a243973f37eb" flags="110000" assembly="App_Web_5n3hefyp" type="ASP.pages_adminkiosk_adminusermanagement_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/AdminKiosk/adminusermanagement.aspx" />
+    </filedeps>
+</preserve>

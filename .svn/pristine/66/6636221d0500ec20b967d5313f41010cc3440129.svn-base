@@ -1,0 +1,226 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace HRIS_APPELECTRIC.Pages.Admin.Employees._201
+{
+    public partial class AllowanceSetting : System.Web.UI.Page
+    {
+        Employee emp = new Employee();
+        Common cm = new Common();
+        public string empno = "";
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            try
+            {
+                empno = Request.QueryString["id"];
+                if (!IsPostBack)
+                {
+                    if (Session["ROLES"].ToString() != "admin")
+                    {
+                        Session.Clear();
+                        Session.Abandon();
+                        Response.Redirect("~/Pages/Login.aspx");
+                    }
+                    populateUpdateField(empno);
+                }
+            }
+            catch
+            {
+                Session.Clear();
+                Session.Abandon();
+                Response.Redirect("~/Pages/Login.aspx");
+            }
+        }
+
+        public string getname()
+        {
+            string name = "";
+            name = emp.GetEmployeeName(empno);
+
+            return name;
+
+        }
+        public void populateUpdateField(string id)
+        {
+            Dictionary<string, string> getDict = new Dictionary<string, string>();
+            getDict = cm.GetTableDict("TBL_ALLOWANCESETTING", " where EmpID = '" + id + "'");
+            string AllowanceType = "";
+            string AllowanceAmount = "0";
+            string AllowanceFrequency = "";
+            if (getDict.Count > 0)
+            {
+                AllowanceType = getDict["AllowanceType"];
+                AllowanceAmount = getDict["AllowanceAmount"];
+                AllowanceFrequency = getDict["AllowanceFrequency"];
+            }
+            double getallowanceamt = 0;
+            double.TryParse(AllowanceAmount, out getallowanceamt);
+            if(AllowanceType == "1" || AllowanceType == "")
+            {
+                ddlAllowanceFrequency.SelectedValue = AllowanceFrequency;
+                rbAllowanceType.SelectedValue = AllowanceType;
+                txtAllowanceAmount.Value = "0";
+                txtAllowanceAmount.Disabled = true;
+            }
+            else if(AllowanceType == "2")
+            {
+                ddlAllowanceFrequency.SelectedValue = AllowanceFrequency;
+                rbAllowanceType.SelectedValue = AllowanceType;
+                txtAllowanceAmount.Value = getallowanceamt.ToString();
+                txtAllowanceAmount.Disabled = false;
+            }
+            else if (AllowanceType == "3")
+            {
+                ddlAllowanceFrequency.SelectedValue = AllowanceFrequency;
+                rbAllowanceType.SelectedValue = AllowanceType;
+                txtAllowanceAmount.Value = getallowanceamt.ToString();
+                txtAllowanceAmount.Disabled = false;
+            }
+        }
+
+
+        protected void btnCreate_Click(object sender, EventArgs e)
+        {
+            string confirmValue = Request.Form["confirm_value"];
+            if (confirmValue == "Yes")
+            {
+                string emppayrollmode = cm.GetSpecificDataFromDB("payrollmode", "TBL_EMPLOYEE_MASTER A, TBL_PAYROLLGRP B", "where A.emp_PayrollGroup = B.id AND emp_EmpID = '" + empno + "'");
+                if(rbAllowanceType.SelectedValue != "1" && rbAllowanceType.SelectedValue != "")
+                {
+                    if(ddlAllowanceFrequency.SelectedValue == "")
+                    {
+                        ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Please select allowance frequency.');", true);
+                        return;
+                    }
+                    if(ddlAllowanceFrequency.SelectedValue == "W4" || ddlAllowanceFrequency.SelectedValue == "W")
+                    {
+                        if(emppayrollmode != "4")
+                        {
+                            ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Please change employee payroll group to weekly first.');", true);
+                            return;
+                        }
+                    }
+                    if (ddlAllowanceFrequency.SelectedValue == "SM")
+                    {
+                        if (emppayrollmode != "2")
+                        {
+                            ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Please change employee payroll group to semi-monthly first.');", true);
+                            return;
+                        }
+                    }
+                }
+                if (!cm.ItemExist("TBL_ALLOWANCESETTING", "id", "where EmpID = '" + empno + "'", ""))
+                {
+                    if(rbAllowanceType.SelectedValue != "1" && rbAllowanceType.SelectedValue != "" && ddlAllowanceFrequency.SelectedValue != "")
+                    {
+                        if (emp.InsertQueryCommon(saveParam(), "TBL_ALLOWANCESETTING"))
+                        {
+                            cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " created Allowance " + txtAllowanceAmount.Value,
+                               "CREATE", "x123", "qwg-23", "CREATE", Session["EMP_ID"].ToString());
+                            ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully Save !!!');", true);
+                            populateUpdateField(empno);
+                        }
+                        else
+                        {
+                            ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Invalid Input !!!');", true);
+                                return;
+                        }
+                    }
+                    else
+                        {
+                            ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Invalid Input !!!');", true);
+                            return;
+                        }
+
+                    
+
+
+                }
+                else
+                {
+                    if (rbAllowanceType.SelectedValue == "1" || rbAllowanceType.SelectedValue == "")
+                    {
+                        ddlAllowanceFrequency.SelectedValue = "";
+                    }
+                        if (cm.UpdateQueryCommon(saveParam(), "TBL_ALLOWANCESETTING", " EmpID = '" + empno + "'"))
+                        {
+                            cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " Update Allowance For Employee ID: "+empno+" AllowanceAmount To: " + txtAllowanceAmount.Value,
+                               "UPDATE", "x123", "qwg-23", "UPDATE", Session["EMP_ID"].ToString());
+                            ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully Updated !!!');", true);
+                            populateUpdateField(empno);
+                        }
+                        else
+                        {
+                            ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Invalid Input !!!');", true);
+
+                        }
+                    
+                        
+
+                }
+            }
+        }
+        Dictionary<string, string> saveParam()
+        {
+
+            //TBL_ALLOWANCESETTING
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            string AllowanceType = "1";
+            string AllowanceFrequency = ddlAllowanceFrequency.SelectedValue;
+            
+            if (rbAllowanceType.SelectedValue == "" || rbAllowanceType.SelectedValue == "1")
+            {
+                AllowanceType = "1";
+                AllowanceFrequency = "";
+            }
+            else
+                AllowanceType = rbAllowanceType.SelectedValue;
+            param.Add("EmpID", "'" + empno + "'");
+            param.Add("AllowanceType", "'" + AllowanceType + "'");
+            param.Add("AllowanceAmount", "" + txtAllowanceAmount.Value == "" ? "0" : txtAllowanceAmount.Value + "");
+            param.Add("AllowanceFrequency", "'" + ddlAllowanceFrequency.SelectedValue + "'");
+
+
+
+
+            return param;
+        }
+
+        protected void btnReset_Click(object sender, EventArgs e)
+        {
+            rbAllowanceType.SelectedValue = "1";
+            txtAllowanceAmount.Value = "0";
+
+        }
+        protected void OnRadio_Changed(object sender, EventArgs e)
+        {
+            
+            if (rbAllowanceType.SelectedItem.Value == "1" || rbAllowanceType.SelectedItem.Value == "")
+            {
+                ddlAllowanceFrequency.SelectedValue = "";
+                txtAllowanceAmount.Value = "0";
+                txtAllowanceAmount.Disabled = true;
+            }
+            else if (rbAllowanceType.SelectedItem.Value == "2")
+            {
+                
+                txtAllowanceAmount.Value = "0";
+                txtAllowanceAmount.Disabled = false;
+            }
+            else if (rbAllowanceType.SelectedItem.Value == "3")
+            {
+                
+                txtAllowanceAmount.Value = "0";
+                txtAllowanceAmount.Disabled = false;
+            }
+
+            //string message = "Value: " + rblFruits.SelectedItem.Value;
+            //message += " Text: " + rblFruits.SelectedItem.Text;
+            //ClientScript.RegisterStartupScript(this.GetType(), "alert", "alert('" + message + "');", true);
+        }
+    }
+}

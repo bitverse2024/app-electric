@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/Reports/ReportsPage.aspx" hash="2e7cb0847" filehash="f02c5db8cb9b3ead" flags="110000" assembly="App_Web_mpl5papm" type="ASP.pages_admin_reports_reportspage_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/Reports/ReportsPage.aspx" />
+    </filedeps>
+</preserve>

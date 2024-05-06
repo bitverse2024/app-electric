@@ -1,0 +1,95 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.Master" AutoEventWireup="true" CodeBehind="createPayrollGroup.aspx.cs" Inherits="HRIS_APPELECTRIC.Pages.Admin.createPayrollGroup" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <aside class="right-side">
+
+
+        <script type="text/javascript">
+            function Confirm() {
+                var confirm_value = document.createElement("INPUT");
+                confirm_value.type = "hidden";
+                confirm_value.name = "confirm_value";
+                if (confirm("Are you sure you want to add this item?")) {
+                    confirm_value.value = "Yes";
+                } else {
+                    confirm_value.value = "No";
+                }
+                document.forms[0].appendChild(confirm_value);
+            }
+        </script>
+
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6"></div>
+                    <div class="col-sm-6"></div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-12">
+            <div class="content">
+                <div class="container-fluid">
+                    <div class="container"></div>
+                    <h3 class="m-0 text-dark">Admin<small> Payroll Group</small></h3>
+                    <section class="card">
+                        <div class="card-header">
+                            <a href="createPayrollGroup.aspx" class="btn btn-default"><i class="fa fa-plus"></i><span class="h6">Create</span></a>
+                            <a href="PayrollGroup.aspx" class="btn btn-default"><i class="fa fa-th-list"></i><span class="h6">List</span></a>
+                        </div>
+                        <div class="card-body">
+                            <div class="content">
+                                <div class="container-fluid">
+                                    <div class="box-body">
+                                        <div class="form">
+                                            <legend>
+                                                <p class="note">Fields with <span class="required text-red">*</span> are required.</p>
+                                            </legend>
+
+
+                                            <div class="showgrid row">
+                                                <div class="col-lg-6">
+                                                    <label for="PayGrpName" class="required">Payroll Group Name</label><span class="required">
+                                                    <asp:RequiredFieldValidator ID="RequiredFieldValidator1" ControlToValidate="PayGrpName" ForeColor="Red" runat="server" ErrorMessage="Field Required" ValidationGroup="docs"></asp:RequiredFieldValidator></span>
+                                                    <input class="form-control" maxlength="50" name="PayGrpName" id="PayGrpName" type="text" runat="server" />
+
+                                                    <asp:Label ID="Label4" runat="server" Text="Payroll Group"></asp:Label><span class="required">
+                                                    <asp:RequiredFieldValidator ID="RequiredFieldValidator3" ControlToValidate="PayrollGrpMode" ForeColor="Red" runat="server" ErrorMessage="Please Select Payroll Mode" ValidationGroup="docs"></asp:RequiredFieldValidator></span>
+                                                    <asp:DropDownList AutoPostBack="true" ID="PayrollGrpMode" runat="server" CssClass="form-control">
+                                                        <asp:ListItem Value="" Text="--Select Payroll Group--"></asp:ListItem>
+                                                        <asp:ListItem Value="4" Text="Weekly"></asp:ListItem>
+                                                        <asp:ListItem Value="1" Text="Monthly"></asp:ListItem>
+                                                        <asp:ListItem Value="2" Text="Semi-Monthly"></asp:ListItem>
+                                                        
+                                                                                                       
+                                                    </asp:DropDownList>
+
+                                                    <label for="PayLocation" class="required"> Group Location</label>
+                                                    <input class="form-control" maxlength="2" name="PayLocation" id="PayLocation" type="text" runat="server" />
+                                                </div>
+                                            </div>
+                                            <br />
+                                            <div class="form-actions">
+                                                <asp:Button ID="btnCreate" class="btn btn-primary" Width="80px" runat="server" Text="Create"
+                                                    OnClick="btnCreate_Click" OnClientClick="Confirm()"></asp:Button>
+                                                <asp:Button ID="btnReset" class="btn btn-danger" Width="80px" runat="server" Text="Reset"
+                                                    OnClick="btnReset_Click"></asp:Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+        </div>
+        <!-- content -->
+
+
+        <!-- /.row (main row) -->
+    </aside>
+</asp:Content>

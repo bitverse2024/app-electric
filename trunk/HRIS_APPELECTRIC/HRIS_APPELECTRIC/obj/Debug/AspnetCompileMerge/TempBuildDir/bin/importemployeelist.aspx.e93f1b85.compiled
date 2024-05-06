@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/Employees/ImportEmployeeList.aspx" hash="fffffffb122f315e" filehash="1d03cf8408bdc965" flags="110000" assembly="App_Web_i5fgwtfz" type="ASP.pages_admin_employees_importemployeelist_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/Employees/ImportEmployeeList.aspx" />
+    </filedeps>
+</preserve>

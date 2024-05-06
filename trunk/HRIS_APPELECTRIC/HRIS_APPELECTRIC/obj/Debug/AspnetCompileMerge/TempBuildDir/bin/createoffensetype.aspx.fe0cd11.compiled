@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/createOffenseType.aspx" hash="fffffffb122f315e" filehash="e2fc2d4217b0cd35" flags="110000" assembly="App_Web_oegd3002" type="ASP.pages_admin_createoffensetype_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/createOffenseType.aspx" />
+    </filedeps>
+</preserve>

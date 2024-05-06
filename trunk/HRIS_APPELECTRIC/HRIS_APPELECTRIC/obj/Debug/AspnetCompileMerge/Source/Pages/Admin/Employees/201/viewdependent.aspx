@@ -1,0 +1,309 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.Master" AutoEventWireup="true" CodeBehind="viewdependent.aspx.cs" Inherits="HRIS_APPELECTRIC.Pages.Admin.Employees._201.viewdependent" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <script type="text/javascript">
+        function Confirm() {
+            var confirm_value = document.createElement("INPUT");
+            confirm_value.type = "hidden";
+            confirm_value.name = "confirm_value";
+            if (confirm("Are you sure you want to add this item?")) {
+                confirm_value.value = "Yes";
+            } else {
+                confirm_value.value = "No";
+            }
+            document.forms[0].appendChild(confirm_value);
+        }
+    </script>
+    <script type="text/javascript">
+        function Confirm1() {
+            var confirm_value = document.createElement("INPUT");
+            confirm_value.type = "hidden";
+            confirm_value.name = "confirm_value";
+            if (confirm("Are you sure you want to update this item?")) {
+                confirm_value.value = "Yes";
+            } else {
+                confirm_value.value = "No";
+            }
+            document.forms[0].appendChild(confirm_value);
+        }
+    </script>
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6"></div>
+                <div class="col-sm-6"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="content">
+            <div class="container-fluid">
+                <div class="container"></div>
+                <h3 class="m-0 text-dark"><%=getname() %><small> Dependent</small></h3>
+                <section class="card">
+                    <div class="card-header">
+                        <a href="<%= ResolveUrl("~/Pages/Admin/Employees/CreateEmployee.aspx")%>" class="btn btn-default"><i class="fa fa-plus"></i><span class="h6">Create</span></a>
+                        <a href="<%= ResolveUrl("~/Pages/Admin/Employees/EmployeeMaster.aspx")%>" class="btn btn-default"><i class="fa fa-list"></i><span class="h6">List</span></a>
+                        <a href="<%= ResolveUrl("~/Pages/Admin/Employees/EmployeeView.aspx?empid="+empno+"")%>" class="btn btn-default"><i class="fa fa-arrow-left"></i><span class="h6">Employee View</span></a>
+                    </div>
+                    <div class="card-body">
+                        <div class="content">
+                            <div class="container-fluid">
+                                <div class="box-body">
+                                    <div class='printableArea'>
+                                        <div id="list">
+                                            <div id="dependent-grid" class="grid-view">
+                                                <div class="summary">Displaying <%=gridrangecount%> of <%=gridtotalcount%> results.</div>
+                                                <asp:GridView ID="GridDependentList" runat="server" AutoGenerateColumns="False"
+                                                    ShowFooter="True" CssClass="items table table-striped table-bordered table-condensed"
+                                                    GridLines="None" AllowPaging="True" Font-Names="Segoe UI"
+                                                    ForeColor="Black" OnRowCommand="GridUserList_RowCommand"
+                                                    OnPageIndexChanging="GridUserList_PageIndexChanging"
+                                                    ViewStateMode="Enabled" ShowHeaderWhenEmpty="true">
+                                                    <EmptyDataTemplate>
+                                                        <center><h1>NO DEPENDENT AVAILABLE</h1></center>
+                                                    </EmptyDataTemplate>
+                                                    <Columns>
+                                                        <asp:TemplateField>
+                                                            <HeaderTemplate>
+                                                                <asp:LinkButton ID="lnkName" CssClass="h8" Text='Name' runat="server" CommandName="Sort" CommandArgument="Name"></asp:LinkButton><br />
+                                                                <asp:TextBox ID="txtSearchName" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+                                                            </HeaderTemplate>
+                                                            <ItemTemplate>
+                                                                <asp:Label ID="lblName" CssClass="" Text='<%# Eval("Name") %>' runat="server"></asp:Label>
+                                                            </ItemTemplate>
+                                                        </asp:TemplateField>
+                                                        <asp:TemplateField>
+                                                            <HeaderTemplate>
+                                                                <asp:LinkButton ID="lnkRelationship" CssClass="h8" Text='Relationship' runat="server" CommandName="Sort" CommandArgument="Relationship"></asp:LinkButton><br />
+                                                                <asp:TextBox ID="txtSearchRelationship" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+                                                            </HeaderTemplate>
+                                                            <ItemTemplate>
+                                                                <asp:Label ID="lblRelationship" CssClass="" Text='<%# Eval("Relationship") %>' runat="server"></asp:Label>
+                                                            </ItemTemplate>
+                                                        </asp:TemplateField>
+                                                        <asp:TemplateField>
+                                                            <HeaderTemplate>
+                                                                <asp:LinkButton ID="lnkDOB" CssClass="h8" Text='BirthDate' runat="server" CommandName="Sort" CommandArgument="Birthdate"></asp:LinkButton><br />
+                                                                <asp:TextBox ID="txtSearchDOB" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+                                                            </HeaderTemplate>
+                                                            <ItemTemplate>
+                                                                <asp:Label ID="lblDOB" CssClass="" Text='<%# Eval("Birthdate") %>' runat="server"></asp:Label>
+                                                            </ItemTemplate>
+                                                        </asp:TemplateField>
+                                                        <asp:TemplateField>
+                                                            <HeaderTemplate>
+                                                                <asp:LinkButton ID="lnkAge" CssClass="h8" Text='Age' runat="server" CommandName="Sort" CommandArgument="Age"></asp:LinkButton><br />
+                                                                <asp:TextBox ID="txtSearchAge" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+                                                            </HeaderTemplate>
+                                                            <ItemTemplate>
+                                                                <asp:Label ID="lblAge" CssClass="" Text='<%# Eval("Age") %>' runat="server"></asp:Label>
+                                                            </ItemTemplate>
+                                                        </asp:TemplateField>
+                                                        <asp:TemplateField>
+                                                            <HeaderTemplate>
+                                                                <asp:LinkButton ID="lnkOccupation" CssClass="h8" Text='Occupation' runat="server" CommandName="Sort" CommandArgument="Occupation"></asp:LinkButton><br />
+                                                                <asp:TextBox ID="txtSearchOccupation" runat="server" OnTextChanged="txtItem_TextChanged" Width="100%"></asp:TextBox>
+                                                            </HeaderTemplate>
+                                                            <ItemTemplate>
+                                                                <asp:Label ID="lblOccupation" CssClass="" Text='<%# Eval("Occupation") %>' runat="server"></asp:Label>
+                                                            </ItemTemplate>
+                                                        </asp:TemplateField>
+
+                                                        <asp:TemplateField HeaderStyle-Width="15%">
+                                                            <ItemTemplate>
+                                                                <center>
+                                                                    <asp:LinkButton ID="btnView" runat="server" ForeColor="Black" Font-Size="Large" CommandName="view" CommandArgument='<%# Eval("id") %>'><i class="fa fa-eye"></i></asp:LinkButton> &nbsp;
+                                                                    <asp:LinkButton ID="btnUpdate" runat="server" ForeColor="Black" Font-Size="Medium" CommandName="upd" CommandArgument='<%# Eval("id") %>'><i class="fa fa-edit"></i></asp:LinkButton>&ensp;
+                                                                    <asp:LinkButton ID="btnDelete" runat="server" ForeColor="Black" Font-Size="Medium" OnClientClick="if (!confirm('Are you sure you want to permanently remove this item?')) return false;"  CommandName="del" CommandArgument='<%# Eval("id") %>'><i class="fa fa-trash"></i></asp:LinkButton>
+                                                                </center>
+                                                            </ItemTemplate>
+
+                                                        </asp:TemplateField>
+                                                        <%--<asp:CommandField HeaderText="Cancel Item" ShowDeleteButton="True" ControlStyle-CssClass="btn btn-xs btn-danger"  /> --%>
+                                                    </Columns>
+                                                </asp:GridView>
+                                            </div>
+
+                                        </div>
+
+                                        <div class="form">
+
+                                            <div style="display: none">
+                                                <input type="hidden" value="306f4159fcb713bfde4a3910c1f1218bc2f2035f" name="YII_CSRF_TOKEN" />
+                                            </div>
+
+                                            <legend>
+                                                <h4 class="note">Fields with <span class="required text-red">**</span> are required.</h4>
+                                            </legend>
+
+
+                                            <div class="alert alert-error span10" id="dependent-form_es_" style="display: none">
+                                                Opps!!!
+                                            <ul>
+                                                <li>dummy</li>
+                                            </ul>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-lg-6">
+
+
+                                                    <label for="DName" class="required">First Name <span class="required text-red">**</span><asp:RequiredFieldValidator ID="validatorUploader" runat="server" ControlToValidate="DName" ValidationGroup="dependentgroup" ForeColor="Red" ErrorMessage="Field Required"></asp:RequiredFieldValidator></label>
+                                                    <%--<input class="form-control" maxlength="100" name="Dependent[Name]" id="Dependent_Name" type="text" />--%><span class="help-inline" id="Dependent_Name_em_" style="display: none"></span>
+                                                    <asp:TextBox ID="DName" runat="server" class="form-control" MaxLength="100"></asp:TextBox>
+
+                                                    <label for="MName" class="required">Middle Name</label>
+
+                                                    <%--<input class="form-control" maxlength="100" name="Dependent[Name]" id="Dependent_Name" type="text" />--%><span class="help-inline" id="Span1" style="display: none"></span>
+                                                    <asp:TextBox ID="MName" runat="server" class="form-control" MaxLength="100"></asp:TextBox>
+
+                                                    <label for="LName" class="required">Last Name <span class="required text-red">**</span><asp:RequiredFieldValidator ID="RequiredFieldValidator5" runat="server" ControlToValidate="LName" ValidationGroup="dependentgroup" ForeColor="Red" ErrorMessage="Field Required"></asp:RequiredFieldValidator></label>
+                                                    <%--<input class="form-control" maxlength="100" name="Dependent[Name]" id="Dependent_Name" type="text" />--%><span class="help-inline" id="Span2" style="display: none"></span>
+                                                    <asp:TextBox ID="LName" runat="server" class="form-control" MaxLength="100"></asp:TextBox>
+
+
+                                                </div>
+                                                <div class="col-lg-6">
+                                                    <label for="Relationship" class="required">Relationship <span class="required text-red">**</span><asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server" ControlToValidate="Relationship" ValidationGroup="dependentgroup" ForeColor="Red" ErrorMessage="Field Required"></asp:RequiredFieldValidator></label>
+                                                    <%--<input class="form-control" maxlength="20" name="Dependent[Relationship]" id="Dependent_Relationship" type="text" />--%><span class="help-inline" id="Dependent_Relationship_em_" style="display: none"></span>
+                                                    <asp:TextBox ID="Relationship" runat="server" class="form-control" MaxLength="20"></asp:TextBox>
+                                                    <label for="Dependent_DOB" class="required">Birthdate</label>
+                                                    <%--<input style="height:20px;" class="form-control" id="DOB" name="Dependent[DOB]" type="text" />--%>
+                                                    <%--<asp:TextBox ID="DOB" runat="server" class="form-control datepicker-switch" MaxLength="20"></asp:TextBox>--%>
+                                                    <input class="form-control" id="txtDOB" name="DOB" type="date" runat="server" />
+                                                    <label for="Dependent_Occupation" class="required">Occupation</label>
+                                                    <%--<input class="form-control" maxlength="50" name="Dependent[Occupation]" id="Dependent_Occupation" type="text" />--%><span class="help-inline" id="Dependent_Occupation_em_" style="display: none"></span>
+                                                    <asp:TextBox ID="Occupation" runat="server" class="form-control" MaxLength="50"></asp:TextBox>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-actions" style="padding-top: 10px;">
+                                                <asp:Button ID="btnSubmit" class="btn btn-primary" runat="server" Text="Create" Width="80"
+                                                    OnClick="btnSubmit_Click" OnClientClick="Confirm()" ValidationGroup="dependentgroup"></asp:Button>
+                                                <asp:Button ID="btnReset" class="btn btn-danger" Width="80" runat="server" Text="Reset"
+                                                    OnClick="btnReset_Click"></asp:Button>
+                                                <%--<button  type="submit" name="yt0" runat="server"><i class="icon-ok icon-white"></i> Create</button>              
+            <button  type="reset" name="yt1" runat="server"><i class="icon-remove"></i> Reset</button>	--%>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="listmodal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <asp:UpdatePanel ID="upListDetails" runat="server" ChildrenAsTriggers="False" UpdateMode="Conditional">
+                    <ContentTemplate>
+
+                        <div class="modal-header">
+                            <h4 class="modal-title">
+                                <asp:Label ID="Label3" runat="server" Text="Edit Information"></asp:Label></h4>
+                            <asp:LinkButton ID="lnkbtnXlist" CssClass="close" runat="server"
+                                OnClick="lnkbtnXlist_Click">
+                            <span>&times;</span>
+                            </asp:LinkButton>
+                        </div>
+                        <div class="modal-body">
+                            <asp:HiddenField ID="HiddenEmpID" runat="server" />
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <label for="upd_FName" class="required">First Name <span class="required text-red">**</span></label><asp:RequiredFieldValidator ID="RequiredFieldValidator2" ControlToValidate="upd_FName" ForeColor="Red" runat="server" ErrorMessage="Field Required" ValidationGroup="dependentgroup1"></asp:RequiredFieldValidator>
+                                    <input class="form-control" maxlength="100" name="Fbground[Name]" id="upd_FName" type="text" runat="server" />
+                                    <label for="upd_MName" class="required">Middle Name</label>
+                                    <input class="form-control" maxlength="100" name="Fbground[Name]" id="upd_MName" type="text" runat="server" />
+                                    <label for="upd_LName" class="required">Last Name <span class="required text-red">**</span></label><asp:RequiredFieldValidator ID="RequiredFieldValidator6" ControlToValidate="upd_LName" ForeColor="Red" runat="server" ErrorMessage="Field Required" ValidationGroup="dependentgroup1"></asp:RequiredFieldValidator>
+                                    <input class="form-control" maxlength="100" name="Fbground[Name]" id="upd_LName" type="text" runat="server" />
+                                    <label for="upd_Relationship" class="required">Relationship <span class="required text-red">**</span></label><asp:RequiredFieldValidator ID="RequiredFieldValidator3" ControlToValidate="upd_Relationship" ForeColor="Red" runat="server" ErrorMessage="Field Required" ValidationGroup="dependentgroup1"></asp:RequiredFieldValidator>
+                                    <input class="form-control" maxlength="8" name="Fbground[Relationship]" id="upd_Relationship" type="text" runat="server" />
+                                </div>
+                                <div class="col-lg-6">
+                                    <label for="upd_Birthdate" class="required">Birthdate</label>
+                                    <input class="form-control datetimepicker" id="upd_Birthdate" name="Fbground[Birthdate]" type="text" runat="server" />
+                                    <label for="upd_Occupation" class="required">Occupation</label>
+                                    <input class="form-control" maxlength="40" name="Fbground[Occupation]" id="upd_Occupation" type="text" runat="server" />
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="modal-footer">
+                            <asp:Button ID="btnsaveUpdate" runat="server" Text="Update" CssClass="btn btn-primary"
+                                OnClick="btnsaveUpdate_Click" OnClientClick="Confirm1()" ValidationGroup="dependentgroup1"></asp:Button>
+
+
+                        </div>
+
+
+                    </ContentTemplate>
+                    <Triggers>
+                        <asp:PostBackTrigger ControlID="btnsaveUpdate" />
+                    </Triggers>
+                </asp:UpdatePanel>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="ViewModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <asp:UpdatePanel ID="upListDetails2" runat="server" ChildrenAsTriggers="False" UpdateMode="Conditional">
+                    <ContentTemplate>
+
+                        <div class="modal-header">
+                            <h4 class="modal-title">
+                                <asp:Label ID="Label1" runat="server" Text="View Information"></asp:Label></h4>
+                            <asp:LinkButton ID="LinkButton1" CssClass="close" runat="server"
+                                OnClick="lnkbtnXlistView_Click">
+                            <span>&times;</span>
+                            </asp:LinkButton>
+                        </div>
+                        <div class="modal-body" style="">
+                            <asp:HiddenField ID="HiddenField1" runat="server" />
+                            <div class="row">
+                                <!-- View Modal Content -->
+                                <div class="col-lg-6">
+                                    <label for="vw_FName" class="required">First Name</label>
+                                    <input class="form-control" maxlength="100" name="vw_FName" id="vw_FName" type="text" runat="server" disabled="disabled" />
+                                    <label for="vw_MName" class="required">Middle Name</label>
+                                    <input class="form-control" maxlength="100" name="vw_FName" id="vw_MName" type="text" runat="server" disabled="disabled" />
+                                    <label for="vw_LName" class="required">Last Name</label>
+                                    <input class="form-control" maxlength="100" name="vw_FName" id="vw_LName" type="text" runat="server" disabled="disabled" />
+                                    <label for="vw_Relationship" class="required">Relationship</label>
+                                    <input class="form-control" maxlength="8" name="vw_Relationship" id="vw_Relationship" type="text" runat="server" disabled="disabled" />
+                                </div>
+                                <div class="col-lg-6">
+                                    <label for="vw_Birthdate" class="required">Birthdate</label>
+                                    <input class="form-control datetimepicker" id="vw_Birthdate" name="vw_Birthdate" type="text" runat="server" disabled="disabled" />
+                                    <label for="vw_Occupation" class="required">Occupation</label>
+                                    <input class="form-control" maxlength="40" name="vw_Occupation" id="vw_Occupation" type="text" runat="server" disabled="disabled" />
+                                </div>
+
+                            </div>
+
+
+                        </div>
+                        <div class="modal-footer">
+                        </div>
+
+
+                    </ContentTemplate>
+                    <Triggers>
+                        <asp:PostBackTrigger ControlID="btnsaveUpdate" />
+                    </Triggers>
+                </asp:UpdatePanel>
+
+            </div>
+        </div>
+    </div>
+</asp:Content>

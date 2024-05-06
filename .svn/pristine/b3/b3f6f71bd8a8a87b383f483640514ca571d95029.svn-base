@@ -1,0 +1,97 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.Master" AutoEventWireup="true" CodeBehind="philHealth.aspx.cs" Inherits="HRIS_APPELECTRIC.Pages.Admin.philHealth" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <script type="text/javascript">
+        function Confirm() {
+            var confirm_value = document.createElement("INPUT");
+            confirm_value.type = "hidden";
+            confirm_value.name = "confirm_value";
+            if (confirm("Are you sure you want to update Philhealth Percentage Deduction?")) {
+                confirm_value.value = "Yes";
+            } else {
+                confirm_value.value = "No";
+            }
+            document.forms[0].appendChild(confirm_value);
+        }
+    </script>
+    <aside class="right-side">
+        <!-- Small boxes (Stat box) -->
+
+
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6"></div>
+                    <div class="col-sm-6"></div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-12">
+            <div class="content">
+                <div class="container-fluid">
+                    <div class="container"></div>
+                    <h3 class="m-0 text-dark">Admin<small> PhilHealth Percentage</small></h3>
+                    <section class="card">
+                        <div class="card-header">
+                            <%--<a href="createProvince.aspx" class="btn btn-default"><i class="fa fa-plus"></i><span class="h6">Create</span></a>
+                            <a href="provinceList.aspx" class="btn btn-default"><i class="fa fa-th-list"></i><span class="h6">List</span></a>--%>
+
+                        </div>
+                        <div class="card-body">
+                            <div class="content">
+                                <div class="container-fluid">
+                                    <div class="box-body">
+                                        <div class="form">
+
+                                            <fieldset>
+                                                <legend>
+                                                    <p class="note">Fields with <span class="required">*</span> are required.</p>
+                                                </legend>
+                                                <div class="row">
+                                                    <div class="col-lg-6">
+
+                                                        <div class="control-group ">
+                                                            <label class="required" for="philDedPercent">
+                                                                PhilHealth Percentage <span class="required">*
+   
+                                                            <asp:RequiredFieldValidator ID="validatorUploader" runat="server" ControlToValidate="philDedPercent" ValidationGroup="UpdatePhilhealth" ForeColor="Red" ErrorMessage="Field Required">
+                </asp:RequiredFieldValidator>
+                                                                </span>
+                                                            </label>
+                                                            <div class="controls">
+                                                                <input class="form-control" maxlength="30" name="philDedPercent" id="philDedPercent" type="text" runat="server">
+                                                            </div>
+                                                        </div>
+                                                        <div class="control-group ">
+                                                            <label class="required" for="City_Include">Year</label><div class="controls">
+                                                                <input class="form-control" maxlength="20" name="philDedYear" id="philDedYear" type="text" runat="server">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <br />
+                                                <div class="form-actions">
+                                                    <asp:Button ID="btnCreate" class="btn btn-primary" Width="80px" runat="server" Text="Update"
+                                                        OnClick="btnUpdate_Click" ValidationGroup="UpdatePhilhealth" OnClientClick="Confirm()"></asp:Button>
+                                                    <asp:Button ID="btnReset" class="btn btn-danger" Width="80" runat="server" Text="Cancel"
+                                                    OnClick="btnReset_Click"></asp:Button>
+                                                </div>
+                                            </fieldset>
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <!-- /.row (main row) -->
+    </aside>
+</asp:Content>

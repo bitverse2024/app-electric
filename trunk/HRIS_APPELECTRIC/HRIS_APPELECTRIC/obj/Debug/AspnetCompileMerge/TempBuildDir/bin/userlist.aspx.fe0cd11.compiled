@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/UserList.aspx" hash="fffffffb122f315e" filehash="1d03fd60e8abacb3" flags="110000" assembly="App_Web_vmflz0jk" type="ASP.pages_admin_userlist_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/UserList.aspx" />
+    </filedeps>
+</preserve>

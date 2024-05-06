@@ -1,0 +1,99 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.Master" AutoEventWireup="true" CodeBehind="createhtli.aspx.cs" Inherits="HRIS_APPELECTRIC.Pages.AdminKiosk.createhtli" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <aside class="right-side">
+          <!-- Small boxes (Stat box) -->
+          <div class="row">
+	<div class="col-lg-12">
+		<div id="content">
+			
+
+<section class="content-header">
+     <h1>
+         HTLI Directory
+         <small>Add New Contact</small>
+     </h1>
+     <ol class="breadcrumb">
+        <li><a href="../../Default_kioskAdmin.aspx"><i class="fa fa-folder"></i> Admin</a></li>
+        <li class="active">Add New Contact</li>
+    </ol>
+</section>
+<hr>
+
+
+<section class="content">
+    <div class="box box-primary">
+        <div class="box-header">
+            <div class="" id="yw0">
+            <div class="portlet-content">
+            <ul class="nav nav-pills">
+            <li class="active"><a href="#"><i class="icon-plus"></i> Create</a></li><li class="">
+            <a href="adminhtli.aspx"><i class="icon-th-list"></i> List</a></li></ul></div>
+            </div>                    
+       </div>
+        <div class="box-body">
+
+        
+<div class="form">
+
+
+		<fieldset>
+		<legend>
+			<p class="note">Fields with <span class="required">*</span> are required.</p>
+		</legend>
+
+	        		
+
+	 <div class="row">		
+		<div class="col-lg-6">
+
+			<div class="control-group "><label class="control-label required" for="Htli_Name">Name <span class="required">*</span></label><div class="controls">
+                <input class="form-control" maxlength="50" name="Htli[Name]" id="Htli_Name" type="text" runat = "server">
+                </div>
+            </div>			
+            <div class="control-group "><label class="control-label required" for="Htli_Position">Position <span class="required">*</span></label><div class="controls">
+                <input class="form-control" maxlength="50" name="Htli[Position]" id="Htli_Position" type="text" runat = "server">
+                </div>
+            </div>			
+            <div class="control-group "><label class="control-label required" for="Htli_Cp_Number">Cp Number <span class="required">*</span></label><div class="controls">
+                <input class="form-control" maxlength="20" name="Htli[Cp_Number]" id="Htli_Cp_Number" type="text" runat = "server">
+                </div>
+            </div>			
+            <div class="control-group "><label class="control-label required" for="Htli_Phone_Number">Phone Number <span class="required">*</span></label><div class="controls">
+                <input class="form-control" maxlength="20" name="Htli[Phone_Number]" id="Htli_Phone_Number" type="text" runat = "server">
+                </div>
+            </div>			
+            <div class="control-group "><label class="control-label required" for="Htli_Email">Email <span class="required">*</span></label><div class="controls">
+                <input class="form-control" maxlength="50" name="Htli[Email]" id="Htli_Email" type="text" runat = "server">
+                </div>
+            </div>        
+       </div>   
+   </div>
+
+	<div class="form-actions">
+		<%--<button class="btn btn-primary" type="submit" name="yt0"><i class="icon-ok icon-white"></i> Create</button>              
+        <button class="btn" type="reset" name="yt1"><i class="icon-remove"></i> Reset</button>--%>
+        <asp:Button ID="btnCreate" class="btn btn-primary" runat="server" Text="Save" onclick="btnCreate_Click" ></asp:Button>
+        <asp:Button ID="btnReset" class="btn btn-primary" runat="server" Text="Reset" onclick="btnReset_Click" ></asp:Button>	
+        </div>
+</fieldset>
+
+
+
+</div><!-- form -->        </div>
+    </div>
+</section>		</div><!-- content -->
+	</div>
+	<div class="col-lg-6">
+		<div id="sidebar">
+				
+		
+		</div><!-- sidebar -->
+	</div>
+</div>
+ 
+          <!-- /.row (main row) -->
+        </aside>
+
+</asp:Content>

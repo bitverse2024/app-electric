@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/AdminKiosk/createofficesupplies.aspx" hash="fffffffb122f315e" filehash="e2fc37405ba7106e" flags="110000" assembly="App_Web_hbqrppau" type="ASP.pages_adminkiosk_createofficesupplies_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/AdminKiosk/createofficesupplies.aspx" />
+    </filedeps>
+</preserve>

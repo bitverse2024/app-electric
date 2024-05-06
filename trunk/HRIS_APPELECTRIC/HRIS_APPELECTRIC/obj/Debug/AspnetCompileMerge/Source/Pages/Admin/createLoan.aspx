@@ -1,0 +1,93 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.Master" AutoEventWireup="true" CodeBehind="createLoan.aspx.cs" Inherits="HRIS_APPELECTRIC.Pages.Admin.createLoan" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <aside class="right-side">
+        <!-- Small boxes (Stat box) -->
+
+        <script type="text/javascript">
+            function Confirm() {
+                var confirm_value = document.createElement("INPUT");
+                confirm_value.type = "hidden";
+                confirm_value.name = "confirm_value";
+                if (confirm("Are you sure you want to add this item?")) {
+                    confirm_value.value = "Yes";
+                } else {
+                    confirm_value.value = "No";
+                }
+                document.forms[0].appendChild(confirm_value);
+            }
+        </script>
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6"></div>
+                    <div class="col-sm-6"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="content">
+                <div class="container-fluid">
+                    <div class="container"></div>
+                    <h3 class="m-0 text-dark">Admin<small> Loans</small></h3>
+                    <section class="card">
+                        <div class="card-header">
+                            <a href="createLoan.aspx" class="btn btn-default"><i class="fa fa-plus"></i><span class="h6">Create</span></a>
+                            <a href="Loans.aspx" class="btn btn-default"><i class="fa fa-th-list"></i><span class="h6">List</span></a>
+
+                        </div>
+                        <div class="card-body">
+                            <div class="content">
+                                <div class="container-fluid">
+                                    <div class="box-body">
+                                        <div class="form">
+
+                                            <legend>
+                                                <p class="note">Fields with <span class="required text-red">*</span> are required.</p>
+                                            </legend>
+
+
+                                            <div class="showgrid row">
+                                                <div class="col-lg-6">
+                                                    <label for="Loan_LoanID" class="required">
+                                                        ID <span class="required text-red">*
+                                               
+                                                        <asp:RequiredFieldValidator ID="validatorUploader" runat="server" ControlToValidate="Loan_LoanID" ValidationGroup="CreateLoanGroup" ForeColor="Red" ErrorMessage="Field Required">
+                                                </asp:RequiredFieldValidator>
+                                                        </span>
+                                                    </label>
+                                                    <input class="form-control" maxlength="40" name="Loan_LoanID[Loan_LoanID]" id="Loan_LoanID" type="text" runat="server" />
+                                                </div>
+                                                <div class="col-lg-6">
+                                                    <label for="Loan_LoanDesc" class="required">
+                                                        Loan Description <span class="required text-red">*
+                                               
+                                                        <asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server" ControlToValidate="Loan_LoanDesc" ValidationGroup="CreateLoanGroup" ForeColor="Red" ErrorMessage="Field Required">
+                                                </asp:RequiredFieldValidator>
+                                                        </span>
+                                                    </label>
+                                                    <input class="form-control" maxlength="40" name="Loan_LoanDesc[Loan_LoanDesc]" id="Loan_LoanDesc" type="text" runat="server" />
+                                                </div>
+                                            </div>
+                                            <br />
+                                            <div class="form-actions">
+                                                <asp:Button ID="btnCreate" class="btn btn-primary" Width="80" runat="server" Text="Create"
+                                                    OnClick="btnCreate_Click" ValidationGroup="CreateLoanGroup" OnClientClick="Confirm()"></asp:Button>
+                                                <asp:Button ID="btnReset" class="btn btn-danger" Width="80" runat="server" Text="Reset"
+                                                    OnClick="btnReset_Click"></asp:Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <!-- content -->
+            </div>
+        </div>
+        <!-- /.row (main row) -->
+    </aside>
+</asp:Content>

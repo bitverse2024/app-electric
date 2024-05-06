@@ -1,0 +1,336 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.Master" AutoEventWireup="true" CodeBehind="CreateEmployee.aspx.cs" Inherits="HRIS_APPELECTRIC.Pages.Admin.Employees.CreateEmployee" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <script src="https://igorescobar.github.io/jQuery-Mask-Plugin/js/jquery.mask.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        function Confirm() {
+            var confirm_value = document.createElement("INPUT");
+            confirm_value.type = "hidden";
+            confirm_value.name = "confirm_value";
+            if (confirm("Are you sure you want to add this employee?")) {
+                confirm_value.value = "Yes";
+            } else {
+                confirm_value.value = "No";
+            }
+            document.forms[0].appendChild(confirm_value);
+        }
+    </script>
+
+    <script type="text/javascript">
+       <!--
+    function isNumberKey(evt) {
+        var charCode = (evt.which) ? evt.which : evt.keyCode;
+        if (charCode != 46 && charCode > 31
+            && (charCode < 48 || charCode > 57))
+            return false;
+
+        return true;
+    }
+       //-->
+    </script>
+    <script type="text/javascript">
+        function Function1() {
+            var x = document.getElementById("Employee_EmpID");
+            x.value = x.value.toUpperCase();
+        }
+        $(document).ready(function () {
+
+            $(".ssno").keyup(function (e) {
+                var value = $(".ssno").val();
+                if (e.key.match(/[0-9]/) == null) {
+                    value = value.replace(e.key, "");
+                    $(".ssno").val(value);
+                    return;
+                }
+
+                if (value.length == 2) {
+                    $(".ssno").val(value + "-")
+                }
+                if (value.length == 10) {
+                    $(".ssno").val(value + "-")
+                }
+            });
+        });
+
+        $(document).ready(function () {
+
+            $(".tinno").keyup(function (e) {
+                var value = $(".tinno").val();
+                if (e.key.match(/[0-9]/) == null) {
+                    value = value.replace(e.key, "");
+                    $(".tinno").val(value);
+                    return;
+                }
+
+                if (value.length == 3) {
+                    $(".tinno").val(value + "-")
+                }
+                if (value.length == 7) {
+                    $(".tinno").val(value + "-")
+                }
+            });
+        });
+
+        $(document).ready(function () {
+
+            $(".pagibigno").keyup(function (e) {
+                var value = $(".pagibigno").val();
+                if (e.key.match(/[0-9]/) == null) {
+                    value = value.replace(e.key, "");
+                    $(".pagibigno").val(value);
+                    return;
+                }
+
+                if (value.length == 4) {
+                    $(".pagibigno").val(value + "-")
+                }
+                if (value.length == 11) {
+                    $(".pagibigno").val(value + "-")
+                }
+            });
+        });
+
+        $(document).ready(function () {
+
+            $(".philno").keyup(function (e) {
+                var value = $(".philno").val();
+                if (e.key.match(/[0-9]/) == null) {
+                    value = value.replace(e.key, "");
+                    $(".philno").val(value);
+                    return;
+                }
+
+                if (value.length == 2) {
+                    $(".philno").val(value + "-")
+                }
+                if (value.length == 12) {
+                    $(".philno").val(value + "-")
+                }
+            });
+        });
+    </script>
+
+    <!--mask script-->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6"></div>
+                <div class="col-sm-6"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="content">
+            <div class="container-fluid">
+                <div class="container"></div>
+                <h3 class="m-0 text-dark">Employees<small> Create Employee</small></h3>
+                <section class="card">
+                    <div class="card-header">
+                        <a href="#" class="btn btn-default"><i class="fa fa-plus"></i><span class="h6">Create</span></a>
+                        <a href="<%= ResolveUrl("~/Pages/Admin/Employees/EmployeeMaster.aspx")%>" class="btn btn-default"><i class="fa fa-list"></i><span class="h6">List</span></a>
+                        <a href="<%= ResolveUrl("~/Pages/Admin/Employees/COE.aspx")%>" class="btn btn-default"><i class="fa fa-file"></i><span class="h6">COE</span></a>
+                        <%--<a href="<%= ResolveUrl("~/Pages/Admin/Employees/Leaves.aspx")%>" class="btn btn-default"><i class="fa fa-list"></i><span class="h6">Leaves</span></a>--%>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="content">
+                            <div class="container-fluid">
+                                <div class="box-header">
+
+                                    <legend>
+                                        <p class="note">Fields with <span class="required text-red">*</span> are required.</p>
+                                    </legend>
+                                </div>
+
+                                <div class="showgrid">
+                                    <div class="form row">
+                                        <div class="col-lg-6">
+
+
+                                            <label for="Employee_Surname" class="required">
+                                                Last Name <span class="required text-red">* 
+   
+                                        <asp:RequiredFieldValidator ID="validatorUploader" runat="server" ControlToValidate="txtEmployee_Surname" ValidationGroup="CreateEmployeeGroup" autocomplete="off" ForeColor="Red" ErrorMessage="Field Required">
+    </asp:RequiredFieldValidator>
+                                                </span>
+                                            </label>
+                                            <input class="form-control" maxlength="255" name="emp_Surname" id="txtEmployee_Surname" type="text" runat="server" clientidmode="Static" />
+
+                                            <label for="Employee_FirstName" class="required">
+                                                First Name <span class="required text-red">*
+                                    <asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server" ControlToValidate="Employee_FirstName" ValidationGroup="CreateEmployeeGroup" ForeColor="Red" ErrorMessage="Field Required"></asp:RequiredFieldValidator></span></label><input class="form-control" maxlength="255" name="emp_FirstName" id="Employee_FirstName" type="text" runat="server" />
+
+                                            <label for="Employee_MidName" class="required">Middle Name</label><input class="form-control" maxlength="255" name="emp_MidName" id="Employee_MidName" type="text" runat="server" />
+
+                                            <label for="Employee_Suffix" class="required">Suffix</label><input class="form-control" maxlength="50" name="emp_Suffix" id="Employee_Suffix" type="text" runat="server" />
+                                            <label for="Employee_NickName" class="required">Nickname</label><input class="form-control" maxlength="10" name="emp_NickName" id="Employee_NickName" type="text" runat="server" />
+
+                                            <%--<label for="Employee_EmpID" class="required">Employee No.<input class="form-control" maxlength="255" name="emp_EmpIDD" id="Text1" type="text" onblur ="Function1()" runat="server"/></label>--%>
+                                            <label for="Employee_EmpID" class="required">
+                                                Employee No. <span class="required text-red">*
+                                        <asp:RequiredFieldValidator ID="RequiredFieldValidator2" runat="server" ControlToValidate="Employee_EmpID" ValidationGroup="CreateEmployeeGroup" ForeColor="Red" ErrorMessage="Field Required">
+    </asp:RequiredFieldValidator>
+                                                </span>
+                                            </label>
+                                            <asp:TextBox ID="Employee_EmpID" class="form-control" runat="server"
+                                                OnTextChanged="Employee_EmpID_TextChanged" AutoPostBack="true"></asp:TextBox>
+
+
+
+                                            <%--<input class="form-control" maxlength="255" name="emp_EmpID" id="Employee_EmpID" type="text" runat="server" ClientIDMode="Static" onblur ="Function1()"/>--%>
+
+                                            <label for="Employee_BACode" class="required">Biometrics ID</label>
+                                            <asp:TextBox ID="Employee_BACode" class="form-control" runat="server" OnTextChanged="Employee_BACode_TextChanged" AutoPostBack="true"></asp:TextBox>
+                                            <%--<input class="form-control" maxlength="255" name="emp_BiometricsID" id="Employee_BACode" type="text" runat="server" />--%>
+                                            <label for="Employee_AssignmentCode" class="required">
+                                                Company <span class="required text-red">*
+                                    <asp:RequiredFieldValidator ID="RequiredFieldValidator3" runat="server" ControlToValidate="Employee_AssignmentCode" ValidationGroup="CreateEmployeeGroup" ForeColor="Red" ErrorMessage="Field Required"></asp:RequiredFieldValidator></span></label>
+                                            <select class="form-control" name="emp_Assignment" id="Employee_AssignmentCode" runat="server">
+                                                <option value="">---Select Company---</option>
+                                            </select>
+                                            <label for="Employee_Gender" class="required">Gender</label>
+                                            <select class="form-control" name="emp_Gender" id="Employee_Gender" runat="server">
+                                                <option value="">---Select Gender---</option>
+                                                <option value="M">Male</option>
+                                                <option value="F">Female</option>
+                                            </select>
+                                            <label for="Employee_PositionCode" class="required">
+                                                Position <span class="required text-red">*
+                                    <asp:RequiredFieldValidator ID="RequiredFieldValidator4" runat="server" ControlToValidate="Employee_PositionCode" ValidationGroup="CreateEmployeeGroup" ForeColor="Red" ErrorMessage="Field Required"></asp:RequiredFieldValidator></span></label>
+                                            <select class="form-control" name="emp_Position" id="Employee_PositionCode" runat="server">
+                                                <option value="">---Select Position---</option>
+
+                                            </select>
+                                            <label for="Employee_DeptCode" class="required">
+                                                Department <span class="required text-red">*
+                                    <asp:RequiredFieldValidator ID="RequiredFieldValidator7" runat="server" ControlToValidate="Employee_DeptCode" ValidationGroup="CreateEmployeeGroup" ForeColor="Red" ErrorMessage="Field Required"></asp:RequiredFieldValidator></span></label>
+                                            <select class="form-control" name="emp_Department" id="Employee_DeptCode" runat="server">
+                                                <option value="">---Select Department---</option>
+
+
+                                            </select>
+                                            <label for="Employee_DeptCode" class="required">
+                                                Payroll Group <span class="required text-red">*
+                                    <asp:RequiredFieldValidator ID="RequiredFieldValidator10" runat="server" ControlToValidate="Employee_PayrollGrpCode" ValidationGroup="CreateEmployeeGroup" ForeColor="Red" ErrorMessage="Field Required"></asp:RequiredFieldValidator></span></label>
+                                            <select class="form-control" name="Employee_PayrollGrpCode" id="Employee_PayrollGrpCode" runat="server">
+                                                <option value="">---Select Payroll Group---</option>
+
+
+                                            </select>
+                                            <label for="Leavesapp_DateFrom" class="required">
+                                                Date Start <span class="required text-red">*</span><asp:RequiredFieldValidator
+                                                    ID="RequiredFieldValidator12" runat="server" ErrorMessage="Field Required" ControlToValidate="Employee_DateStart" ForeColor="Red" ValidationGroup="CreateEmployeeGroup"></asp:RequiredFieldValidator></label>
+                                            <div class="input-group">
+                                                <input class="form-control" id="Employee_DateStart" type="date" min="1900-01-01" max="2099-12-31" runat="server">
+                                            </div>
+                                            <label for="ContractStart" class="required">
+                                                Contract Start <span class="required text-red"></span>
+                                            </label>
+                                            <div class="input-group">
+                                                <input class="form-control" id="ContStart" type="date" min="1900-01-01" max="2099-12-31" runat="server">
+                                            </div>
+                                            <label for="ContractEnd" class="required">
+                                                Contract End <span class="required text-red"></span>
+                                            </label>
+                                            <div class="input-group">
+                                                <input class="form-control" id="ContEnd" type="date" min="1900-01-01" max="2099-12-31" runat="server">
+                                            </div>
+
+
+
+
+                                        </div>
+                                        <div class="col-lg-6 col-xs-6">
+                                            <label for="Employee_SSSNo" class="required">SSS</label>
+                                            <input size="11" class="form-control ssno" id="Employee_SSSNo" name="emp_SSSNo" type="text" maxlength="12" runat="server" placeholder="00-0000000-0" />
+                                            <label for="Employee_TIN" class="required">TIN</label>
+                                            <input size="11" class="form-control tinno" id="Employee_TIN" name="Employee[TIN]" type="text" maxlength="11" runat="server" placeholder="000-000-000" />
+                                            <label for="Employee_PagibigNo" class="required">Pagibig MID No</label>
+                                            <input size="14" class="form-control pagibigno" id="Employee_PagibigNo" name="emp_PagibigNo" type="text" maxlength="14" runat="server" placeholder="0000-000000-00" />
+                                            <label for="Employee_PhilHealth_No" class="required">Phil Health No</label>
+                                            <input size="14" class="form-control philno" id="Employee_PhilHealth_No" name="PhilHealth_No" type="text" maxlength="14" runat="server" placeholder="00-000000000-0" />
+                                            <label for="Employee_NationalIDNo" class="required">National ID No</label><input class="form-control" maxlength="12" autocomplete="off" name="emp_NationalIDNo" id="Employee_NationalIDNo" type="text" runat="server" />
+
+                                            <label for="Employee_LicNo" class="required">License No.</label><input class="form-control" maxlength="15" name="emp_LicNo" id="Employee_LicNo" type="text" runat="server" />
+                                            <label for="Employee_LicExpDate" class="required">License Expiry Date</label>
+                                            <input class="form-control datetimepicker" id="Employee_LicExpDate" name="emp_LicExpDate" type="text" runat="server" />
+
+                                            <label for="Employee_Status" class="required">
+                                                Status<span class="required text-red">*
+                                    <asp:RequiredFieldValidator ID="RequiredFieldValidator8" runat="server" ControlToValidate="Employee_Status" ValidationGroup="CreateEmployeeGroup" ForeColor="Red" ErrorMessage="Field Required"></asp:RequiredFieldValidator></span></label>
+                                            <select class="form-control" name="emp_Status" id="Employee_Status" runat="server">
+                                                <option value="">---Select Status---</option>
+
+                                            </select>
+                                            <label for="Employee_RankCode" class="required">
+                                                Rank<span class="required text-red">*
+                                    <asp:RequiredFieldValidator ID="RequiredFieldValidator9" runat="server" ControlToValidate="Employee_RankCode" ValidationGroup="CreateEmployeeGroup" ForeColor="Red" ErrorMessage="Field Required"></asp:RequiredFieldValidator></span></label>
+                                            <select class="form-control" name="emp_Rank" id="Employee_RankCode" runat="server">
+                                                <option value="">---Select Rank---</option>
+
+                                            </select>
+                                            <label for="Employee_Approver1" class="required">
+                                                First Approver<span class="required text-red">*
+                                    <asp:RequiredFieldValidator ID="RequiredFieldValidator5" runat="server" ControlToValidate="Employee_Approver1" ValidationGroup="CreateEmployeeGroup" ForeColor="Red" ErrorMessage="Field Required"></asp:RequiredFieldValidator></span></label>
+                                            <select class="form-control" name="emp_Approver1" id="Employee_Approver1" runat="server">
+                                                <option value="">---Select Approver---</option>
+
+                                            </select>
+                                            <label for="Employee_Approver2" class="required">Second Approver<span class="required"></span></label>
+                                            <select class="form-control" name="emp_Approver2" id="Employee_Approver2" runat="server">
+                                                <option value="">---Select Approver 2---</option>
+
+                                            </select>
+
+                                            <label for="Employee_Email" class="required">
+                                                Email
+       
+                                    <span class="required text-red"> 
+       
+                                        <%--<asp:RegularExpressionValidator ID="RegularExpressionValidator1" runat="server" ControlToValidate="Employee_Email" ValidationGroup="CreateEmployeeGroup"
+                                            ForeColor="Red" ValidationExpression="^([\w-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$"
+                                            Display="Static" ErrorMessage="Invalid email address" />
+                                        <asp:RequiredFieldValidator ID="RequiredFieldValidator6" Display="static" runat="server" ControlToValidate="Employee_Email" ValidationGroup="CreateEmployeeGroup" ForeColor="Red" ErrorMessage="Field Required"></asp:RequiredFieldValidator>--%>
+                                    </span>
+                                            </label>
+                                            <input class="form-control" maxlength="255" name="emp_FirstName" id="Employee_Email" type="text" runat="server" />
+                                            <%--<label for="Employee_BasicPay" class="required">
+                                                Basic Pay<span class="required">*
+                                    <asp:RequiredFieldValidator ID="RequiredFieldValidator32" runat="server" ControlToValidate="txtBasicPay" ValidationGroup="CreateEmployeeGroup" ForeColor="Red" ErrorMessage="Field Required"></asp:RequiredFieldValidator></span></label>
+                                            <asp:TextBox ID="txtBasicPay" runat="server" class="form-control"></asp:TextBox>--%>
+                                            <label for="txtBasicPay" class="required">
+                                                Basic Pay <span class="required text-red">*</span><asp:RequiredFieldValidator
+                                                    ID="RequiredFieldValidator11" runat="server" ErrorMessage="Field Required" ForeColor="Red"
+                                                    ControlToValidate="txtBasicPay" ValidationGroup="CreateEmployeeGroup"></asp:RequiredFieldValidator></label>
+                                            <div class="input-group">
+                                                <input class="form-control" id="txtBasicPay" name="Leavesapp[LeaveHrs]" type="number" min="1" max="100000" onkeypress="return isNumberKey(event)" runat="server" />
+                                            </div>
+                                            <%--<label for="Employee_ReportingTo" class="required">1st Approver <span class="required text-red">** <asp:RequiredFieldValidator ID="RequiredFieldValidator6" runat="server" ControlToValidate="Employee_ReportingTo"  ValidationGroup="CreateEmployeeGroup" ForeColor="Red" ErrorMessage="Field Required" ></asp:RequiredFieldValidator></span></label>	<input class="form-control" id="Employee_ReportingTo" name="emp_Approver1" type="text" runat="server" />	<input class="form-control" id="hidden-approver1" name="Employee[ReportingTo]" type="hidden" />
+	<label for="Employee_ReportingTo2" class="required">2nd Approver</label>	<input class="form-control" id="Employee_ReportingTo2" name="emp_Approver2" type="text" runat="server" />	<input class="form-control" id="hidden-approver2" name="Employee[ReportingTo2]" type="hidden" />	</div>--%>
+                                        </div>
+                                    </div>
+                                    <br />
+
+
+
+                                    <div class="form-actions">
+                                        <asp:Button ID="btnCreate" class="btn btn-primary" Width="80px" runat="server" Text="Save"
+                                                    OnClick="btnSubmit_Click" OnClientClick="Confirm()" ValidationGroup="CreateEmployeeGroup"></asp:Button>
+                                        <button class="btn btn-danger" style="width: 80px;" id="yw2" type="submit" name="yt1" runat="server" onserverclick="btnCancel_Click"><i class="icon-remove"></i>Cancel</button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</asp:Content>

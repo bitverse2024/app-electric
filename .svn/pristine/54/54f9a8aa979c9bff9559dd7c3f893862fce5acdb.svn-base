@@ -1,0 +1,1701 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections;
+using System.Linq;
+using System.Web;
+using System.Data.SqlClient;
+using System.Data;
+using System.Web.UI.WebControls;
+using System.Configuration;
+
+
+public class Payroll
+    {   
+        public class Payslip
+        {
+            public string empno;
+            public string empname;
+            public string date_covered;
+            public string payrollgroup;
+            public string department;
+            public string basicpay;
+            public string sss;
+            public string cash_adv;
+            public string loanbal;
+            public string absentded;
+            public string philhealth;
+            public string lates;
+            public string pagibig;
+            public string totalgrossincome;
+            public string totaldeduction;
+            public string netpay;
+            public string utded;
+            public string leavepay;
+            public string remainingleavecredit;
+            public string otpay;
+            public string holidaypay;
+            public string bonus;
+
+    }
+
+
+        Common cm = new Common();
+        Timekeeping tk = new Timekeeping();
+        static string connectionstring = ConfigurationManager.ConnectionStrings["conn"].ConnectionString;
+        //public string FileDirectory =  ConfigurationManager.AppSettings["201FileDirectory"].ToString(); 
+        public SqlCommand cmd = new SqlCommand();
+        public SqlConnection conn = new SqlConnection();
+        public SqlDataReader dread;
+        public SqlDataAdapter adpt = new SqlDataAdapter();
+        public DataTable dt = new DataTable();
+        //public string file201folder = @"201Filecs\";
+        public string file201folder = @"~/201Files/";
+    
+        public DataTable populateGridPayrollRegister_TBLPAYREG()
+        {
+            dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[10] { new DataColumn("id"), new DataColumn("CODate"),
+            new DataColumn("EmpName"), new DataColumn("GrossPay"), new DataColumn("TotDed"), new DataColumn("NetPay"),
+            new DataColumn("UT"),new DataColumn("Absent"),new DataColumn("Lates"),new DataColumn("OTPay")});
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+            //cmd = new SqlCommand("Select * from TBL_USERS where user_Status='ACTIVE'", conn);
+            cmd = new SqlCommand("Select * from TBL_PAYREG Order by id", conn);
+            dread = cmd.ExecuteReader();
+            while (dread.Read())
+            {
+                
+                dt.Rows.Add(dread["id"].ToString(), cm.FormatDate(dread["CODate"].ToString()),
+                    dread["EmpName"].ToString(),toRoundOff( dread["GrossPay"].ToString()), toRoundOff(dread["TotDed"].ToString()), toRoundOff(dread["NetPay"].ToString()),
+                    toRoundOff(dread["UT"].ToString()), toRoundOff(dread["Absent"].ToString()), toRoundOff(dread["Lates"].ToString()), toRoundOff(dread["OTPay"].ToString()));
+            }
+            dread.Close();
+
+        conn.Close();
+        return dt;
+    }
+    public DataTable populateGridPayrollRegisterCol_TBLPAYREG(string expr)
+    {
+        string qry = "Select * from TBL_PAYREG";
+        qry += (expr == "" ? "" : expr);
+        string ordr = " Order by id";
+        qry += ordr;
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[10] { new DataColumn("id"), new DataColumn("CODate"),
+            new DataColumn("EmpName"), new DataColumn("GrossPay"), new DataColumn("TotDed"), new DataColumn("NetPay"),
+            new DataColumn("UT"),new DataColumn("Absent"),new DataColumn("Lates"),new DataColumn("OTPay")});
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        //cmd = new SqlCommand("Select * from TBL_USERS where user_Status='ACTIVE'", conn);
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+
+            dt.Rows.Add(dread["id"].ToString(), cm.FormatDate(dread["CODate"].ToString()),
+                    dread["EmpName"].ToString(), toRoundOff(dread["GrossPay"].ToString()), toRoundOff(dread["TotDed"].ToString()), toRoundOff(dread["NetPay"].ToString()),
+                    toRoundOff(dread["UT"].ToString()), toRoundOff(dread["Absent"].ToString()), toRoundOff(dread["Lates"].ToString()), toRoundOff(dread["OTPay"].ToString()));
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+    }
+    public DataTable populateGridPayrollRegister()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[13] { new DataColumn("id"), new DataColumn("CODate"),
+            new DataColumn("EmpName"), new DataColumn("GrossPay"),new DataColumn("SSSDed"),new DataColumn("PhilhealthDed"),new DataColumn("PagibigDed"), new DataColumn("TotDed"), new DataColumn("NetPay"),
+            new DataColumn("UT"),new DataColumn("Absent"),new DataColumn("Lates"),new DataColumn("OTPay")});
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        //cmd = new SqlCommand("Select * from TBL_USERS where user_Status='ACTIVE'", conn);
+        cmd = new SqlCommand("Select * from TBL_PAYSLIP Order by CODate DESC", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+
+            dt.Rows.Add(dread["id"].ToString(), cm.FormatDate(dread["CODate"].ToString()),
+                dread["EmployeeName"].ToString(), toRoundOff(dread["GrossPay"].ToString()), toRoundOff(dread["SSSDed"].ToString()), toRoundOff(dread["PhilhealthDed"].ToString()), toRoundOff(dread["PagibigDed"].ToString()), toRoundOff(dread["TotDed"].ToString()), toRoundOff(dread["NetPay"].ToString()),
+                toRoundOff(dread["UTDed"].ToString()), toRoundOff(dread["AbsentDed"].ToString()), toRoundOff(dread["LatesDed"].ToString()), toRoundOff(dread["OTPay"].ToString()));
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+    }
+    public DataTable populateGridPayrollRegisterCol(string expr)
+    {
+        string qry = "Select * from TBL_PAYSLIP";
+        qry += (expr == "" ? "" : expr);
+        string ordr = " Order by CODate DESC";
+        qry += ordr;
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[13] { new DataColumn("id"), new DataColumn("CODate"),
+            new DataColumn("EmpName"), new DataColumn("GrossPay"),new DataColumn("SSSDed"),new DataColumn("PhilhealthDed"),new DataColumn("PagibigDed"), new DataColumn("TotDed"), new DataColumn("NetPay"),
+            new DataColumn("UT"),new DataColumn("Absent"),new DataColumn("Lates"),new DataColumn("OTPay")});
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        //cmd = new SqlCommand("Select * from TBL_USERS where user_Status='ACTIVE'", conn);
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+
+            dt.Rows.Add(dread["id"].ToString(), cm.FormatDate(dread["CODate"].ToString()),
+                dread["EmployeeName"].ToString(), toRoundOff(dread["GrossPay"].ToString()), toRoundOff(dread["SSSDed"].ToString()), toRoundOff(dread["PhilhealthDed"].ToString()), toRoundOff(dread["PagibigDed"].ToString()), toRoundOff(dread["TotDed"].ToString()), toRoundOff(dread["NetPay"].ToString()),
+                toRoundOff(dread["UTDed"].ToString()), toRoundOff(dread["AbsentDed"].ToString()), toRoundOff(dread["LatesDed"].ToString()), toRoundOff(dread["OTPay"].ToString()));
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+    }
+    public DataTable populateGridPayrollRegisterddl(string CreditDate)
+    {
+        string qry = "Select * from TBL_PAYREG where CODate = '" + CreditDate + "' Order by id";
+        if(CreditDate == "all")
+        {
+            qry = "Select * from TBL_PAYREG Order by id";
+
+        }
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[6] { new DataColumn("id"), new DataColumn("CODate"),
+            new DataColumn("EmpName"), new DataColumn("GrossPay"), new DataColumn("TotDed"), new DataColumn("NetPay")});
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        //cmd = new SqlCommand("Select * from TBL_USERS where user_Status='ACTIVE'", conn);
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+
+            dt.Rows.Add(dread["id"].ToString(), cm.FormatDate(dread["CODate"].ToString()),
+                dread["EmpName"].ToString(), dread["GrossPay"].ToString(), dread["TotDed"].ToString(), dread["NetPay"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+    }
+    public string build_or_like_paramPayroll(Dictionary<string, string> param)
+    {
+        return build_or_like_paramPayroll(false, param);
+    }
+    public string build_or_like_paramPayroll(bool IsFirstCondition, Dictionary<string, string> param)
+    {
+
+        string values = (IsFirstCondition ? "" : " where (");
+        bool isfirstItem = true;
+        string query_optr = "";
+        foreach (KeyValuePair<string, string> kvp in param)
+        {
+            if (kvp.Value == "" || kvp.Value == "'%%'") continue;
+            query_optr = (kvp.Value.Contains("'") ? "LIKE" : "=");
+            values += (isfirstItem ? "" : " or ") + kvp.Key + " " + query_optr + " " + kvp.Value;
+            isfirstItem = false;
+        }
+
+        values += (IsFirstCondition ? "" : " )");
+
+
+
+        return values;
+
+    }
+
+    public int processpayroll(string cutoffid,bool is13thMonthEnabled)
+    {
+        int ret = 0;
+        List<string> summaryIDs = getSummaryIDs(cutoffid);
+        foreach(string s in summaryIDs)
+        {
+            Dictionary<string, string> deductionsDict = new Dictionary<string, string>();
+            Dictionary<string, string> summaryDict = cm.GetTableDict("TBL_PAYROLLSUM", " where id = " + s + "");
+            Dictionary<string, string> empDict = cm.GetTableDict("TBL_EMPLOYEE_MASTER", " where emp_EmpID = '" + summaryDict["empid"] + "'");
+            if (empDict.Count <= 0)
+                continue;
+            computeDeduction(cutoffid,empDict, summaryDict, is13thMonthEnabled, out deductionsDict);
+            string payrollGrp = cm.GetSpecificDataFromDB("PayrollGroup", "TBL_CUTOFF", "where id = " + cutoffid + "");
+            #region payregparam
+            Dictionary<string, string> payregparam = new Dictionary<string, string>();
+            payregparam.Add("CODate", "'"+summaryDict["CODate"]+"'");
+            payregparam.Add("CutoffID", cutoffid);
+            payregparam.Add("PayrollGroup", payrollGrp);
+            payregparam.Add("EmpID", "'" + summaryDict["empid"] + "'");
+            payregparam.Add("EmpName", "'" + summaryDict["PSname"] + "'");
+            payregparam.Add("AccountNo", "'########'");
+            payregparam.Add("Lates", deductionsDict["LatesDed"]);
+            payregparam.Add("UT", deductionsDict["UTDed"]);
+            payregparam.Add("Absent", deductionsDict["AbsentDed"]);
+            payregparam.Add("Leaves", deductionsDict["Leaves"]);
+            payregparam.Add("OTPay", deductionsDict["OTPay"]);
+            payregparam.Add("BasicPay", "'" + deductionsDict["BasicPay"] + "'");
+            payregparam.Add("GrossPay", deductionsDict["GrossPay"]);
+            payregparam.Add("TotDed", deductionsDict["TotDed"]);
+            payregparam.Add("SSSDed", deductionsDict["SSSDed"]);
+            payregparam.Add("PhilhealthDed", deductionsDict["PhilhealthDed"]);
+            payregparam.Add("PagibigDed", deductionsDict["PagibigDed"]);
+            payregparam.Add("NetPay", deductionsDict["NetPay"]);
+            payregparam.Add("NumDays", deductionsDict["NumDays"]);
+            payregparam.Add("WTax", deductionsDict["WTax"]);
+            payregparam.Add("thirteenthmonth", deductionsDict["thirteenthmonth"]);
+            #endregion payregparam
+            Dictionary<string, string> payslipparam = new Dictionary<string, string>();
+
+
+            payslipparam.Add("CODate", "'" + Convert.ToDateTime(summaryDict["CODate"]).ToString("yyyy-MM-dd") + "'");
+            payslipparam.Add("CutoffID", "'"+cutoffid +"'");
+            payslipparam.Add("PayrollGroup", payrollGrp);
+            payslipparam.Add("EmployeeID", "'" + summaryDict["empid"] + "'");
+            payslipparam.Add("EmployeeName", "'" + summaryDict["PSname"] + "'");
+            
+            payslipparam.Add("DateCovered", "'" + getDateCovered(cutoffid) + "'");
+            string dept = cm.GetSpecificDataFromDB("DeptName", "TBL_DEPARTMENT", "where id = " + empDict["emp_Department"] + "");
+            payslipparam.Add("Department", "'" + dept + "'");
+            payslipparam.Add("TINNO", "'#######'");
+            payslipparam.Add("AccountNo", "'########'");
+            payslipparam.Add("Latesmin", "'" + summaryDict["Latesmin"] + "'");
+            payslipparam.Add("UTmin", "'" + summaryDict["UTmin"] + "'");
+            payslipparam.Add("LatesDed", "'" + deductionsDict["LatesDed"] + "'");
+            payslipparam.Add("UTDed", "'" + deductionsDict["UTDed"] + "'");
+            payslipparam.Add("AbsentCount", "'" + deductionsDict["AbsentCount"] + "'");
+            payslipparam.Add("AbsentDed", "'" + deductionsDict["AbsentDed"] + "'");
+            payslipparam.Add("Leaves", "'" + deductionsDict["Leaves"] + "'");
+
+            string remainingleaves = cm.GetSpecificDataFromDB("Remaining", "TBL_LEAVES", " where EmpID = '" + summaryDict["empid"] + "' and LeaveType = '1'");
+
+            payslipparam.Add("RemainingLeavesCredit", (remainingleaves == ""? "0": remainingleaves));
+            payslipparam.Add("LeavePay",  deductionsDict["LeavesPay"]);
+            payslipparam.Add("OTPay", "'" + deductionsDict["OTPay"] + "'");
+            payslipparam.Add("BasicPay", "'" + deductionsDict["BasicPay"] + "'");
+            payslipparam.Add("GrossPay", "'" + deductionsDict["GrossPay"] + "'");
+            payslipparam.Add("TaxableAmt", "'#######'");
+            
+            
+            payslipparam.Add("SSSDed", deductionsDict["SSSDed"]);
+            payslipparam.Add("PhilhealthDed", deductionsDict["PhilhealthDed"]);
+            payslipparam.Add("PagibigDed", deductionsDict["PagibigDed"]);
+            payslipparam.Add("TotDed", "'"+deductionsDict["TotDed"] + "'");
+            payslipparam.Add("NetPay", "'" + deductionsDict["NetPay"] + "'");
+            payslipparam.Add("taxrate", "'" + deductionsDict["taxrate"] + "'");
+            payslipparam.Add("WTax", "'" + deductionsDict["WTax"] + "'");
+            payslipparam.Add("LoanBal", "'" + deductionsDict["LoanBalance"] + "'");
+            payslipparam.Add("CashADV", "'" + deductionsDict["CashAdvance"] + "'");
+            payslipparam.Add("LHWP", deductionsDict["HolidayPay"]);
+            payslipparam.Add("thirteenthmonthpay", deductionsDict["thirteenthmonthpay"]);
+
+            Dictionary<string, string> contributionparam = new Dictionary<string, string>();
+            contributionparam.Add("cutoffID", "'" + cutoffid + "'");
+            contributionparam.Add("empID", "'" + summaryDict["empid"] + "'");
+            contributionparam.Add("sssER", "'" + deductionsDict["sssERgrp"].ToString() + "'");
+            contributionparam.Add("sssEE", "'" + deductionsDict["SSSDed"] + "'");
+            contributionparam.Add("sssEC", "'" + deductionsDict["sssECgrp"].ToString() + "'");
+            contributionparam.Add("philhealthEE", "'" + deductionsDict["PhilhealthDed"] + "'");
+            contributionparam.Add("philhealthER", "'" + deductionsDict["philhealthER"] + "'");
+            contributionparam.Add("pagibigEE", "'" + deductionsDict["PagibigDed"] + "'");
+            contributionparam.Add("pagibigER", "'" + deductionsDict["pagibigER"] + "'");
+            contributionparam.Add("empTax", "'" + deductionsDict["WTax"] + "'");
+
+            if (!HasDuplicate_Contribution_Entry(summaryDict["empid"], cutoffid))
+            {
+                if (!(cm.InsertQueryCommon(contributionparam, "TBL_CONTRIBUTION")))
+                    Console.WriteLine("Failed Insert Contribution()");
+            }
+            else
+                cm.UpdateQueryCommon(contributionparam, "TBL_CONTRIBUTION", "   cutoffID = '" + cutoffid + "' and empID = '" + summaryDict["empid"] + "' ");
+
+
+            if (!HasDuplicate_PayReg_Entry(summaryDict["empid"], cutoffid))
+            {
+                if (!(cm.InsertQueryCommon(payregparam, "TBL_PAYREG")))
+                    Console.WriteLine("Failed InsertPayroll()");
+                
+            }
+            else
+                cm.UpdateQueryCommon(payregparam, "TBL_PAYREG", "   CutoffID = " + cutoffid + " and EmpID = '" + summaryDict["empid"] + "' ");
+
+            if (!HasDuplicate_PaySlip_Entry(summaryDict["empid"], cutoffid))
+            {
+                if (!(cm.InsertQueryCommon(payslipparam, "TBL_PAYSLIP")))
+                    Console.WriteLine("Failed InsertPayroll()");
+                
+            }
+            else
+                cm.UpdateQueryCommon(payslipparam, "TBL_PAYSLIP", "   CutoffID = '" + cutoffid + "' and EmployeeID = '" + summaryDict["empid"] + "' ");
+
+
+        }//end of foreach summaryIDs
+
+        return ret;
+
+
+    }
+    bool HasDuplicate_PayReg_Entry(string empno, string cutoffid)
+    {
+        bool isduplicate = false;
+        string qry = "Select * from TBL_PAYREG where EmpID = '" + empno + "' and CutoffID = " + cutoffid + "";
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        dread.Read();
+        if (dread.HasRows)
+            isduplicate = true;
+
+        dread.Close();
+        conn.Close();
+
+
+        return isduplicate;
+    }
+    bool HasDuplicate_Contribution_Entry(string empno, string cutoffid)
+    {
+        bool isduplicate = false;
+        string qry = "Select * from TBL_CONTRIBUTION where empID = '" + empno + "' and cutoffID = '" + cutoffid + "'";
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        dread.Read();
+        if (dread.HasRows)
+            isduplicate = true;
+
+        dread.Close();
+        conn.Close();
+
+
+        return isduplicate;
+    }
+    bool HasDuplicate_PaySlip_Entry(string empno, string cutoffid)
+    {
+        bool isduplicate = false;
+        string qry = "Select * from TBL_PAYSLIP where EmployeeID = '" + empno + "' and CutoffID = '" + cutoffid + "'";
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        dread.Read();
+        if (dread.HasRows)
+            isduplicate = true;
+
+        dread.Close();
+        conn.Close();
+
+
+        return isduplicate;
+    }
+
+    List<string> getSummaryIDs(string cutoffid)
+    {
+        List<string> IDs = new List<string>();
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select id from TBL_PAYROLLSUM where CutoffID = " + cutoffid + "", conn);
+        dread = cmd.ExecuteReader();
+        while(dread.Read())
+        {
+            IDs.Add(dread[0].ToString());
+        }
+        dread.Close();
+        conn.Close();
+
+        return IDs;
+
+    }
+    public void getDeductionAdjustment(string empno, string cutoff_id, double sss, double phil, double pagibig, out double sssded, out double philded, out double pagibigded )
+    {
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        sssded = sss; philded = phil; pagibigded = pagibig;
+        cmd = new SqlCommand("Select * from TBL_DEDUCTIONADJ where EmpID = '"+empno+"' and CutOffID =" + cutoff_id + "", conn);
+        dread = cmd.ExecuteReader();
+        dread.Read();
+        if (dread.HasRows)
+        {
+            if(dread["SSSDed"] != DBNull.Value)
+            {
+                sssded = double.Parse(dread["SSSDed"].ToString());
+            }
+            if (dread["PhilDed"] != DBNull.Value)
+            {
+                philded = double.Parse(dread["PhilDed"].ToString());
+            }
+            if (dread["PagibigDed"] != DBNull.Value)
+            {
+                pagibigded = double.Parse(dread["PagibigDed"].ToString());
+            }
+
+            
+            
+        }
+        
+        dread.Close();
+        conn.Close();
+
+
+    }
+    public void getCashAdvance(string empno, string cutoff_id, out double cashadvance, out double loanbalance)
+    {
+        cashadvance = 0;
+        loanbalance = 0;
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        
+        cmd = new SqlCommand("Select * from TBL_CASHADVANCE where EmpID = '" + empno + "' and CutOffID =" + cutoff_id + "", conn);
+        dread = cmd.ExecuteReader();
+        dread.Read();
+        if (dread.HasRows)
+        {
+            if (dread["CashAdvance"] != DBNull.Value)
+            {
+                cashadvance = double.Parse(dread["CashAdvance"].ToString());
+            }
+            if (dread["LoanBalance"] != DBNull.Value)
+            {
+                loanbalance = double.Parse(dread["LoanBalance"].ToString());
+            }
+            
+
+
+
+        }
+
+        dread.Close();
+        conn.Close();
+
+
+    }
+    public void getDeductionAdjustmentLates(string empno, string cutoff_id, out double latesded)
+    {
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        latesded = 0;
+        cmd = new SqlCommand("Select * from TBL_DEDUCTIONADJ where EmpID = '" + empno + "' and CutOffID =" + cutoff_id + "", conn);
+        dread = cmd.ExecuteReader();
+        dread.Read();
+        if (dread.HasRows)
+        {
+            if (dread["LatesDed"] != DBNull.Value)
+            {
+                latesded = double.Parse(dread["LatesDed"].ToString());
+            }
+            
+        }
+
+        dread.Close();
+        conn.Close();
+
+
+    }
+    void computeDeduction(string cutoffid, Dictionary<string, string> empDict, Dictionary<string, string> summaryDict, bool is13thMonthEnabled, out Dictionary<string, string> deductionsDict)
+    {
+        bool isMonthly = empDict["emp_PayType"] == "M";
+        string getcutoffWeek = cm.GetSpecificDataFromDB("creditWeek", "TBL_CUTOFF", "where id = " + cutoffid + "");
+        string islatedisregardval = "0";
+        double grosspay = double.Parse(empDict["emp_BasicPay"]);
+        double sssded = double.Parse(empDict["emp_SSSDed"]);
+        double philhded = double.Parse(empDict["emp_PhilHealthDed"]);
+        double pagibigded = double.Parse(empDict["emp_PagibigDed"]);
+        double grosspaygrp = 0;
+        double sssdedgrp = 0;
+        double philhdedgrp = 0;
+        double pagibigdedgrp = 0;
+        double cashadvance = 0;
+        double loanbalance = 0;
+        /*Get employee work days (from TBL_EMPLYOEE_MASTER)
+        */
+        double getempworkdays = 0;
+        double workdays = double.TryParse(empDict["emp_WorkDays"], out getempworkdays) ? getempworkdays : 0;
+
+        double sssER = 0;
+        double sssEC = 0;
+        double sssERgrp = 0;
+        double sssECgrp = 0;
+        double philhealthER = 0;
+        double philhealthERgrp = 0;
+        double pagibigER = 0;
+        double pagibigERgrp = 0;
+        pagibigded = 100;
+        pagibigER = 100;
+
+        //sssER = tk.GetSSSERContribution(empDict["emp_BasicPay"]);
+        sssded = tk.GetSSSDed(empDict["emp_BasicPay"]);
+        sssER = tk.GetSSSERContribution(empDict["emp_BasicPay"]);
+        sssEC = tk.GetSSSECContribution(empDict["emp_BasicPay"]);
+        philhded = tk.GetPhilDed(empDict["emp_BasicPay"]);
+        double LatesDed = 0;
+        double TotalGovtDed = sssded + philhded + pagibigded;
+        
+        double TotalGovtDedpergroup = 0;
+        string payrollmode = cm.GetSpecificDataFromDB("payrollmode", "TBL_PAYROLLGRP", "where id =" + empDict["emp_PayrollGroup"] + "");
+
+        double divide = double.Parse(payrollmode);
+        //grosspaygrp = grosspay / divide;
+        //grosspaygrp = grosspay / 26 * double.Parse(summaryDict["PSDays"]);
+        //grosspaygrp = grosspay / workdays * double.Parse(summaryDict["PSDays"]);
+        grosspaygrp = grosspay / divide; // 10/25/2021 Jan
+        if (getcutoffWeek == "5")
+        {
+            sssdedgrp = 0;
+            philhdedgrp = 0;
+            pagibigdedgrp = 0;
+            TotalGovtDedpergroup = 0;
+            pagibigERgrp = 0;
+            sssECgrp = 0;
+            sssERgrp = 0;
+        }
+        else
+        {
+            sssdedgrp = sssded / divide;
+            sssERgrp = sssER / divide;
+            sssECgrp = sssEC / divide;
+            pagibigERgrp = pagibigER / divide;
+            //philhdedgrp = philhded / divide / 2;
+            philhdedgrp = philhded / divide;
+            pagibigdedgrp = pagibigded / divide;
+        }
+        
+        if (cm.ItemExist("TBL_DEDUCTIONADJ", "id", "where EmpID = '" + summaryDict["empid"] + "' and CutOffID =" + summaryDict["CutoffID"] + "", ""))
+        { 
+            getDeductionAdjustment(summaryDict["empid"], summaryDict["CutoffID"],sssdedgrp, philhdedgrp, pagibigdedgrp, out sssdedgrp, out philhdedgrp, out pagibigdedgrp);
+        }
+        if (cm.ItemExist("TBL_CASHADVANCE", "id", "where EmpID = '" + summaryDict["empid"] + "' and CutOffID =" + summaryDict["CutoffID"] + "", ""))
+        {
+            getCashAdvance(summaryDict["empid"], summaryDict["CutoffID"],out cashadvance, out loanbalance);
+        }
+        TotalGovtDedpergroup = sssdedgrp + philhdedgrp + pagibigdedgrp;
+
+
+        double perday = 0;
+        double permin = 0;
+        double perhr = 0;
+
+        #region new_AE
+        double summaryLatesmin = 0; double summarypsabsent = 0;
+        double summaryutmin = 0; double summarylatesmin = 0;
+        double summaryTotHrs = 0; double summaryOTHrs = 0;
+
+        bool isothrs = double.TryParse(summaryDict["OTHrs"].ToString(), out summaryOTHrs);
+        bool isutmin = double.TryParse(summaryDict["UTmin"].ToString(), out summaryutmin);
+        bool islatesmin = double.TryParse(summaryDict["Latesmin"].ToString(), out summarylatesmin);
+        bool istothrs = double.TryParse(summaryDict["TotHrs"].ToString(), out summaryTotHrs);
+        bool issummarypsabsentn = double.TryParse(summaryDict["PSabsent"].ToString(), out summarypsabsent);
+        #endregion new_AE
+
+        if (payrollmode == "4")
+            perday = grosspay / workdays;
+        //if (payrollmode == "4")
+        //    perday = grosspay / 26;
+        else if (payrollmode == "2")
+            perday = grosspay * 12 / 313;
+        /*if (payrollmode == "4")
+            perday = grosspay / 26;
+        else if (payrollmode == "2")
+            perday = grosspay * 12 / 313;
+         OLD PROCESS   
+         */
+
+        if (perday != 0)
+            permin = perday / 8 / 60;
+        if (perday != 0)
+            perhr = perday / 8;
+
+
+
+        double UTDed = isMonthly ? double.Parse(summaryDict["UTmin"]) * permin : 0;
+         LatesDed = isMonthly ? double.Parse(summaryDict["Latesmin"]) * permin : 0;
+        if (cm.ItemExist("TBL_DTRSETTINGS", "id", " where EmpID = '" + summaryDict["empid"] + "'", ""))
+        {
+            getIsLatesDisregard(summaryDict["empid"], out islatedisregardval);
+            {
+                if(islatedisregardval == "1")
+                { 
+                    LatesDed = 0;
+                }
+            }
+            
+
+        }
+        //if (cm.ItemExist("TBL_DEDUCTIONADJ", "id", "where EmpID = '" + summaryDict["empid"] + "' and CutOffID =" + summaryDict["CutoffID"] + "", ""))
+        //{
+        //    getDeductionAdjustmentLates(summaryDict["empid"], summaryDict["CutoffID"], out LatesDed);
+        //}
+        double OTReg = double.Parse(summaryDict["OTReg"]) * permin;
+
+        //double absentded = double.Parse(summaryDict["PSabsent"]) * perday;
+        double absentded = isMonthly ? summarypsabsent * perday : 0;
+        double totaldtrdeduction = isMonthly ? UTDed + LatesDed : 0;
+
+        //double basicpay = grosspaygrp;
+        //double basicpay = empDict["emp_PayType"]  == "D" ? perday * double.Parse(summaryDict["PSDays"]) : grosspay / divide;
+        double totdayscount = summaryTotHrs / 9;
+        //double basicpay = isMonthly ? grosspaygrp : perday * totdayscount;
+        double basicpay = isMonthly ? grosspaygrp : perhr * summaryTotHrs;
+        basicpay = Math.Ceiling(basicpay);
+        
+        double holidaypay = 0;
+        //holidaypay = computeHoldayPay(summaryDict["CutoffID"], perday);
+
+        #region new_holidaypay
+        double NDPay = 0;
+        double RDpay = 0; double rdothrs = 0; double RDNDPay = 0; double RDNDHrs = 0;
+
+        double LHP = 0; double LHothrs = 0; double LHNDPay = 0; double LHNDHrs = 0;
+        double LHRDpay = 0; double LHRDothrs = 0;
+        double WRKLH = 0; double WRKLHothrs = 0;
+
+        double RHpay = 0; double RHothrs = 0; double RHNDpay = 0; double RHNDHrs = 0;
+        double RHRDpay = 0; double RHRDothrs = 0;
+
+        double SHP = 0; double SHothrs = 0; double SHNDPay = 0; 
+        double WRKSH = 0; double WRKSHothrs = 0;
+        double SHRDpay = 0; double SHRDothrs = 0; double SHRDNDPay = 0; double SHRDNDHrs = 0;
+        double REGOT = 0, RDP = 0, RDLHOT = 0, ND01 = 0, RDOT = 0, LHOT = 0, RDSHP = 0, RDSHOT = 0, SHOT = 0, RHOT = 0, RDLHP = 0;
+        double SHOTND = 0, SHNDHrs = 0;
+        double LHOTND = 0;
+        double RDLHOTND = 0; double RDLHNDHrs = 0;
+
+        double WRKSHRD = 0; double WRKSHRDOT = 0; double WRKLHRD = 0; double WRKLHRDOT = 0;
+
+        RDpay = computeOtherPays(summaryDict["empid"], summaryDict["CutoffID"], perhr, "RDP", out rdothrs);//OK 10/05/2021 Jan
+        LHRDpay = computeOtherPays(summaryDict["empid"], summaryDict["CutoffID"], perhr, "LHRD", out LHRDothrs);//OK 10/05/2021 Jan
+        SHRDpay = computeOtherPays(summaryDict["empid"], summaryDict["CutoffID"], perhr, "SHRD", out SHRDothrs);
+        RHRDpay = computeOtherPays(summaryDict["empid"], summaryDict["CutoffID"], perhr, "RHRD", out RHRDothrs);
+
+        LHP = computeOtherPays(summaryDict["empid"], summaryDict["CutoffID"], perhr, "LH", out LHothrs); //OK 10/05/2021 Jan
+        SHP = computeOtherPays(summaryDict["empid"], summaryDict["CutoffID"], perhr, "SH", out SHothrs);
+        RHpay = computeOtherPays(summaryDict["empid"], summaryDict["CutoffID"], perhr, "WRKRH", out RHothrs);
+
+        WRKSHRD = computeOtherPays(summaryDict["empid"], summaryDict["CutoffID"], perhr, "WRKSHRD", out WRKSHRDOT);//OK 10/05/2021 Jan
+        WRKLHRD = computeOtherPays(summaryDict["empid"], summaryDict["CutoffID"], perhr, "WRKLHRD", out WRKLHRDOT);//OK 10/05/2021 Jan
+        WRKLH = computeOtherPays(summaryDict["empid"], summaryDict["CutoffID"], perhr, "WRKLH", out WRKLHothrs); //OK 10/05/2021 Jan
+        WRKSH = computeOtherPays(summaryDict["empid"], summaryDict["CutoffID"], perhr, "WRKSH", out WRKSHothrs);//OK 10/05/2021 Jan
+        double totalOthers = 0;
+        double totalLHP = 0;
+        double totalSHP = 0;
+        totalLHP = LHRDpay + LHP + WRKLHRD + WRKLH;
+        totalSHP = SHRDpay + SHP + WRKSHRD + WRKSH;
+        totalOthers = RDpay + LHRDpay + SHRDpay + RHRDpay + LHP + SHP + RHpay + WRKSHRD + WRKLHRD + WRKLH + WRKSH;
+        #endregion new_holidaypay
+
+        double grossincome = basicpay - totaldtrdeduction + totalOthers;
+        //double grossincome = basicpay;
+        double taxrate = 0;
+        double wtax = computeTax(grossincome.ToString(), out taxrate);
+        //double totaldeduction = TotalGovtDedpergroup + totaldtrdeduction + absentded + wtax;
+        double totaldeduction = TotalGovtDedpergroup + absentded + wtax + cashadvance;
+        double leavepay = 0; double LWPCount = 0;
+        double.TryParse(summaryDict["LWP"], out LWPCount);
+        //leavepay = computeLeavePay(summaryDict["CutoffID"], summaryDict["empid"], perday);
+        leavepay = LWPCount * perday;
+        //double otpay = 0;
+        //otpay = computeOTPay(summaryDict["CutoffID"], summaryDict["empid"], perday);
+
+        #region new_OT
+        REGOT = getRegOTPay(summaryDict["RegOT"] != "" ? double.Parse(summaryDict["RegOT"]) : 0, perhr);   //OK 10/05/2021 Jan
+        RDOT =  getRegOTPay(summaryDict["RDOT"] != "" ? double.Parse(summaryDict["RDOT"]) : 0, perhr, "RDOT"); //OK 10/06/2021 Jan
+        RDSHOT = getRegOTPay(summaryDict["RDSHOT"] != "" ? double.Parse(summaryDict["RDSHOT"]) : 0, perhr, "RDSHOT");
+        SHOT = getRegOTPay(summaryDict["SHOT"] != "" ? double.Parse(summaryDict["SHOT"]) : 0, perhr, "SHOT");//OK 10/07/2021 Jan
+        LHOT = getRegOTPay(summaryDict["LHOT"] != "" ? double.Parse(summaryDict["LHOT"]) : 0, perhr, "LHOT");//OK 10/07/2021 Jan
+        SHOTND = getRegOTPay(summaryDict["SHOTND"] != "" ? double.Parse(summaryDict["SHOTND"]) : 0, perhr, "SHOTND");//OK 10/07/2021 Jan
+        LHOTND = getRegOTPay(summaryDict["LHOTND"] != "" ? double.Parse(summaryDict["LHOTND"]) : 0, perhr, "LHOTND");//OK 10/07/2021 Jan
+        RDLHOT = getRegOTPay(summaryDict["RDLHOT"] != "" ? double.Parse(summaryDict["RDLHOT"]) : 0, perhr, "RDLHOT");//OK 10/07/2021 Jan
+        RDLHOTND = getRegOTPay(summaryDict["RDLHOTND"] != "" ? double.Parse(summaryDict["RDLHOTND"]) : 0, perhr, "RDLHOTND"); //OK 10/05/2021 Jan
+        SHRDNDPay = getRegOTPay(summaryDict["RDSHOTND"] != "" ? double.Parse(summaryDict["RDSHOTND"]) : 0, perhr, "RDSHOTND");//OK 10/05/2021 Jan
+        //for ND OT
+        //SHNDPay = computeNDOTPay(summaryDict["empid"], summaryDict["CutoffID"], perhr, "SH", "SHOTND");
+        RDNDPay = computeNDOTPay(summaryDict["empid"], summaryDict["CutoffID"], perhr, "RDP", "RDOTND");
+        NDPay = computeNDOTPay(summaryDict["empid"], summaryDict["CutoffID"], perhr, "WRK", "RegOTND"); //OK 10/05/2021 Jan
+
+        #region for_nonOTNDHrs
+        double RDNDP = 0, RDSHNDHrsP = 0, RDLHNDHrsP = 0, LHNDHrsP = 0, SHNDHrsP = 0, RegNDHrsP = 0;
+        RegNDHrsP = computeRegNDPay(summaryDict["empid"], summaryDict["CutoffID"], perhr, "WRK", "RegNDHrs","REG ND");//OK 10/05/2021 Jan
+        SHNDHrsP = computeRegNDPay(summaryDict["empid"], summaryDict["CutoffID"], perhr, "WRK", "SHNDHrs", "SPE ND");//OK 10/07/2021 Jan
+        LHNDHrsP = computeRegNDPay(summaryDict["empid"], summaryDict["CutoffID"], perhr, "WRK", "LHNDHrs", "WLEG ND");//OK 10/07/2021 Jan
+        RDLHNDHrsP = computeRegNDPay(summaryDict["empid"], summaryDict["CutoffID"], perhr, "WRK", "RDLHNDHrs", "RST LEG ND");//OK 10/07/2021 Jan
+        RDSHNDHrsP = computeRegNDPay(summaryDict["empid"], summaryDict["CutoffID"], perhr, "WRK", "RDSHNDHrs", "RST SPE ND");//OK 10/07/2021 Jan
+        RDNDP = computeRegNDPay(summaryDict["empid"], summaryDict["CutoffID"], perhr, "RDP", "RDND", "RST ND");//OK 10/05/2021 Jan
+        #endregion for_nonOTNDHrs
+
+
+        double totalOTpay = 0;
+        totalOTpay = REGOT + SHOT + RDOT + RDSHOT + RHOT;
+        #endregion new_OT
+
+
+        #region get13thMonthPay
+        double totalLates = 0, totalAbsences = 0, totalUndertime = 0, TotalDaysWorked = 0, thirteenthmonthpay = 0;
+        if (is13thMonthEnabled)
+        {
+            
+            GetTotalLatesUTAbsDeduction(summaryDict["empid"].ToString(), out totalLates, out totalAbsences, out totalUndertime);
+            if(empDict["emp_PayType"] == "M")
+            {
+                thirteenthmonthpay = grosspay - ((totalLates + totalAbsences + totalUndertime) / 12);
+            }
+            else if (empDict["emp_PayType"] == "D")
+            {
+                GetTotalDaysWorked(summaryDict["empid"].ToString(), out TotalDaysWorked);
+                thirteenthmonthpay = TotalDaysWorked * perday * 26 / 312;
+            }
+        }
+        #endregion get13thMonthPay
+
+        //double netpay = grossincome - totaldeduction + OTReg + leavepay + otpay + holidaypay - cashadvance;
+        //double netpay = grossincome - totaldeduction + OTReg + leavepay + otpay - cashadvance;
+        double netpay = grossincome - totaldeduction + OTReg + leavepay + totalOTpay;
+        if(netpay < 0)
+        {
+            sssdedgrp = 0;
+            philhdedgrp = 0;
+            pagibigdedgrp = 0;
+            TotalGovtDedpergroup = 0;
+            pagibigERgrp = 0;
+            sssECgrp = 0;
+            sssERgrp = 0;
+            totaldeduction = 0;
+            netpay = 0;
+        }
+        netpay = Math.Ceiling(netpay);
+        //totaldeduction += totaldtrdeduction;
+
+
+
+
+        deductionsDict = new Dictionary<string, string>();
+        deductionsDict.Add("LatesDed", LatesDed.ToString());
+        deductionsDict.Add("UTDed", UTDed.ToString());
+        deductionsDict.Add("AbsentCount",  summaryDict["PSabsent"]);
+        deductionsDict.Add("AbsentDed", absentded.ToString());
+        deductionsDict.Add("Leaves", "0");
+        //deductionsDict.Add("OTPay", otpay.ToString());
+        deductionsDict.Add("OTPay", REGOT.ToString());
+        deductionsDict.Add("LeavesPay", leavepay.ToString());
+        //deductionsDict.Add("HolidayPay", holidaypay.ToString());
+        deductionsDict.Add("HolidayPay", totalOthers.ToString());
+        deductionsDict.Add("BasicPay", basicpay.ToString());
+        deductionsDict.Add("GrossPay", grossincome.ToString());
+        deductionsDict.Add("TotDed", totaldeduction.ToString());
+        deductionsDict.Add("SSSDed", sssdedgrp.ToString());
+        deductionsDict.Add("PhilhealthDed", philhdedgrp.ToString());
+        deductionsDict.Add("philhealthER", philhdedgrp.ToString());
+        deductionsDict.Add("PagibigDed", pagibigdedgrp.ToString());
+        deductionsDict.Add("pagibigER", pagibigERgrp.ToString());
+        deductionsDict.Add("NetPay", netpay.ToString());
+        deductionsDict.Add("NumDays", summaryDict["PSDays"]); 
+        deductionsDict.Add("taxrate", taxrate.ToString());
+        deductionsDict.Add("WTax", wtax.ToString());
+        deductionsDict.Add("thirteenthmonth", "0.00");
+        deductionsDict.Add("CashAdvance", cashadvance.ToString());
+        deductionsDict.Add("LoanBalance", loanbalance.ToString());
+        deductionsDict.Add("sssERgrp", sssERgrp.ToString());
+        deductionsDict.Add("sssECgrp", sssECgrp.ToString());
+        deductionsDict.Add("thirteenthmonthpay", thirteenthmonthpay.ToString());
+
+        #region new_AE
+        double SSSLoanDed = 0;
+        deductionsDict.Add("SSSLoanDed", SSSLoanDed.ToString());
+        deductionsDict.Add("RDLHOT", RDLHOT.ToString());
+        deductionsDict.Add("REGOT", REGOT.ToString());
+        deductionsDict.Add("RDOT", RDOT.ToString());
+        deductionsDict.Add("LHOT", LHOT.ToString());
+        deductionsDict.Add("RDSHOT", RDSHOT.ToString());
+        deductionsDict.Add("SHOT", SHOT.ToString());
+
+        deductionsDict.Add("RDP", RDpay.ToString());
+        deductionsDict.Add("ND01", ND01.ToString());
+        deductionsDict.Add("LHP", totalLHP.ToString());
+        deductionsDict.Add("RDSHP", SHRDpay.ToString());
+        deductionsDict.Add("SHP", totalSHP.ToString());
+        deductionsDict.Add("RDLHP", LHRDpay.ToString());
+        deductionsDict.Add("TotHrs", summaryTotHrs.ToString());
+        //deductionsDict.Add("sssERgrp", sssERgrp.ToString());
+
+        //deductionsDict.Add("WTax", wtax.ToString());
+
+
+
+        deductionsDict.Add("RHRDpay", RHRDpay.ToString());
+        #endregion new_AE
+
+    }
+    double getRegOTPay(double RegOTHrs, double perhr)
+    {
+        return getRegOTPay(RegOTHrs, perhr, "");
+
+    }
+    double getRegOTPay(double RegOTHrs, double perhr, string ottype)
+    {
+        double ret = 0;
+        double RegOTPay = 0;
+        double otpercent = 1.25;
+
+        if (ottype == "SHOT")
+        {
+            //perhr = perhr * 1.3;
+            //otpercent = 1.30;
+            otpercent = 1.69;
+        }
+        if (ottype == "LHOT")
+        {
+            otpercent = 2.6;
+        }
+        if (ottype == "SHOTND")
+        {
+            //mababa to kasi na compute na sa SHOT yung regular na ot plus nalang ito
+            //otpercent = .169;
+            otpercent = 1.859;
+        }
+        if (ottype == "LHOTND")
+        {
+            otpercent = 2.86;
+        }
+        if (ottype == "SHNDHrs")
+        {
+            //10/07/2021
+            //mababa din to kasi nacompute na sa SHP yung pinasok niya na regular plus nalang din ito
+            otpercent = .43;
+        }
+        if (ottype == "RD")
+        {
+            //perhr = perhr * 1.3;
+            otpercent = 1.30;
+        }
+        if (ottype == "SHRD")
+        {
+            //perhr = perhr * 1.5;
+            otpercent = 1.30;
+        }
+        if (ottype == "RH")
+        {
+            //perhr = perhr * 2;
+            otpercent = 1.30;
+        }
+
+        if (ottype == "LH")
+        {
+            //perhr = perhr * 2;
+            otpercent = 2;
+        }
+        if (ottype == "RDLHOTND")
+        {
+            //otpercent = 1.118;
+            otpercent = 3.718;
+        }
+        if (ottype == "RDLHOT")
+        {
+            //otpercent = 0.78;
+            otpercent = 3.38;
+        }
+        if (ottype == "RDOT")
+        {
+            otpercent = 1.69;
+        }
+        if (ottype == "RDSHOTND")
+        {
+            otpercent = 2.145;
+        }
+        if (ottype == "RDSHOT")
+        {
+            otpercent = 1.95;
+        }
+
+
+
+
+
+
+
+
+        RegOTPay = RegOTHrs * (perhr * otpercent);
+        ret = RegOTPay;
+
+        return ret;
+    }
+    double computeOtherPays(string empID, string cutoffid, double perhr, string otype, out double outOThrs)
+    {
+        /*
+         * rdtype
+         * WRK RD - for restday pero pumasok
+         * SHRD - for special restday pero pumasok
+         * LHRD - for legal pero pumasok
+         * RHRD
+         * */
+        string qry = "Select SUM(TotHrs) as 'TotHrs', Count(id) as 'ItemCOunt' from TBL_DTS where EmpID = '" + empID + "' and CutoffID = " + cutoffid + " and Remarks = '" + otype + "' ";
+        double totalhrs = 0;
+        double rate = 1.3;
+        if (otype == "SH") rate = .3;//1.3
+        else if (otype == "LH") rate = 1.0; //2.0
+        else if (otype == "RH") rate = 1.0;//2.0
+
+        else if (otype == "SHRD") rate = 1.5;
+        else if (otype == "LHRD") rate = 2.6;
+        else if (otype == "RHRD") rate = 2.0;
+
+        else if (otype == "WRKSH") rate = .3;//1.3
+        else if (otype == "WRKLH") rate = 1.0; //2.0
+        else if (otype == "WRKRH") rate = 1.0;//2.0
+
+        else if (otype == "WRKSHRD") rate = .5;//1.5
+        else if (otype == "WRKLHRD") rate = 1.6;//2.6  //10/07/2021 from .6 to 1.6 kasi hindi naman nacocompute si LHP si WRK lang
+        //this is for holidays na walang bayad.
+        if (otype == "SHWOP") rate = 0;
+        if (otype == "LHWOP") rate = 0;
+        if (otype == "RHWOP") rate = 0;
+        //this is for leave with holiday
+
+        //test 10/05/2021 - Jan
+        if (otype == "RDP") rate = 1.3;//1.3
+        else if (otype == "LH") rate = 1.0; //2.0
+        else if (otype == "WRKSH") rate = .3;//1.3
+        else if (otype == "WRKSHRD") rate = .5;//1.5
+        else if (otype == "WRKLHRD") rate = 1.6;//2.6
+
+
+
+
+
+        double ret = 0;
+        double PayCOunt = 0, TotPay = 0, regHrs = 0, OTHrs = 0, TotalOTPay = 0;
+        bool isExist = false;
+
+        int schedID = 0;
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            bool valid = double.TryParse(dread[0].ToString(), out totalhrs);
+            valid = double.TryParse(dread[1].ToString(), out PayCOunt);
+            isExist = true;
+        }
+        dread.Close();
+
+
+        regHrs += (totalhrs > 8 ? 8 : totalhrs);
+        OTHrs += (totalhrs > 8 ? (totalhrs - 8) : 0);
+        outOThrs = OTHrs;
+        conn.Close();
+        double rounded = Math.Floor(regHrs * 2) / 2;
+        //TotPay = (perhr * RDrate * 8) * RDCounWithDTR;
+        if (otype == "LH" || otype == "LHRD")
+        {
+            if (isExist)
+            {
+                TotPay = perhr * 8 * PayCOunt;
+            }
+            else
+            {
+                TotPay = 0;
+            }
+        }
+        else
+        {
+            TotPay = perhr * rate * rounded;
+        }
+
+        //TotalOTPay = (perhr * rate) * rounded;
+        ret = TotPay;
+        return ret;
+
+    }
+    double computeNDOTPay(string empID, string cutoffid, double perhr, string remarkstype, string sumtype)
+    {
+
+        string qry = "Select SUM(" + sumtype + ") as '" + sumtype + "', Count(id) as 'NDCount' from TBL_DTS where EmpID = '" + empID + "' and CutoffID = " + cutoffid + " and Remarks = '" + remarkstype + "' ";
+        double NDtotalhrs = 0;
+        double NDpercent = .1;
+        double ret = 0;
+        double NDCount = 0, TotPay = 0;
+        
+
+        if (remarkstype == "SH")
+            perhr = perhr * 1.3;
+        if (remarkstype == "RD")
+            perhr = perhr * 1.3;
+        if (remarkstype == "SHRD")
+            perhr = perhr * 1.5;
+        if (remarkstype == "RH")
+            perhr = perhr * 2;
+        if (remarkstype == "LH")
+            perhr = perhr * 0;
+        //if (remarkstype == "WRK")
+        //    perhr = perhr * 1.25; change to 1.375
+
+        //Try 10/05/2021 Jan
+        if (remarkstype == "WRK")
+            perhr = perhr * 1.375;
+        //Try 10/06/2021 Jan
+        if (remarkstype == "RDP")
+            perhr = perhr * 1.859;
+        
+
+
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            bool valid = double.TryParse(dread[0].ToString(), out NDtotalhrs);
+            valid = double.TryParse(dread[1].ToString(), out NDCount);
+        }
+        dread.Close();
+        conn.Close();
+
+        double rounded = Math.Floor(NDtotalhrs * 2) / 2;
+        TotPay = (perhr * NDpercent) * rounded;
+
+        ret = TotPay;
+        return ret;
+
+    }
+   
+    double computeRegNDPay(string empID, string cutoffid, double perhr, string remarkstype, string sumtype,string ratetype)
+    {
+
+        string qry = "Select SUM(" + sumtype + ") as '" + sumtype + "', Count(id) as 'NDCount' from TBL_DTS where EmpID = '" + empID + "' and CutoffID = " + cutoffid + " and Remarks like '%" + remarkstype + "%'";
+        double NDtotalhrs = 0;
+        double NDpercent = .1;
+        double ret = 0;
+        double NDCount = 0, TotPay = 0;
+
+
+
+        //if (remarkstype == "WRKSH")
+        //    perhr = perhr * 0.43;//1.43
+        //if (remarkstype == "WRKLH")
+        //    perhr = perhr * 1.2;//2.2
+        //if (remarkstype == "WRKLHRD")
+        //    perhr = perhr * 1.86;//2.86
+        //if (remarkstype == "WRKSHRD")
+        //    perhr = perhr * .65;//1.65
+
+        //if (ratetype == "REG ND")
+        //    NDpercent = 0.1;
+        //if (ratetype == "SPE ND")
+        //    perhr = perhr * 1.2;
+        //if (ratetype == "WLEG ND")
+        //    perhr = perhr * 1.86;
+        //if (ratetype == "RST LEG ND")
+        //    perhr = perhr * .65;
+        //if (ratetype == "RST SPE ND")
+        //    perhr = perhr * .65;
+        //if (ratetype == "RST ND")
+        //    perhr = perhr * .65;
+
+        //Try 10/05/2021
+        if (remarkstype == "RDLHNDHrs")
+        {
+            NDpercent = 0.26;
+        }
+        if (remarkstype == "RDSHNDHrs")
+        {
+            NDpercent = 0.15;
+        }
+        if (remarkstype == "RDND")
+        {
+            NDpercent = 0.13;
+        }
+        if (remarkstype == "SHNDHrs")
+        {
+            NDpercent = 0.13;
+        }
+        if (remarkstype == "LHNDHrs")
+        {
+            NDpercent = 0.2;
+        }
+
+
+
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            bool valid = double.TryParse(dread[0].ToString(), out NDtotalhrs);
+            valid = double.TryParse(dread[1].ToString(), out NDCount);
+        }
+        dread.Close();
+        conn.Close();
+
+        double rounded = Math.Floor(NDtotalhrs * 2) / 2;
+        TotPay = perhr * rounded * NDpercent;
+
+        ret = TotPay;
+        return ret;
+
+    }
+    public void getIsLatesDisregard(string empno, out string islatedisregard)
+    {
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        islatedisregard = "0";
+        cmd = new SqlCommand("Select * from TBL_DTRSETTINGS where EmpID = '" + empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        dread.Read();
+        if (dread.HasRows)
+        {
+            if (dread["DisregardLate"] != DBNull.Value)
+            {
+                islatedisregard = dread["DisregardLate"].ToString();
+            }
+        }
+
+        dread.Close();
+        conn.Close();
+
+
+    }
+    double computeLeavePay(string cutoffid, string empid, double perday)
+    {
+        double ret = 0;
+        double hrs = 0;
+        string dtfrom = "", dtto = "";
+        
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_CUTOFF where id = "+ cutoffid + "", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dtfrom = dread["COFrom"].ToString();
+            dtto = dread["COTo"].ToString();
+        }
+        dread.Close();
+        if(dtfrom != "" && dtto != "")
+        {
+            //DateFrom is the Leave Date
+            cmd = new SqlCommand("select * from TBL_LEAVESAPP where EmpID = '"+empid+"' and DateFrom between '"+cm.FormatDateyyyy(dtfrom)+"' and '"+cm.FormatDateyyyy(dtto)+"'", conn);
+            dread = cmd.ExecuteReader();
+            while (dread.Read())
+            {
+                hrs += double.Parse(dread["LeaveHours"].ToString());
+            }
+
+            dread.Close();
+        }
+
+        conn.Close();
+        
+
+        //get date range of cutoff from TBL_CUTOFF
+        
+        //get data from TBL_LEAVESAPP
+
+
+
+
+        double leavepay = perday * (hrs * .125);
+
+        ret = leavepay;
+        return ret;
+
+    }
+    double computeOTPay(string cutoffid, string empid, double perday)
+    {
+        double ret = 0;
+        double hrs = 0;
+        string dtfrom = "", dtto = "";
+
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_CUTOFF where id = " + cutoffid + "", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dtfrom = dread["COFrom"].ToString();
+            dtto = dread["COTo"].ToString();
+        }
+        dread.Close();
+        if (dtfrom != "" && dtto != "")
+        {
+            
+            cmd = new SqlCommand("select * from TBL_OVERTIME where EmpID = '" + empid + "' and OTDate between '" + cm.FormatDateyyyy(dtfrom) + "' and '" + cm.FormatDateyyyy(dtto) + "'", conn);
+            dread = cmd.ExecuteReader();
+            while (dread.Read())
+            {
+                hrs += double.Parse(dread["ot_hours"].ToString());
+            }
+
+            dread.Close();
+        }
+
+        conn.Close();
+        double otpay = perday * (hrs * .125);
+        ret = otpay;
+        return ret;
+
+    }
+    double computeHoldayPay(string cutoffid,double perday)
+    {
+        double ret = 0;
+        double holidaycount = 0;
+        string dtfrom = "", dtto = "";
+
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_CUTOFF where id = " + cutoffid + "", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dtfrom = dread["COFrom"].ToString();
+            dtto = dread["COTo"].ToString();
+        }
+        dread.Close();
+        if (dtfrom != "" && dtto != "")
+        {
+            //DateFrom is the Leave Date
+            cmd = new SqlCommand("select count (id) from TBL_HOLIDAY where Holiday between '" + cm.FormatDateyyyy(dtfrom) + "' and '" + cm.FormatDateyyyy(dtto) + "'", conn);
+            dread = cmd.ExecuteReader();
+            while (dread.Read())
+            {
+                holidaycount = double.Parse(dread[0].ToString()) * perday;
+            }
+
+            dread.Close();
+        }
+
+        conn.Close();
+
+
+        //get date range of cutoff from TBL_CUTOFF
+
+        //get data from TBL_LEAVESAPP
+
+
+
+
+        //double leavepay = perday * (hrs * .125);
+
+        ret = holidaycount;
+        return ret;
+
+    }
+    double compute13thMonth(string empid)
+    {
+        double ret = 0;
+
+
+        return ret;
+    }
+
+    double computeTax(string grossincome, out double taxrate)
+    {
+        double wtax = 0;
+        double dgrossincome = double.Parse(grossincome);
+        taxrate = 0;
+           
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("select * from TBL_TAX where " + grossincome + " between GrossIncomeFrom and GrossIncomeTo", conn);
+        dread = cmd.ExecuteReader();
+        dread.Read();
+        if(dread.HasRows)
+        {
+            taxrate = 0.01 * double.Parse(dread["Taxrate"].ToString());
+
+        }
+        dread.Close();
+        conn.Close();
+
+        wtax = dgrossincome * taxrate;
+
+        return wtax;
+    }
+
+    string getDateCovered(string cutoffid)
+    {
+        string cdate="";DateTime dtfrom, dtto;
+        tk.getCutoffRange(cutoffid, out cdate, out dtfrom, out dtto);
+        string covereddate = string.Format(" {0} to {1}", cm.FormatDate(dtfrom), cm.FormatDate(dtto));
+        return covereddate;
+
+    }
+
+    public Payslip GetPayslip(string cutoffid, string empno)
+    {
+        Payslip ps = new Payslip();
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("select * from TBL_PAYSLIP where CutoffID = '" + cutoffid + "' and EmployeeID = '" + empno + "'", conn);
+        dread = cmd.ExecuteReader();
+        
+        while(dread.Read())
+        {
+            ps.empno = dread["EmployeeID"].ToString();
+            ps.empname = dread["EmployeeName"].ToString();
+            ps.date_covered = dread["DateCovered"].ToString();
+            ps.payrollgroup = dread["PayrollGroup"].ToString();
+            ps.department = dread["Department"].ToString();
+            ps.basicpay = dread["BasicPay"].ToString();
+            ps.sss = dread["SSSDed"].ToString();
+            ps.cash_adv = dread["CashADV"].ToString();
+            ps.loanbal = dread["LoanBal"].ToString();
+            ps.absentded = dread["AbsentDed"].ToString();
+            ps.philhealth = dread["PhilhealthDed"].ToString();
+            ps.lates = dread["LatesDed"].ToString();
+            ps.pagibig = dread["PagibigDed"].ToString();
+            ps.totalgrossincome = dread["GrossPay"].ToString();
+            ps.totaldeduction = dread["TotDed"].ToString();
+            ps.netpay = dread["NetPay"].ToString();
+            //ps.lates = dread["Latesmin"].ToString();
+            ps.remainingleavecredit = dread["RemainingLeavesCredit"].ToString();
+            ps.leavepay = dread["LeavePay"].ToString();
+            ps.utded = dread["UTDed"].ToString();
+            ps.otpay = dread["OTPay"].ToString();
+            ps.holidaypay = dread["LHWP"].ToString();
+            
+        }
+        dread.Close();
+        conn.Close();
+        return ps;
+
+
+    }
+
+    public List<Payslip> GetPayslipBulk(string cutoffid)
+    {
+        List<Payslip> listps = new List<Payslip>();
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("select * from TBL_PAYSLIP where CutoffID = '" + cutoffid + "'", conn);
+        dread = cmd.ExecuteReader();
+
+        while (dread.Read())
+        {
+            Payslip ps = new Payslip();
+            ps.empno = dread["EmployeeID"].ToString();
+            ps.empname = dread["EmployeeName"].ToString();
+            ps.date_covered = dread["DateCovered"].ToString();
+            ps.payrollgroup = dread["PayrollGroup"].ToString();
+            ps.department = dread["Department"].ToString();
+            ps.basicpay = dread["BasicPay"].ToString();
+            ps.sss = dread["SSSDed"].ToString();
+            ps.cash_adv = dread["CashADV"].ToString();
+            ps.loanbal = dread["LoanBal"].ToString();
+            ps.absentded = dread["AbsentDed"].ToString();
+            ps.philhealth = dread["PhilhealthDed"].ToString();
+            ps.lates = dread["LatesDed"].ToString();
+            ps.pagibig = dread["PagibigDed"].ToString();
+            ps.totalgrossincome = dread["GrossPay"].ToString();
+            ps.totaldeduction = dread["TotDed"].ToString();
+            ps.netpay = dread["NetPay"].ToString();
+            //ps.lates = dread["Latesmin"].ToString();
+            ps.remainingleavecredit = dread["RemainingLeavesCredit"].ToString();
+            ps.leavepay = dread["LeavePay"].ToString();
+            ps.utded = dread["UTDed"].ToString();
+            ps.otpay = dread["OTPay"].ToString();
+            ps.holidaypay = dread["LHWP"].ToString();
+            //ps.bonus = dread["Bonus1"].ToString();
+            listps.Add(ps);
+        }
+        dread.Close();
+        conn.Close();
+        return listps;
+
+
+    }
+    public List<Payslip> GetspecificPayslip(string cutoffid, string empno)
+    {
+        List<Payslip> listps = new List<Payslip>();
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("select * from TBL_PAYSLIP where CutoffID = '" + cutoffid + "' and EmployeeID = '"+empno+"'", conn);
+        dread = cmd.ExecuteReader();
+
+        while (dread.Read())
+        {
+            Payslip ps = new Payslip();
+            ps.empno = dread["EmployeeID"].ToString();
+            ps.empname = dread["EmployeeName"].ToString();
+            ps.date_covered = dread["DateCovered"].ToString();
+            ps.payrollgroup = dread["PayrollGroup"].ToString();
+            ps.department = dread["Department"].ToString();
+            ps.basicpay = dread["BasicPay"].ToString();
+            ps.sss = dread["SSSDed"].ToString();
+            ps.cash_adv = dread["CashADV"].ToString();
+            ps.loanbal = dread["LoanBal"].ToString();
+            ps.absentded = dread["AbsentDed"].ToString();
+            ps.philhealth = dread["PhilhealthDed"].ToString();
+            ps.lates = dread["LatesDed"].ToString();
+            ps.pagibig = dread["PagibigDed"].ToString();
+            ps.totalgrossincome = dread["GrossPay"].ToString();
+            ps.totaldeduction = dread["TotDed"].ToString();
+            ps.netpay = dread["NetPay"].ToString();
+
+            listps.Add(ps);
+        }
+        dread.Close();
+        conn.Close();
+        return listps;
+
+
+    }
+    public string toRoundOff(string num)
+    {
+        string numtoround = "";
+        if (num != null && num != "")
+        {
+            numtoround = string.Format("{0:#,0.00}", double.Parse(num));
+        }
+        else
+        {
+            numtoround = "0.00";
+        }
+
+        return numtoround;
+
+
+    }
+
+    #region UPDATE
+    public bool UpdateQueryPhilhealth(string fieldToUpdate, string newValue, string tbl)
+    {
+        Dictionary<string, string> param = new Dictionary<string, string>();
+        param.Add(fieldToUpdate, newValue);
+        return UpdateQueryPhilhealth(param, tbl);
+    }
+    /// <summary>
+    /// whereCondition = "field = 'value'"
+    /// </summary>
+    /// <param name="param"></param>
+    /// <param name="tbl"></param>
+    /// <param name="whereCondition"></param>
+    /// <returns></returns>
+    public bool UpdateQueryPhilhealth(Dictionary<string, string> param, string tbl)
+    {
+
+        try
+        {
+            string setval = "";
+            bool isfirstItem = true;
+            foreach (KeyValuePair<string, string> kvp in param)
+            {
+                setval += (isfirstItem ? "" : ",") + kvp.Key + " = " + kvp.Value;
+
+
+                isfirstItem = false;
+            }
+            string base_query = "UPDATE " + tbl + " SET " + setval + "";
+
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+            cmd = new SqlCommand(base_query, conn);
+            cmd.ExecuteNonQuery();
+
+            conn.Close();
+            return true;
+        }
+        catch (Exception e)
+        {
+            conn.Close();
+            return false;
+        }
+    }
+    #endregion UPDATE
+
+    #region READ
+    public bool UpdateEmpPhilhealthbulk()
+    {
+        
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        //cmd = new SqlCommand("Select * from TBL_USERS where user_Status='ACTIVE'", conn);
+        cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER  where emp_Active !='A'", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            Dictionary<string, string> saveParam()
+            {
+                Dictionary<string, string> param = new Dictionary<string, string>();
+                param.Add("emp_PhilHealthDed", "" + tk.GetPhilDed(dread["emp_BasicPay"].ToString()) + "");
+                
+
+
+
+                return param;
+            }
+            cm.UpdateQueryCommon(saveParam(), "TBL_EMPLOYEE_MASTER", "emp_EmpID = " + dread["emp_EmpID"].ToString() + "");
+            
+            
+        }
+        dread.Close();
+
+        conn.Close();
+        return true;
+    }
+    #endregion READ
+
+    #region 13thmonth
+    void GetTotalLatesUTAbsDeduction(string empnum,out double TotalLatesDed, out double TotalAbsentDed, out double TotalUndertimeDed)
+    {
+        TotalLatesDed = 0;
+        TotalAbsentDed = 0;
+        TotalUndertimeDed = 0;
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("select SUM(convert(float,LatesDed)) as TotalLatesDed,SUM(convert(float,AbsentDed)) as TotalAbsentDed,SUM(convert(float,UTDed)) as TotalUndertimeDed  from TBL_PAYSLIP A,TBL_CUTOFF B where A.CutoffID = B.id AND A.EmployeeID = '"+empnum+"' AND B.creditYear = '" + cm.dtnow().Year + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            double.TryParse(dread_fn["TotalLatesDed"].ToString(), out TotalLatesDed);
+            double.TryParse(dread_fn["TotalAbsentDed"].ToString(), out TotalAbsentDed);
+            double.TryParse(dread_fn["TotalUndertimeDed"].ToString(), out TotalUndertimeDed);
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+
+
+    }
+    void GetTotalDaysWorked(string empnum, out double TotalDaysWorked)
+    {
+        TotalDaysWorked = 0;
+        
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("select  Count(A.id) as TotalDaysWorked from TBL_DTS A,TBL_CUTOFF B, TBL_PAYSLIP C where A.CutoffID = B.id AND A.CutoffID = C.CutoffID AND (A.Remarks = 'WRK' or A.Remarks = 'OBT' or A.Remarks = 'WRK UA' or A.LWP = 1) AND A.EmpID = '" + empnum+"' AND B.creditYear = '"+cm.dtnow().Year+"'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            double.TryParse(dread_fn["TotalDaysWorked"].ToString(), out TotalDaysWorked);
+            
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+
+
+    }
+    #endregion 13thmonth
+    public DataTable populateAlphaListReportByCutOffs(List<string> cutoffids)
+    {
+
+        string expr = "";
+        int i = 0;
+        if (cutoffids.Count > 0)
+        {
+            expr += " where (";
+            foreach (string s in cutoffids)
+            {
+                if (i > 0)
+                {
+                    expr += " OR ";
+                }
+                expr += " TBL_CUTOFF.id = " + s + " ";
+                i++;
+            }
+            expr += ") AND TBL_EMPLOYEE_MASTER.emp_PayrollGroup = TBL_CUTOFF.PayrollGroup";
+        }
+
+        //expr += cutoff == "" ? "" : "where TBL_CUTOFF.id = " + cutoff + " AND TBL_EMPLOYEE_MASTER.emp_PayrollGroup = TBL_CUTOFF.PayrollGroup";
+        string qry = "Select COALESCE(emp_EmpID, 'Grand Total:') AS [Emp. No.]," +
+            "COALESCE((emp_Surname + ', ' +emp_FirstName + ' '+emp_MidName), '') as Name," +
+            " SUM(CAST(TBL_PAYSLIP.BasicPay as float)) as 'Basic Pay', SUM(CAST(OTPay as float)) as 'Overtime Pay'," +
+            "SUM(CAST(ND01 as float)) as 'Night Diff Pay', SUM((CAST(AbsentDed AS float)+ CAST(UTDed AS float)) * -1) as 'Absent/UD'," +
+            "SUM(CAST(LeavePay as float)) as 'SL/VL Encash', SUM(CAST(BonusPay as float)) as 'Bonuses'," +
+            " SUM(CAST(reserve1 as float)) as 'ECOLA', '0' as 'ALLOWANCE'," +
+            "SUM(CAST(AdjustmentAdd as float)) as 'ADJUSTMENT',SUM(CAST(LHP as float)) as 'LEGAL HOLIDAY'," +
+            "SUM(CAST(SHP as float)) as 'SPECIAL HOLIDAY',SUM(CAST(RDP as float)) as 'RESTDAY PREM'," +
+            "SUM(CAST(RDSHP as float)) as 'RESTDAY/SPEC',SUM(CAST(RDLHP as float)) as 'RESTDAY/LEGA'," +
+            "SUM(CAST(AdjustmentOthersAdd as float)) as 'ADJ - OTHERS',SUM(CAST(GrossPay as float)) as 'Total Income'," +
+            "SUM(CAST(SSSDed as float)) as 'SSS  Contrib',SUM(CAST(PhilhealthDed as float)) as 'PHIC Contrib'," +
+            "SUM(CAST(PagibigDed as float)) as 'HDMF Contrib',SUM(CAST(WTax as float)) as 'Withheld Tax'," +
+            " SUM(CAST(SSSL as float)) as 'SSS LOAN',SUM(CAST(PIL as float)) as 'HDMF LOAN'," +
+            "SUM(CAST(UniformDed as float)) as 'UNIFORM',SUM(CAST(CashAdvance as float)) as 'CA/LI/LO/EC'," +
+            "SUM(CAST(PhoneChargesDed as float)) as 'PHONE CHARGE',SUM(CAST(TotDed as float)) as 'Tot Deductns'," +
+            "SUM(CAST(NetPay as float)) as 'Net Pay',SUM(CAST(sssER as float)) as 'Emplyr SSSER'," +
+            "SUM(CAST(CompensationPay as float)) as 'Emp Compnstn'," +
+            "SUM(CAST(philhealthER as float)) as 'EmplyrPHICER'," +
+            "SUM(CAST(pagibigER as float)) as 'EmplyrHDMFER'" +
+            " from TBL_EMPLOYEE_MASTER " +
+            "INNer join TBL_PAYSLIP on emp_EmpID = EmployeeID " +
+            "inner join TBL_CUTOFF on TBL_PAYSLIP.CutoffID = TBL_CUTOFF.id " +
+            "inner join TBL_POSITION on emp_Position = TBL_POSITION.id " +
+            "left join TBL_BONUSES on TBL_PAYSLIP.CutoffID = TBL_BONUSES.CutoffID AND TBL_PAYSLIP.EmployeeID = TBL_BONUSES.EmpID " +
+            "left join TBL_ALLOWANCE on TBL_PAYSLIP.CutoffID = TBL_ALLOWANCE.CutoffID AND TBL_PAYSLIP.EmployeeID = TBL_ALLOWANCE.EmpID " +
+            "left join TBL_ADJUSTMENT on TBL_PAYSLIP.CutoffID = TBL_ADJUSTMENT.CutoffID AND TBL_PAYSLIP.EmployeeID = TBL_ADJUSTMENT.EmpID " +
+            "left join TBL_OTHERSDEDUCTION on TBL_PAYSLIP.CutoffID = TBL_OTHERSDEDUCTION.CutoffID AND TBL_PAYSLIP.EmployeeID = TBL_OTHERSDEDUCTION.EmpID " +
+            "left join TBL_CASHADVANCE on TBL_PAYSLIP.CutoffID = TBL_CASHADVANCE.CutoffID AND TBL_PAYSLIP.EmployeeID = TBL_CASHADVANCE.EmpID " +
+            "left join TBL_CONTRIBUTION on TBL_PAYSLIP.CutoffID = TBL_CONTRIBUTION.cutoffID AND TBL_PAYSLIP.EmployeeID = TBL_CONTRIBUTION.empID " +
+            "left join TBL_COMPENSATION on TBL_PAYSLIP.CutoffID = TBL_COMPENSATION.CutoffID AND TBL_PAYSLIP.EmployeeID = TBL_COMPENSATION.EmpID ";
+        //if (company != "" || month != "")
+        //{
+        //    qry += " where";
+        //}
+        //if (company != "")
+        //{
+        //    qry += " TBL_EMPLOYEE_MASTER.emp_Assignment = " + company + "";
+        //}
+        //if (month != "")
+        //{
+        //    qry += company != "" ? " AND (month(TBL_CUTOFF.COFrom) = " + month + " AND month(TBL_CUTOFF.COTo) = " + month + ") AND (year(TBL_CUTOFF.COFrom) = " + year + " AND year(TBL_CUTOFF.COTo) = " + year + ")" : " (month(TBL_CUTOFF.COFrom) = " + month + " AND month(TBL_CUTOFF.COTo) = " + month + ") AND (year(TBL_CUTOFF.COFrom) = " + year + " AND year(TBL_CUTOFF.COTo) = " + year + ")";
+        //}
+        if (cutoffids.Count > 0)
+        {
+            qry += expr;
+        }
+
+        qry += " GROUP BY  GROUPING SETS((emp_EmpID ,(emp_Surname + ', ' +emp_FirstName + ' '+emp_MidName)), ())";
+        //TBL_PAYSLIP.EmployeeID = '739' AND (month(TBL_CUTOFF.COFrom) = 4 AND month(TBL_CUTOFF.COTo) = 4)
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[33] { new DataColumn("Emp. No."),
+            new DataColumn("Name"),new DataColumn("Basic Pay"),new DataColumn("Overtime Pay"),
+            new DataColumn("Night Diff Pay"),new DataColumn("Absent/UD"),new DataColumn("SL/VL Encash"),
+            new DataColumn("Bonuses"), new DataColumn("ECOLA"), new DataColumn("ALLOWANCE"),new DataColumn("ADJUSTMENT"),
+            new DataColumn("LEGAL HOLIDAY"),new DataColumn("SPECIAL HOLIDAY"),new DataColumn("RESTDAY PREM"),new DataColumn("RESTDAY/SPEC"),
+            new DataColumn("RESTDAY/LEGA"),new DataColumn("ADJ - OTHERS"),new DataColumn("Total Income"),new DataColumn("SSS  Contrib"),
+            new DataColumn("PHIC Contrib"),new DataColumn("HDMF Contrib"),new DataColumn("Withheld Tax"),new DataColumn("SSS LOAN"),
+            new DataColumn("HDMF LOAN"),new DataColumn("UNIFORM"),new DataColumn("CA/LI/LO/EC"),new DataColumn("PHONE CHARGE"),
+            new DataColumn("Tot Deductns"),new DataColumn("Net Pay"),new DataColumn("Emplyr SSSER"),new DataColumn("Emp Compnstn"),
+            new DataColumn("EmplyrPHICER"),new DataColumn("EmplyrHDMFER")});
+
+        //dt.Columns.AddRange(new DataColumn[27] { new DataColumn("Emp. No."),
+        //    new DataColumn("EmpName"),new DataColumn("Basic Pay"),new DataColumn("Overtime Pay"),
+        //    new DataColumn("Night Diff Pay"),new DataColumn("Absent/UD"),new DataColumn("SL/VL Encash"),
+        //    new DataColumn("Bonuses"), new DataColumn("ECOLA"), new DataColumn("ALLOWANCE"),new DataColumn("ADJUSTMENT"),
+        //    new DataColumn("LEGAL HOLIDAY"),new DataColumn("SPECIAL HOLIDAY"),new DataColumn("RESTDAY PREM"),new DataColumn("RESTDAY/SPEC"),
+        //    new DataColumn("RESTDAY/LEGA"),new DataColumn("ADJ - OTHERS"),new DataColumn("Total Income"),new DataColumn("SSS  Contrib"),
+        //    new DataColumn("PHIC Contrib"),new DataColumn("HDMF Contrib"),new DataColumn("Withheld Tax"),new DataColumn("SSS LOAN"),
+        //    new DataColumn("HDMF LOAN"),new DataColumn("UNIFORM"),new DataColumn("CA/LI/LO/EC"),new DataColumn("PHONE CHARGE")});
+
+        //,new DataColumn("CA/LI/LO/EC")
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+
+        //cmd = new SqlCommand("Select * from TBL_USERS where user_Status='ACTIVE'", conn);
+        cmd = new SqlCommand(qry, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["Emp. No."].ToString(), dread["Name"].ToString(), dread["Basic Pay"].ToString(),
+                dread["Overtime Pay"].ToString(), dread["Night Diff Pay"].ToString(),
+                dread["Absent/UD"].ToString(), dread["SL/VL Encash"].ToString(), dread["Bonuses"].ToString(),
+                dread["ECOLA"].ToString(), dread["ALLOWANCE"].ToString(), dread["ADJUSTMENT"].ToString(),
+                dread["LEGAL HOLIDAY"].ToString(), dread["SPECIAL HOLIDAY"].ToString(), dread["RESTDAY PREM"].ToString(),
+                dread["RESTDAY/SPEC"].ToString(), dread["RESTDAY/LEGA"].ToString(), dread["ADJ - OTHERS"].ToString(),
+                dread["Total Income"].ToString(), dread["SSS  Contrib"].ToString(), dread["PHIC Contrib"].ToString(),
+                dread["HDMF Contrib"].ToString(), dread["Withheld Tax"].ToString(), dread["SSS LOAN"].ToString(),
+                dread["HDMF LOAN"].ToString(), dread["UNIFORM"].ToString(), dread["CA/LI/LO/EC"].ToString(),
+                dread["PHONE CHARGE"].ToString(), dread["Tot Deductns"].ToString(), dread["Net Pay"].ToString(),
+                dread["Emplyr SSSER"].ToString(), dread["Emp Compnstn"].ToString(), dread["EmplyrPHICER"].ToString(),
+                dread["EmplyrHDMFER"].ToString());
+
+            }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+    }
+
+
+
+
+}

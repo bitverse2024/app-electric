@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/createProvince.aspx" hash="2e7cb0847" filehash="fd3d7b84337d505" flags="110000" assembly="App_Web_idpumttp" type="ASP.pages_admin_createprovince_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/createProvince.aspx" />
+    </filedeps>
+</preserve>

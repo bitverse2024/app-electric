@@ -1,0 +1,292 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.Master" AutoEventWireup="true" CodeBehind="Default_kiosk.aspx.cs" Inherits="HRIS_APPELECTRIC.Default_kiosk" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <aside class="right-side">
+        <!-- Small boxes (Stat box) -->
+
+        <section class="content-header">
+       
+        </section>
+        <!-- Main content -->
+        <div class="col-md-12">
+            <div class="content">
+                <div class="container-fluid">
+                    <div class="container"></div>
+                    <h1 class="m-0 text-dark">Dashboard<small> Control Panel</small></h1>
+
+                    <section class="card">
+                        <div class="card-body">
+                            <div class="content">
+                                <div class="container-fluid">
+                                    <%--<div class="col-lg-3 col-xs-6">
+			<!-- small box -->
+			<div class="small-box bg-blue" >
+				<div class="inner">
+					<h3>
+						MR
+					</h3>
+					<p>
+						Manpower Requisition
+					</p>
+				</div>
+				<div class="icon">
+					<i class="fa fa-user-plus"></i>
+				</div>
+				<a href=/dataland-new/index.php class="small-box-footer">
+					Click here <i class="fa fa-arrow-circle-right"></i>
+				</a>
+			</div>
+		</div>--%><!-- ./col -->
+
+
+
+                                    <%--<div class="col-lg-3 col-xs-6">
+			<!-- small box -->
+			<div class="small-box bg-green" >
+				<div class="inner">
+					<h3>
+						Payslip
+					</h3>
+					<p>
+						View Payslip
+					</p>
+				</div>
+				<div class="icon">
+					<i class="fa fa-file-text"></i>
+				</div>
+				<a href="" class="small-box-footer">
+					Click here <i class="fa fa-arrow-circle-right"></i>
+				</a>
+			</div>
+		</div><!-- ./col -->
+
+		<div class="col-lg-3 col-xs-6">
+			<!-- small box -->
+			<div class="small-box bg-red" >
+				<div class="inner">
+					<h3>
+						Appraisal
+					</h3>
+					<p>
+						Performance Evaluation
+					</p>
+				</div>
+				<div class="icon">
+					<i class="ion ion-arrow-graph-up-right"></i>
+				</div>
+				<a href="" class="small-box-footer">
+					Click here <i class="fa fa-arrow-circle-right"></i>
+				</a>
+			</div>
+		</div><!-- ./col -->--%>
+                                </div>
+
+                                   
+                                <div class="row">
+
+                                    <div class="col-lg-3 col-xs-6">
+                                        <!-- small box -->
+                                        <div class="small-box badge-success">
+                                            <div class="inner">
+                                                <h3>DTR
+                                                </h3>
+                                                <p>
+                                                    Time Record
+                                                </p>
+                                            </div>
+                                            <div class="icon">
+                                                <i class="fa fa-calendar"></i>
+                                            </div>
+                                            <a href="Pages/Admin/TK/viewdts.aspx" class="small-box-footer">Click here <i class="fa fa-arrow-circle-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-xs-6">
+                                        <!-- small box -->
+                                        <div class="small-box bg-yellow">
+                                            <div class="inner">
+                                                <h3>Leaves
+                                                </h3>
+                                                <p>
+                                                    Apply Leaves 
+                                                </p>
+                                            </div>
+                                            <div class="icon">
+                                                <i class="ion ion-person-stalker"></i>
+                                            </div>
+                                            <a href="Pages/Admin/Employees/viewleavesforapproval.aspx" class="small-box-footer">Click here <i class="fa fa-arrow-circle-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <!-- ./col -->
+
+
+                                    <%--<%if (Session["Roles"].ToString() == "admin")
+                                        { %>
+                                    <div class="col-lg-3 col-xs-6">
+                                        <!-- small box -->
+                                        <div class="small-box bg-green">
+                                            <div class="inner">
+                                                <h3>Overtime
+                                                </h3>
+                                                <p>
+                                                    Apply Overtime
+                                                </p>
+                                            </div>
+                                            <div class="icon">
+                                                <i class="fa fa-clock-o"></i>
+                                            </div>
+                                            <a href="Pages/Admin/Employees/viewotforapproval.aspx" class="small-box-footer">Click here <i class="fa fa-arrow-circle-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <%} %>--%>
+                                    <!-- ./col -->
+
+                                    <div class="col-lg-3 col-xs-6">
+                                        <!-- small box -->
+                                        <div class="small-box bg-teal">
+                                            <div class="inner">
+                                                <h3>OBT
+                                                </h3>
+                                                <p>
+                                                    Apply Official Business Trip
+                                                </p>
+                                            </div>
+                                            <div class="icon">
+                                                <i class="fa fa-road"></i>
+                                            </div>
+                                            <a href="Pages/Admin/Employees/viewobtforapproval.aspx" class="small-box-footer">Click here <i class="fa fa-arrow-circle-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <!-- ./col -->
+
+                                    <%--<div class="col-lg-3 col-xs-6">
+                                        <!-- small box -->
+                                        <div class="small-box bg-blue">
+                                            <div class="inner">
+                                               <span class="text-xl text-bold">UA
+                                                    </span><br />
+                                                    <span class="text">Apply Unaccounted Attendance</span>
+                                            </div>
+                                            <div class="icon">
+                                                <i class="fa fa-pencil-square-o"></i>
+                                            </div>
+                                            <a href="Pages/Admin/Employees/viewftsforapproval.aspx" class="small-box-footer">Click here <i class="fa fa-arrow-circle-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>--%>
+
+                                 
+                                    <!-- ./col -->
+                                    <div class="col-lg-3 col-xs-6">
+                                        <!-- small box -->
+                                        <div class="small-box bg-blue">
+                                            <div class="inner">
+                                                <h3>Overtime
+                                                </h3>
+                                                <p>
+                                                   Apply Overtime
+                                                </p>
+                                            </div>
+                                            <div class="icon">
+                                                <i class="fa fa-calendar"></i>
+                                            </div>
+                                            <a href="Pages/Admin/Employees/viewotforapproval.aspx" class="small-box-footer">Click here <i class="fa fa-arrow-circle-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                   
+                                    <!-- ./col -->
+                                </div>
+
+                                <div class="row">
+                                        <div class="col-lg-3 col-xs-6">
+                                        <!-- small box -->
+                                        <div class="small-box bg-gradient-danger">
+                                            <div class="inner">
+                                                <h3>UA
+                                                </h3>
+                                                <p>
+                                                    Apply UA
+                                                </p>
+                                            </div>
+                                            <div class="icon">
+                                                <i class="fa fa-pencil-square-o"></i>
+                                            </div>
+                                            <a href="Pages/Admin/Employees/viewftsforapproval.aspx" class="small-box-footer">Click here <i class="fa fa-arrow-circle-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <%--<div class="col-lg-3 col-xs-6">
+                                        <!-- small box -->
+                                        <div class="small-box bg-blue">
+                                            <div class="inner">
+                                                <h3>Loans
+                                                </h3>
+                                                <p>
+                                                    View Loans 
+                                                </p>
+                                            </div>
+                                            <div class="icon">
+                                                <i class="fa fa-list"></i>
+                                            </div>
+                                            <a href="Pages/Admin/Employees/viewloans.aspx" class="small-box-footer">Click here <i class="fa fa-arrow-circle-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>--%>
+                                    <!-- ./col -->
+
+                                    <%--<div class="col-lg-3 col-xs-6">
+                                        <!-- small box -->
+                                        <div class="small-box bg-teal">
+                                            <div class="inner">
+                                                <h3>Training
+                                                </h3>
+                                                <p>
+                                                    Apply for Training 
+                                                </p>
+                                            </div>
+                                            <div class="icon">
+                                                <i class="fa fa-users"></i>
+                                            </div>
+                                            <a href="" class="small-box-footer">Click here <i class="fa fa-arrow-circle-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>--%>
+                                    <!-- ./col -->
+
+                                    <%--<div class="col-lg-3 col-xs-6">
+                                        <!-- small box -->
+                                        <div class="small-box bg-green">
+                                            <div class="inner">
+                                                <h3>HR Advisory
+                                                </h3>
+                                                <p>
+                                                    HR Advisories
+                                                </p>
+                                            </div>
+                                            <div class="icon">
+                                                <i class="fa fa-file"></i>
+                                            </div>
+                                            <a href="Pages/Admin/Announcement/announcements.aspx" class="small-box-footer">Click here <i class="fa fa-arrow-circle-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>--%>
+                                    <!-- ./col -->
+                                    
+                                </div>
+
+                            </div>
+                        </div>
+                        <!-- Widgets as boxes -->
+                    </section>
+                </div>
+            </div>
+        </div>
+        <!-- /.row (main row) -->
+    </aside>
+</asp:Content>

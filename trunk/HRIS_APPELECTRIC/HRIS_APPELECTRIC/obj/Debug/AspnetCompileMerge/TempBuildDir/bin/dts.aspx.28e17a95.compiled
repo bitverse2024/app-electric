@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/TK/dts.aspx" hash="fffffffb122f315e" filehash="e2fc33f3aff9f16f" flags="110000" assembly="App_Web_lwm2xbfz" type="ASP.pages_admin_tk_dts_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/TK/dts.aspx" />
+    </filedeps>
+</preserve>

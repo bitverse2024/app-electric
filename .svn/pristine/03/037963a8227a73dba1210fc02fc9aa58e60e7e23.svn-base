@@ -1,0 +1,1111 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+
+namespace HRIS_APPELECTRIC.Pages.Admin.Employees
+{
+    public partial class viewleavesforapproval : System.Web.UI.Page
+    {
+        public string numdays = "";
+        AdminLib adl = new AdminLib();
+        Employee emp = new Employee();
+        Timekeeping tk = new Timekeeping();
+        Common cm = new Common();
+        public string empno = "";
+        public string userid = "";
+        public int gridtotalcount = 0;
+        public string gridrangecount = "";
+        string getdfrom, getleavehrs, getampm, getleave, getreason, getemp, getstat;
+        string getallowed, getrem, getact, getexp, getdays, getused, getfiledate;
+        public Dictionary<string, string> empInfo = new Dictionary<string, string>();
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            empno = Session["EMP_ID"].ToString();
+            userid = Session["USERID"].ToString();
+            empInfo = emp.GetEmployeeInfoDict(empno);
+            if (!IsPostBack)
+            {
+                //upd_leavetype.Items.AddRange(emp.GetDropDownMenuList("TBL_LEAVETYPE", "LeaveTypeDesc"));
+                Leavesapp_LeaveType.Items.AddRange(emp.GetDropDownMenuList("TBL_LEAVETYPE", "LeaveTypeDesc"));
+                upd_leavetype.Items.AddRange(emp.GetDropDownMenuList("TBL_LEAVETYPE", "LeaveTypeDesc"));
+                Leave_LeaveType.Items.AddRange(emp.GetDropDownMenuList("TBL_LEAVETYPE", "LeaveTypeDesc"));
+                refresh();
+            }
+        }
+
+        public string getname()
+        {
+            string name = "";
+            name = emp.GetEmployeeName(empno);
+
+            return name;
+
+        }
+        void summary()
+        {
+            gridtotalcount = ((DataTable)ViewState["EMP_GRID1"]).Rows.Count;
+            int pageIndex = GridForApproval.PageIndex;
+            int c = (pageIndex > 0 ? 10 * pageIndex : 0) + GridForApproval.Rows.Count;
+            gridrangecount = (c > 0 ? c : 0) + " - " + gridtotalcount;
+        }
+
+        void refresh()
+        {
+            DataTable dt = new DataTable(); //GridForApproval
+
+            dt = tk.populateGridLeavesForApproval(empno);
+            GridForApproval.DataSource = dt;
+            GridForApproval.DataBind();
+            ViewState["EMP_GRID1"] = dt;
+            ViewState["SORTDR_1"] = null;
+
+            dt = new DataTable();
+            dt = tk.populateGridLeaves(empno);
+            GridLeaveLedger.DataSource = dt;
+            GridLeaveLedger.DataBind();
+            ViewState["EMP_GRID2"] = dt;
+            ViewState["SORTDR_2"] = null;
+
+            dt = new DataTable();
+            dt = tk.populateGridLeavesApp(empno);
+            GridFiledLeave.DataSource = dt;
+            GridFiledLeave.DataBind();
+            ViewState["EMP_GRI3"] = dt;
+            ViewState["SORTDR_3"] = null;
+            summary();
+        }
+
+        protected void GridForApproval_OnRowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            if (e.Row.RowType == DataControlRowType.DataRow)
+            {
+                Button approve = (Button)e.Row.FindControl("btnApprove");
+                Button disapprove = (Button)e.Row.FindControl("btnDisapprove");
+                Label empid1 = (Label)e.Row.FindControl("lblApp1");
+                Label empid2 = (Label)e.Row.FindControl("lblApp2");
+                Label date1 = (Label)e.Row.FindControl("lblDate1");
+                Label date2 = (Label)e.Row.FindControl("lblDate2");
+
+                if (empid1.Text == empno)
+                {
+                    if (date1.Text != "")
+                    {
+                        approve.Visible = false;
+                        disapprove.Visible = false;
+                    }
+                }
+                if (empid2.Text == empno)
+                {
+                    if (date2.Text != "")
+                    {
+                        approve.Visible = false;
+                        disapprove.Visible = false;
+                    }
+                }
+            }
+        }
+
+        protected void sort_grid(string sort_args, string viewstateindex, string viewsortDR, int gridno)
+        {
+            DataTable dt = (DataTable)ViewState[viewstateindex];
+            if (dt.Rows.Count > 0)
+            {
+                if (Convert.ToString(ViewState[viewsortDR]) == "Asc")
+                {
+                    dt.DefaultView.Sort = sort_args + " Desc";
+                    ViewState[viewsortDR] = "Desc";
+                }
+                else
+                {
+                    dt.DefaultView.Sort = sort_args + " Asc";
+                    ViewState[viewsortDR] = "Asc";
+                }
+
+                if (gridno == 1)
+                {
+                    GridLeaveLedger.DataSource = dt;
+                    GridLeaveLedger.DataBind();
+                }
+                if (gridno == 2)
+                {
+                    GridForApproval.DataSource = dt;
+                    GridForApproval.DataBind();
+                }
+                if (gridno == 3)
+                {
+                    GridFiledLeave.DataSource = dt;
+                    GridFiledLeave.DataBind();
+                }
+                summary();
+
+
+            }
+
+        }
+        protected void GridForApproval_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            GridForApproval.PageIndex = e.NewPageIndex;
+            refresh();
+        }
+        protected void GridForApproval_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (e.CommandName == "Sort")
+            {
+                sort_grid(e.CommandArgument.ToString(), "EMP_GRID1", "SORTDR1", 1);
+
+            }
+
+            if (e.CommandName == "cmd_approve")
+            {
+                string confirmValue = Request.Form["confirm_value"];
+                if (confirmValue == "Yes")
+                {
+                    string[] arg = new string[2];
+                    arg = e.CommandArgument.ToString().Split(',');
+                    string eID = arg[0];
+                    string eEmpID = arg[1];
+                    hfAprrove.Value = eID;
+                    getleave = cm.GetSpecificDataFromDB("LeaveType", "TBL_LEAVESAPP", "where id = " + eID + "");
+                    getemp = cm.GetSpecificDataFromDB("FullName", "TBL_LEAVESAPP", "where id = " + eID + "");
+                    getdays = cm.GetSpecificDataFromDB("NumberOfDays", "TBL_LEAVESAPP", "where id = " + eID + "");
+                    getstat = cm.GetSpecificDataFromDB("LeaveStatus", "TBL_LEAVESAPP", "where id = " + eID + "");
+                    getfiledate = cm.FormatDate(cm.GetSpecificDataFromDB("DateFiled", "TBL_LEAVESAPP", "where id = " + eID + ""));
+                    string getapp1 = cm.GetSpecificDataFromDB("Approver1", "TBL_LEAVESAPP", "where id = " + eID + "");
+                    string getapp2 = cm.GetSpecificDataFromDB("Approver2", "TBL_LEAVESAPP", "where id = " + eID + "");
+                    string getdate1 = cm.GetSpecificDataFromDB("DateApproved1", "TBL_LEAVESAPP", "where id = " + eID + "");
+                    string getdate2 = cm.GetSpecificDataFromDB("DateApproved2", "TBL_LEAVESAPP", "where id = " + eID + "");
+                    string getid = cm.GetSpecificDataFromDB("EmpID", "TBL_LEAVESAPP", "where id = " + eID + "");
+                    getrem = cm.GetSpecificDataFromDB("Remaining", "TBL_LEAVES", "where EmpID = '" + eEmpID + "' and LeaveType ='" + getleave +
+                        "' and Activated = '1'");
+                    getused = cm.GetSpecificDataFromDB("Used", "TBL_LEAVES", "where EmpID = '" + eEmpID + "' and LeaveType ='" + getleave +
+                        "' and Activated = '1'");
+                    double total = Convert.ToDouble(getrem.ToString()) - Convert.ToDouble(getdays.ToString());
+                    double used = Convert.ToDouble(getused.ToString()) + Convert.ToDouble(getdays.ToString());
+                    if (getapp1 == empno)
+                    {
+                        if (getapp2 == "")
+                        {
+                            ChangeLeaveStatus(eID, "1");
+                            updatecred(eEmpID, total.ToString(), used.ToString());
+                        }
+                        else
+                        {
+                            if (getdate2 != "")
+                            {
+                                ChangeLeaveStatus(eID, "1");
+                                updatecred(eEmpID, total.ToString(), used.ToString());
+                            }
+                            else
+                            {
+                                ChangeLeaveStatus(eID, "2");
+                            }
+                        }
+                    }
+                    if (getapp2 == empno)
+                    {
+                        if (getdate1 != "")
+                        {
+                            ChangeLeaveStatus(eID, "1");
+                            updatecred(eEmpID, total.ToString(), used.ToString());
+                        }
+                        else
+                        {
+                            ChangeLeaveStatus(eID, "2");
+                        }
+                    }
+                    cm.AddLog("User " + Session["FULLNAME"].ToString().ToUpper() + " Approved Leave of " + getemp + " with LEAVE TYPE " + getleave +
+                        ".Date Filed: " + getfiledate + ". Reason: " + getreason + ".", "APPROVE", "LEAVES", eID, "LEAVES", Session["EMP_ID"].ToString());
+                    refresh();
+                    ScriptManager.RegisterStartupScript(this, this.GetType(),
+                    "alert",
+                    "alert('Successfully Approved');",
+                    true);
+                }
+            }
+            if (e.CommandName == "cmd_disapprove")
+            {
+                HiddenField2.Value = e.CommandArgument.ToString();
+                populateUpdateField2(e.CommandArgument.ToString());
+                openTransDetails2(empno);
+                refresh();
+
+            }
+            if (e.CommandName == "upd")
+            {
+                HiddenEmpID.Value = e.CommandArgument.ToString();
+                populateUpdateField(e.CommandArgument.ToString());
+                openTransDetails(empno);
+            }
+            if (e.CommandName == "del")
+            {
+                getleave = cm.GetSpecificDataFromDB("LeaveType", "TBL_LEAVESAPP", "where id = " + e.CommandArgument.ToString() + "");
+                string getemp = cm.GetSpecificDataFromDB("FullName", "TBL_LEAVESAPP", "where id = " + e.CommandArgument.ToString() + "");
+                string getid = cm.GetSpecificDataFromDB("EmpID", "TBL_LEAVESAPP", "where id = " + e.CommandArgument.ToString() + "");
+                getdays = cm.GetSpecificDataFromDB("NumberOfDays", "TBL_LEAVESAPP", "where id = " + e.CommandArgument.ToString() + "");
+                getstat = cm.GetSpecificDataFromDB("LeaveStatus", "TBL_LEAVESAPP", "where id = " + e.CommandArgument.ToString() + "");
+                getrem = cm.GetSpecificDataFromDB("Remaining", "TBL_LEAVES", "where EmpID = '" + getid + "' and LeaveType ='" + getleave +
+                    "' and Activated = '1'");
+                getused = cm.GetSpecificDataFromDB("Used", "TBL_LEAVES", "where EmpID = '" + getid + "' and LeaveType ='" + getleave +
+                    "' and Activated = '1'");
+                getreason = cm.GetSpecificDataFromDB("Reason", "TBL_LEAVESAPP", "where id = " + e.CommandArgument.ToString() + "");
+                getfiledate = cm.FormatDate(cm.GetSpecificDataFromDB("DateFiled", "TBL_LEAVESAPP", "where id = " + e.CommandArgument.ToString() + ""));
+                double total = Convert.ToDouble(getrem.ToString()) + Convert.ToDouble(getdays.ToString());
+                double used = Convert.ToDouble(getused.ToString()) - Convert.ToDouble(getdays.ToString());
+                if (getstat == "1")
+                {
+                    updatecred(getid, total.ToString(), used.ToString());
+                }
+                emp.DeleteQuery("TBL_LEAVESAPP", "where id =" + e.CommandArgument.ToString() + "");
+                cm.AddLog("User " + Session["FULLNAME"].ToString().ToUpper() + " removed Applied Leave of " + getemp + "with LEAVE TYPE" + getleave +
+                    ".Date Filed: " + getfiledate + ".Reason: " + getreason + ".", "DELETE", "LEAVES", e.CommandArgument.ToString(), "LEAVES", Session["EMP_ID"].ToString());
+                refresh();
+                ScriptManager.RegisterStartupScript(this, this.GetType(),
+                "alert",
+                "alert('Successfully Deleted');",
+                true);
+
+            }
+
+        }
+
+        void updatecred(string id, string total, string used)
+        {
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            param.Add("Remaining", "'" + total + "'");
+            param.Add("Used", "'" + used + "'");
+            cm.UpdateQueryCommon(param, "TBL_LEAVES", " EmpID = " + id + " and LeaveType = '" + getleave + "' and Activated = '1'");
+        }
+
+        void ChangeLeaveStatus(string id, string status)
+        {
+            string getapp1 = cm.GetSpecificDataFromDB("Approver1", "TBL_LEAVESAPP", "where id = " + hfAprrove.Value + "");
+            string getapp2 = cm.GetSpecificDataFromDB("Approver2", "TBL_LEAVESAPP", "where id = " + hfAprrove.Value + "");
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            param.Add("LeaveStatus", "'" + status + "'");
+            if (empno == getapp1)
+            {
+                param.Add("DateApproved1", "'" + cm.FormatDate(DateTime.Now) + "'");
+            }
+            if (empno == getapp2)
+            {
+                param.Add("DateApproved2", "'" + cm.FormatDate(DateTime.Now) + "'");
+            }
+            cm.UpdateQueryCommon(param, "TBL_LEAVESAPP", " id = " + id + "");
+
+        }
+
+        protected void GridLeaveLedger_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            GridLeaveLedger.PageIndex = e.NewPageIndex;
+            refresh();
+        }
+        protected void GridLeaveLedger_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (e.CommandName == "Sort")
+            {
+                sort_grid(e.CommandArgument.ToString(), "EMP_GRID2", "SORTDR2", 2);
+
+            }
+            if (e.CommandName == "Reset")
+            {
+                refresh();
+
+            }
+            if (e.CommandName == "upd")
+            {
+                HiddenField1.Value = e.CommandArgument.ToString();
+                populateUpdateField1(e.CommandArgument.ToString());
+                openTransDetails1(empno);
+            }
+            if (e.CommandName == "del")
+            {
+                getleave = cm.GetSpecificDataFromDB("LeaveType", "TBL_LEAVES", "where id = " + e.CommandArgument.ToString() + "");
+                emp.DeleteQuery("TBL_LEAVES", "where id =" + e.CommandArgument.ToString() + "");
+                cm.AddLog("User " + Session["FULLNAME"].ToString().ToUpper() + " removed LEAVE " + getleave,
+                        "DELETE", "LEAVES", e.CommandArgument.ToString(), "LEAVES", Session["EMP_ID"].ToString());
+                refresh();
+                ScriptManager.RegisterStartupScript(this, this.GetType(),
+                "alert",
+                "alert('Successfully Deleted');",
+                true);
+
+            }
+
+        }
+
+        protected void GridFiledLeave_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            GridFiledLeave.PageIndex = e.NewPageIndex;
+            refresh();
+        }
+        protected void GridFiledLeave_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (e.CommandName == "Sort")
+            {
+                sort_grid(e.CommandArgument.ToString(), "EMP_GRID3", "SORTDR3", 3);
+
+            }
+            if (e.CommandName == "Reset")
+            {
+                refresh();
+
+            }
+            if (e.CommandName == "upd")
+            {
+                HiddenEmpID.Value = e.CommandArgument.ToString();
+                populateUpdateField(e.CommandArgument.ToString());
+                openTransDetails(empno);
+            }
+            if (e.CommandName == "del")
+            {
+                getleave = cm.GetSpecificDataFromDB("LeaveType", "TBL_LEAVESAPP", "where id = " + e.CommandArgument.ToString() + "");
+                getdays = cm.GetSpecificDataFromDB("NumberOfDays", "TBL_LEAVESAPP", "where id = " + e.CommandArgument.ToString() + "");
+                getstat = cm.GetSpecificDataFromDB("LeaveStatus", "TBL_LEAVESAPP", "where id = " + e.CommandArgument.ToString() + "");
+                getrem = cm.GetSpecificDataFromDB("Remaining", "TBL_LEAVES", "where EmpID = '" + empno + "' and LeaveType ='" + getleave +
+                    "' and Activated = '1'");
+                getused = cm.GetSpecificDataFromDB("Used", "TBL_LEAVES", "where EmpID = '" + empno + "' and LeaveType ='" + getleave +
+                    "' and Activated = '1'");
+                getreason = cm.GetSpecificDataFromDB("Reason", "TBL_LEAVESAPP", "where id = " + e.CommandArgument.ToString() + "");
+                getfiledate = cm.FormatDate(cm.GetSpecificDataFromDB("DateFiled", "TBL_LEAVESAPP", "where id = " + e.CommandArgument.ToString() + ""));
+                double total = Convert.ToDouble(getrem.ToString()) + Convert.ToDouble(getdays.ToString());
+                double used = Convert.ToDouble(getused.ToString()) - Convert.ToDouble(getdays.ToString());
+                if (getstat == "1")
+                {
+                    updatecred(empno, total.ToString(), used.ToString());
+                }
+                emp.DeleteQuery("TBL_LEAVESAPP", "where id =" + e.CommandArgument.ToString() + "");
+                cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " removed his/her Applied Leave with Leave Type" + getleave +
+                    ".Date Filed:" + getfiledate + ".Reason: " + getreason, "DELETE", "LEAVES", e.CommandArgument.ToString(), "LEAVES", Session["EMP_ID"].ToString());
+                refresh();
+                ScriptManager.RegisterStartupScript(this, this.GetType(),
+                "alert",
+                "alert('Successfully Deleted');",
+                true);
+
+            }
+        }
+        protected void btnCreate_Click(object sender, EventArgs e)
+        {
+            bool IsDateAllowedToBeFiled = true;
+            bool IsSLAllowedToBeFiled = true;
+            bool IsBLAllowedToBeFiled = true;
+            bool IsEnoughCredits = true;
+            string SLstatus = "", iscount = "";
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            Dictionary<string, string> emailparam = new Dictionary<string, string>();
+            if (cm.ItemExist("TBL_LEAVESAPP", "*", "where EmpID = '" + empno + "' and DateFrom = '" + txtDateFrom.Value + "' AND LeaveStatus = '1'", ""))
+            {
+                ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Duplicate leave is not allowed.');", true);
+                return;
+            }
+            if (cm.ItemExist("TBL_LEAVES", "id", "where EmpID = '" + empno + "' and LeaveType =" + Leavesapp_LeaveType.SelectedValue + " and Activated = '1'", ""))
+            {
+                IsBLAllowedToBeFiled = true;
+                param = saveParam(out emailparam, out IsDateAllowedToBeFiled, out IsSLAllowedToBeFiled, out IsBLAllowedToBeFiled, out IsEnoughCredits, out SLstatus,out iscount);
+            }
+            else
+            {
+                ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Leave is not yet activated.');", true);
+                return;
+            }
+            if (iscount == "NOTIME")
+            {
+                ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Filling of leave in your rest day is not allowed');", true);
+                return;
+            }
+            string confirmValue = Request.Form["confirm_value"];
+
+            if (confirmValue == "Yes")
+            {
+                string leavekey = cm.GetSpecificDataFromDB("LeaveKey", "TBL_LEAVETYPE", " where id = " + Leavesapp_LeaveType.SelectedValue + "");
+                if (!IsEnoughCredits)
+                {
+                    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Not enough leave credits !!!');", true);
+                }
+                else
+                {
+                    if (leavekey == "VL")
+                    {
+                        if (!IsDateAllowedToBeFiled)
+                        {
+                            ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Vacation Leave filing should be 3 days prior.');", true);
+                            return;
+                        }
+                    }
+                    if (leavekey == "SL")
+                    {
+                        if (!IsSLAllowedToBeFiled && double.Parse(SLstatus) <= 0)
+                        {
+                            ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Advance filing for sick leave is not allowed.');", true);
+                            return;
+                        }
+                        else if (!IsSLAllowedToBeFiled && double.Parse(SLstatus) >= 2)
+                        {
+                            ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Filing of sick leave two days or more from date of leave is not allowed.');", true);
+
+                            return;
+                        }
+                        else if (!IsSLAllowedToBeFiled)
+                        {
+                            ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Advance filing for sick leave is not allowed.');", true);
+                            return;
+                        }
+                    }
+                    //if (adl.IsDateHoliday(DateFrom.Value,DateTo.Value) == true)
+                    //{
+                    //    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Filling Leave in Holiday is not allowed !!!');", true);
+                    //    return;
+                    //}
+                    if (emp.InsertQueryCommon(param, "TBL_LEAVESAPP"))
+                    {
+
+                        //cm.UpdateQueryCommon(saveUpdateRemainingParam(), "TBL_LEAVES", " EmpID = '" + empno + "' and id =" + Leavesapp_LeaveType.SelectedValue + "");
+                        int ret = cm.sendApprove(emailparam, "Leave Approval Request");
+                        if (ret > 0)
+                        {
+                            ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully Save !!!');", true);
+                            cm.AddLog("User " + Session["FULLNAME"].ToString().ToUpper() + " created Leave with Leave Type " + Leave_LeaveType.SelectedItem.Text + " for " + emp.GetEmployeeName(empno) +
+                                ".Date Filed: " + cm.FormatDate(DateTime.Now) + ".Reason: " + Leavesapp_Reason.Value + ".", "CREATE", "LEAVES", Session["EMP_ID"].ToString(), "LEAVES", Session["EMP_ID"].ToString());
+                        }
+                        else
+                        {
+                            ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully Save !!! Email not sent');", true);
+                            cm.AddLog("User " + Session["FULLNAME"].ToString().ToUpper() + " created Leave with Leave Type " + Leave_LeaveType.SelectedItem.Text + " for " + emp.GetEmployeeName(empno) +
+                                ".Date Filed: " + cm.FormatDate(DateTime.Now) + ".Reason: " + Leavesapp_Reason.Value + ".", "CREATE", "LEAVES", Session["EMP_ID"].ToString(), "LEAVES", Session["EMP_ID"].ToString());
+                        }
+                        refresh();
+                        reset();
+                    }
+                }
+            }
+        }
+
+        Dictionary<string, string> saveUpdateRemainingParam()
+        {
+            string rm = cm.GetSpecificDataFromDB("Remaining", "TBL_LEAVES", "where EmpID = '" + empno + "' and LeaveType =" + Leavesapp_LeaveType.SelectedValue + "");
+            string allwd = cm.GetSpecificDataFromDB("Allowed", "TBL_LEAVES", "where EmpID = '" + empno + "' and LeaveType =" + Leavesapp_LeaveType.SelectedValue + "");
+            int updrm = int.Parse(rm) - int.Parse(numdays);
+            int updallwd = int.Parse(allwd) - int.Parse(numdays);
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            param.Add("Remaining", "" + updrm + "");
+            param.Add("Allowed", "" + updallwd + "");
+
+
+
+
+            return param;
+
+
+        }
+
+        Dictionary<string, string> saveParam(out Dictionary<string, string> emailparam, out bool IsDateAllowedToBeFiled, out bool IsSLAllowedToBeFiled, out bool IsBLAllowedToBeFiled, out bool IsEnoughCredits, out string strSLstatus, out string iscount)
+        {
+            strSLstatus = ""; iscount = "";
+            IsEnoughCredits = true;
+            IsDateAllowedToBeFiled = true;
+            IsSLAllowedToBeFiled = true;
+            IsBLAllowedToBeFiled = false;
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            emailparam = new Dictionary<string, string>();
+            numdays = get_Days(txtDateFrom.Value, Leavesapp_LeaveType.SelectedValue, out IsDateAllowedToBeFiled, out IsSLAllowedToBeFiled, out IsEnoughCredits, out strSLstatus, out iscount);
+            List<string> approver = new List<string>();
+            param.Add("EmpID", empno);
+            param.Add("DateFrom", "'" + txtDateFrom.Value + "'");
+            param.Add("LeaveHours", "" + txtLeaveHours.Value + "");
+            param.Add("LeaveType", "'" + Leavesapp_LeaveType.SelectedValue + "'");
+            
+            param.Add("Reason", "'" + Leavesapp_Reason.Value + "'");
+
+            try
+            { 
+                if (Session["ROLES"].ToString() == "admin")
+                {
+                    param.Add("LeaveStatus", "'1'");
+                }
+                else
+                {
+                    param.Add("Approver1", "'" + empInfo["emp_Approver1"] + "'");
+                    param.Add("Approver2", "'" + empInfo["emp_Approver2"] + "'");
+                    param.Add("Approving", "'" + empInfo["emp_Approver1"] + "'");
+                    param.Add("LeaveStatus", "'2'");
+                }
+            }
+            catch
+            {
+                ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Session Expired.');", true);
+                Response.Redirect("~/Pages/Login.aspx");
+            }
+
+
+
+            param.Add("NumberOfDays", "" + numdays + "");
+            param.Add("FullName", "'" + empInfo["emp_FullName"] + "'");
+            param.Add("DateFiled", "'" + cm.FormatDate(DateTime.Now) + "'");
+
+            emailparam.Add("EmpID", empno);
+            emailparam.Add("DateFrom", txtDateFrom.Value);
+            emailparam.Add("LeaveHours", txtLeaveHours.Value);
+            emailparam.Add("LeaveType", Leavesapp_LeaveType.SelectedValue);
+            
+            emailparam.Add("Reason", Leavesapp_Reason.Value);
+            emailparam.Add("LeaveStatus", "Pending");
+            emailparam.Add("NumberOfDays", numdays);
+            emailparam.Add("FullName", empInfo["emp_FullName"]);
+            emailparam.Add("DateFiled", cm.FormatDate(DateTime.Now));
+
+            return param;
+
+
+        }
+
+        string get_Days(string timein, string leavetype, out bool IsDateAllowedToBeFiled, out bool IsSLAllowedToBeFiled, out bool IsEnoughCredits, out string SLstatus, out string iscount)
+        {
+            SLstatus = ""; iscount = "";
+            DateTime datetoday = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Taipei Standard Time");
+            DateTime expirydate = Convert.ToDateTime(cm.GetSpecificDataFromDB("Expiry", "TBL_LEAVES", " where EmpID = " + empno + " and (LeaveType = '" + Leavesapp_LeaveType.SelectedValue + "' or LeaveType = '" + upd_leavetype.SelectedValue + "')"));
+            string leavekey = cm.GetSpecificDataFromDB("LeaveKey", "TBL_LEAVETYPE", " where id = " + leavetype + "");
+            IsDateAllowedToBeFiled = true;
+            IsSLAllowedToBeFiled = true;
+            IsEnoughCredits = true;
+            var formats = new string[] { "MM-dd-yyyy", "MM/dd/yyyy" };
+            string getallowed = cm.GetSpecificDataFromDB("Allowed", "TBL_LEAVES", "where EmpID = " + empno + " and (LeaveType = '" + Leavesapp_LeaveType.SelectedValue + "' or LeaveType = '" + upd_leavetype.SelectedValue + "')");
+            string hr = ""; DateTime dtIn = new DateTime(); int count = 0;
+            //bool validDate = (DateTime.TryParseExact(timein, formats, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out dtIn));
+            DateTime bussDt = Convert.ToDateTime(timein);
+            //while (dtIn <= dtOut)
+            //{
+            if (cm.isHasSchedule(empInfo["emp_EmpID"].ToString(), bussDt.ToString()))
+            {
+                if (adl.IsDateHoliday(cm.FormatDate(bussDt.ToString())) == false)
+                {
+                    count = count + 1;
+                }
+            }
+            else
+            {
+                if (bussDt.DayOfWeek == DayOfWeek.Monday)
+                {
+                    if (empInfo["emp_Monday"].ToString() != "0")
+                    {
+                        if (adl.IsDateHoliday(cm.FormatDate(bussDt.ToString())) == false)
+                        {
+                            count = count + 1;
+                        }
+                    }
+                }
+                if (bussDt.DayOfWeek == DayOfWeek.Tuesday)
+                {
+                    if (empInfo["emp_Tuesday"].ToString() != "0")
+                    {
+                        if (adl.IsDateHoliday(cm.FormatDate(bussDt.ToString())) == false)
+                        {
+                            count = count + 1;
+                        }
+                    }
+                }
+                if (bussDt.DayOfWeek == DayOfWeek.Wednesday)
+                {
+                    if (empInfo["emp_Wednesday"].ToString() != "0")
+                    {
+                        if (adl.IsDateHoliday(cm.FormatDate(bussDt.ToString())) == false)
+                        {
+                            count = count + 1;
+                        }
+                    }
+                }
+                if (bussDt.DayOfWeek == DayOfWeek.Thursday)
+                {
+                    if (empInfo["emp_Thursday"].ToString() != "0")
+                    {
+                        if (adl.IsDateHoliday(cm.FormatDate(bussDt.ToString())) == false)
+                        {
+                            count = count + 1;
+                        }
+                    }
+                }
+                if (bussDt.DayOfWeek == DayOfWeek.Friday)
+                {
+                    if (empInfo["emp_Friday"].ToString() != "0")
+                    {
+                        if (adl.IsDateHoliday(cm.FormatDate(bussDt.ToString())) == false)
+                        {
+                            count = count + 1;
+                        }
+                    }
+                }
+                if (bussDt.DayOfWeek == DayOfWeek.Saturday)
+                {
+                    if (empInfo["emp_Saturday"].ToString() != "0")
+                    {
+                        if (adl.IsDateHoliday(cm.FormatDate(bussDt.ToString())) == false)
+                        {
+                            count = count + 1;
+                        }
+                    }
+                }
+                if (bussDt.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    if (empInfo["emp_Sunday"].ToString() != "0")
+                    {
+                        if (adl.IsDateHoliday(cm.FormatDate(bussDt.ToString())) == false)
+                        {
+                            count = count + 1;
+                        }
+                    }
+                }
+            }
+                
+                //dtIn = dtIn.AddDays(1);
+            //}
+
+            //double diff = (dtOut - dtIn).TotalDays;
+            //double inputValue = Math.Round(diff, 2);
+            //validDate = (DateTime.TryParseExact(timein, formats, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out dtIn));
+            hr = count.ToString();
+            if (count <= 0)
+            {
+                iscount = "NOTIME";
+            }
+            if (count > Convert.ToDouble(getallowed))
+                IsEnoughCredits = false;
+
+            if (datetoday > expirydate)
+                IsEnoughCredits = false;
+
+            //double numdays = (dtIn - DateTime.Now).TotalDays;
+            //if (numdays < 3)
+            //    IsDateAllowedToBeFiled = false;
+            if (leavekey == "VL")
+            {
+                DateTime dtfrom = Convert.ToDateTime(timein);
+                double numdays = (dtfrom - datetoday).TotalDays;
+                if ((numdays < 3) || dtfrom <= datetoday)
+                {
+                    IsDateAllowedToBeFiled = false;
+                }
+
+            }
+            if (leavekey == "SL")
+            {
+                DateTime dtfrom = Convert.ToDateTime(timein);
+
+                int days = (datetoday - dtfrom).Days;
+                if (days != 1)
+                {
+                    IsSLAllowedToBeFiled = false;
+                    SLstatus = days.ToString();
+                }
+                
+            }
+            //if (!(datetoday > bussDt) && (leavekey == "SL"))
+            //    IsSLAllowedToBeFiled = false;
+            return hr;
+
+
+        }
+
+        void reset()
+        {
+            txtLeaveHours.Value = "";
+            txtDateFrom.Value = "";
+            Leavesapp_LeaveType.SelectedIndex = 0;
+            //Leavesapp_ampm.SelectedIndex = 0;
+            Leavesapp_Reason.Value = "";
+        }
+        protected void btnReset_Click(object sender, EventArgs e)
+        {
+            reset();
+            refresh();
+        }
+
+        public void openTransDetails(string empNo)
+        {
+            upListDetails.Update();
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append(@"<script type='text/javascript'>");
+            sb.Append(string.Format(@"$('#{0}').modal('show')", "listmodal"));
+            sb.Append(@"</script>");
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "listmodal", sb.ToString(), false);
+            string username = "", fullname = "", email = "", roles = "";
+        }
+        protected void lnkbtnXlist_Click(object sender, EventArgs e)
+        {
+            closeTransDetails();
+        }
+        public void closeTransDetails()
+        {
+            upListDetails.Update();
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append(@"<script type='text/javascript'>");
+            sb.Append(string.Format(@"$('#{0}').modal('hide')", "listmodal"));
+            sb.Append(@"</script>");
+
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "listmodal", sb.ToString(), false);
+
+        }
+        public void populateUpdateField(string id)
+        {
+            string bd;
+            upd_dateFrom.Value = cm.FormatDateyyyy(cm.GetSpecificDataFromDB("DateFrom", "TBL_LEAVESAPP", "where id = " + id + ""));
+            upd_LeaveHours.Value = cm.GetSpecificDataFromDB("LeaveHours", "TBL_LEAVESAPP", "where id = " + id + "");
+            //upd_SelectAmPm.Value = cm.GetSpecificDataFromDB("ampm", "TBL_LEAVESAPP", "where id = " + id + "");
+            upd_leavetype.SelectedValue = cm.GetSpecificDataFromDB("LeaveType", "TBL_LEAVESAPP", "where id = " + id + "");
+            upd_reason.Value = cm.GetSpecificDataFromDB("Reason", "TBL_LEAVESAPP", "where id = " + id + "");
+        }
+
+        Dictionary<string, string> saveUpdateParam(out bool IsDateAllowedToBeFiled, out bool IsSLAllowedToBeFiled, out bool IsBLAllowedToBeFiled, out bool IsEnoughCredits, out string updstrSLstatus, out string iscount)
+        {
+            iscount = "";
+            updstrSLstatus = "";
+            IsDateAllowedToBeFiled = true;
+            IsSLAllowedToBeFiled = true;
+            IsBLAllowedToBeFiled = false;
+            IsEnoughCredits = true;
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            string numdays = get_Days(upd_dateFrom.Value, upd_leavetype.SelectedValue, out IsDateAllowedToBeFiled, out IsSLAllowedToBeFiled, out IsEnoughCredits, out updstrSLstatus, out iscount);
+            param.Add("DateFrom", "'" + upd_dateFrom.Value + "'");
+            param.Add("LeaveHours", "" + upd_LeaveHours.Value + "");
+            //param.Add("ampm", "'" + upd_SelectAmPm.Value + "'");
+            param.Add("LeaveType", upd_leavetype.SelectedValue);
+            param.Add("Reason", "'" + upd_reason.Value + "'");
+            param.Add("NumberOfDays", "" + numdays + "");
+
+            param.Add("EmpID", "'" + empno + "'");
+
+            return param;
+
+
+        }
+
+        private void getdata()
+        {
+            getdfrom = cm.FormatDate(cm.GetSpecificDataFromDB("DateFrom", "TBL_LEAVESAPP", "where id = " + HiddenEmpID.Value + ""));
+            getleavehrs = cm.GetSpecificDataFromDB("LeaveHours", "TBL_LEAVESAPP", "where id = " + HiddenEmpID.Value + "");
+            //getampm = cm.GetSpecificDataFromDB("ampm", "TBL_LEAVESAPP", "where id = " + HiddenEmpID.Value + "");
+            getleave = cm.GetSpecificDataFromDB("LeaveType", "TBL_LEAVESAPP", "where id = " + HiddenEmpID.Value + "");
+            getreason = cm.GetSpecificDataFromDB("Reason", "TBL_LEAVESAPP", "where id = " + HiddenEmpID.Value + "");
+            getemp = cm.GetSpecificDataFromDB("FullName", "TBL_LEAVESAPP", "where id = " + HiddenEmpID.Value + "");
+        }
+
+        private void addlogs()
+        {
+            if (getdfrom != upd_dateFrom.Value)
+            {
+                cm.AddLog("User " + Session["FULLNAME"].ToString().ToUpper() + " changed Applied Leave DATE FROM for " + getemp + " from " + getdfrom + " to " + upd_dateFrom.Value
+                    + ".Date Filed: " + getfiledate + ".Reason: " + getreason, "CHANGE", "LEAVES", HiddenEmpID.Value, "LEAVES", Session["EMP_ID"].ToString());
+            }
+            if (getleavehrs != upd_LeaveHours.Value)
+            {
+                cm.AddLog("User " + Session["FULLNAME"].ToString().ToUpper() + " changed Applied Leave HOURS for " + getemp + " from " + getleavehrs + " to " + upd_LeaveHours.Value
+                    + ".Date Filed: " + getfiledate + ".Reason: " + getreason, "CHANGE", "LEAVES", HiddenEmpID.Value, "LEAVES", Session["EMP_ID"].ToString());
+            }
+            //if (getampm != upd_SelectAmPm.Value)
+            //{
+            //    cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " changed Applied Leave AM/PM for " + getemp + " from " + getampm + " to " + upd_SelectAmPm.Value,
+            //        "CHANGE", "x123", "qwg-23", "CHANGE", Session["EMP_ID"].ToString());
+            //}
+            if (getleave != upd_leavetype.SelectedValue)
+            {
+                cm.AddLog("User " + Session["FULLNAME"].ToString().ToUpper() + " changed Applied Leave TYPE for " + getemp + " from " + getleave + " to " + upd_leavetype.SelectedValue
+                    + ".Date Filed: " + getfiledate + ".Reason: " + getreason, "CHANGE", "LEAVES", HiddenEmpID.Value, "LEAVES", Session["EMP_ID"].ToString());
+            }
+            if (getreason != upd_reason.Value)
+            {
+                cm.AddLog("User " + Session["FULLNAME"].ToString().ToUpper() + " changed Applied Leave REASON for " + getemp + " from " + getreason + " to " + upd_reason.Value
+                    + ".Date Filed: " + getfiledate + ".Reason: " + getreason, "CHANGE", "LEAVES", HiddenEmpID.Value, "LEAVES", Session["EMP_ID"].ToString());
+            }
+
+        }
+
+        protected void btnsaveUpdate_Click(object sender, EventArgs e)
+        {
+            bool IsDateAllowedToBeFiled = true;
+            bool IsSLAllowedToBeFiled = true;
+            bool IsBLAllowedToBeFiled = true;
+            bool IsEnoughCredits = true;
+            string SLstatus = "", iscount = "";
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            if (cm.ItemExist("TBL_LEAVESAPP", "*", "where EmpID = '" + empno + "' and DateFrom = '" + upd_dateFrom.Value + "' AND LeaveStatus = '1' AND id != "+HiddenEmpID.Value+"", ""))
+            {
+                ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Duplicate leave is not allowed.');", true);
+                return;
+            }
+            if (cm.ItemExist("TBL_LEAVES", "id", "where EmpID = '" + empno + "' and LeaveType =" + upd_leavetype.SelectedValue + " and Activated = '1'", ""))
+            {
+                IsBLAllowedToBeFiled = true;
+                param = saveUpdateParam(out IsDateAllowedToBeFiled, out IsSLAllowedToBeFiled, out IsBLAllowedToBeFiled, out IsEnoughCredits, out SLstatus, out iscount);
+            }
+            else
+            {
+                ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Leave is not yet Activated !!!');", true);
+                return;
+            }
+            if (iscount == "NOTIME")
+            {
+                ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Filling of leave in your rest day is not allowed');", true);
+                return;
+            }
+            string confirmValue = Request.Form["confirm_value"];
+            if (confirmValue == "Yes")
+            {
+                string leavekey = cm.GetSpecificDataFromDB("LeaveKey", "TBL_LEAVETYPE", " where id = " + upd_leavetype.SelectedValue + "");
+                getdata();
+                if (!IsEnoughCredits)
+                {
+                    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Not enough leave credits !!!');", true);
+                }
+                else
+                {
+                    if (leavekey == "VL")
+                    {
+                        if (!IsDateAllowedToBeFiled)
+                        {
+                            ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Vacation Leave Filing should be 3 days prior !!!');", true);
+                            return;
+                        }
+                    }
+                    if (leavekey == "SL")
+                    {
+                        if (!IsSLAllowedToBeFiled && double.Parse(SLstatus) <= 0)
+                        {
+                            ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Advance filing for sick leave is not allowed.');", true);
+                            return;
+                        }
+                        else if (!IsSLAllowedToBeFiled && double.Parse(SLstatus) >= 2)
+                        {
+                            ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Filing of sick leave two days or more from date of leave is not allowed.');", true);
+
+                            return;
+                        }
+                        else if (!IsSLAllowedToBeFiled)
+                        {
+                            ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Advance filing for sick leave is not allowed.');", true);
+                            return;
+                        }
+                    }
+                    if (adl.IsDateHoliday(upd_dateFrom.Value) == true)
+                    {
+                        ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Filling Leave in Holiday is not allowed !!!');", true);
+                        return;
+                    }
+                    if (cm.UpdateQueryCommon(param, "TBL_LEAVESAPP", "id = '" + HiddenEmpID.Value + "'"))
+                    {
+                        addlogs();
+                        //db_Emp.updateUserInfo(HiddenEmpID.Value, txtbox_username.Text, txtbox_password.Text, (drpdwn_acctstatus.SelectedValue == "1" ? true : false));
+                        ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully updated !!!');", true);
+                        closeTransDetails();
+                        refresh();
+                    }
+                    else
+                        ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Fields should not be empty !!!');", true);
+                }
+            }
+        }
+
+        public void openTransDetails1(string empNo)
+        {
+            updLedger.Update();
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append(@"<script type='text/javascript'>");
+            sb.Append(string.Format(@"$('#{0}').modal('show')", "listmodal1"));
+            sb.Append(@"</script>");
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "listmodal1", sb.ToString(), false);
+        }
+        protected void lnkbtnXlist1_Click(object sender, EventArgs e)
+        {
+            closeTransDetails1();
+        }
+        public void closeTransDetails1()
+        {
+            updLedger.Update();
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append(@"<script type='text/javascript'>");
+            sb.Append(string.Format(@"$('#{0}').modal('hide')", "listmodal1"));
+            sb.Append(@"</script>");
+
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "listmodal1", sb.ToString(), false);
+
+        }
+        public void populateUpdateField1(string id)
+        {
+            Leave_LeaveType.SelectedValue = cm.GetSpecificDataFromDB("LeaveType", "TBL_LEAVES", "where id = " + id + "");
+            Leave_Allowed.Value = cm.GetSpecificDataFromDB("Allowed", "TBL_LEAVES", "where id = " + id + "");
+            Leave_Remaining.Value = cm.GetSpecificDataFromDB("Remaining", "TBL_LEAVES", "where id = " + id + "");
+            Leave_Activated.Value = cm.GetSpecificDataFromDB("Activated", "TBL_LEAVES", "where id = " + id + "");
+            Expiry.Value = cm.FormatDate(cm.GetSpecificDataFromDB("Expiry", "TBL_LEAVES", "where id = " + id + ""));
+        }
+
+        Dictionary<string, string> saveLeaveUpdateParam()
+        {
+            double used = Convert.ToDouble(Leave_Allowed.Value) - Convert.ToDouble(Leave_Remaining.Value);
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            param.Add("LeaveType", "'" + Leave_LeaveType.SelectedValue + "'");
+            param.Add("Allowed", "'" + Leave_Allowed.Value + "'");
+            param.Add("Remaining", "'" + Leave_Remaining.Value + "'");
+            param.Add("Used", used.ToString());
+            param.Add("Activated", Leave_Activated.Value);
+            param.Add("Expiry", "'" + Expiry.Value + "'");
+
+            param.Add("EmpID", "'" + empno + "'");
+
+            return param;
+
+
+        }
+
+        private void getdata1()
+        {
+            getleave = cm.GetSpecificDataFromDB("LeaveType", "TBL_LEAVES", "where id = " + HiddenField1.Value + "");
+            getallowed = cm.GetSpecificDataFromDB("Allowed", "TBL_LEAVES", "where id = " + HiddenField1.Value + "");
+            getrem = cm.GetSpecificDataFromDB("Remaining", "TBL_LEAVES", "where id = " + HiddenField1.Value + "");
+            getact = cm.GetSpecificDataFromDB("Activated", "TBL_LEAVES", "where id = " + HiddenField1.Value + "");
+            getexp = cm.FormatDate(cm.GetSpecificDataFromDB("Expiry", "TBL_LEAVES", "where id = " + HiddenField1.Value + ""));
+        }
+
+        private void addlogs1()
+        {
+            if (getleave != Leave_LeaveType.SelectedValue)
+            {
+                cm.AddLog("User " + Session["FULLNAME"].ToString().ToUpper() + " changed Leave TYPE for " + emp.GetEmployeeName(empno) + " from " + getleave + " to " + Leave_LeaveType.SelectedValue
+                    , "CHANGE", "LEAVES", HiddenField1.Value, "LEAVES", Session["EMP_ID"].ToString());
+            }
+            if (getallowed != Leave_Allowed.Value)
+            {
+                cm.AddLog("User " + Session["FULLNAME"].ToString().ToUpper() + " changed Leave ALLOWED for " + emp.GetEmployeeName(empno) + " from " + getallowed + " to " + Leave_Allowed.Value
+                    , "CHANGE", "LEAVES", HiddenField1.Value, "LEAVES", Session["EMP_ID"].ToString());
+            }
+            if (getrem != Leave_Remaining.Value)
+            {
+                cm.AddLog("User " + Session["FULLNAME"].ToString().ToUpper() + " changed Leave REMAINING for " + emp.GetEmployeeName(empno) + " from " + getrem + " to " + Leave_Remaining.Value
+                    , "CHANGE", "LEAVES", HiddenField1.Value, "LEAVES", Session["EMP_ID"].ToString());
+            }
+            if (getact != Leave_Activated.Value)
+            {
+                cm.AddLog("User " + Session["FULLNAME"].ToString().ToUpper() + " changed Leave ACTIVATED for " + emp.GetEmployeeName(empno) + " from " + getact + " to " + Leave_Activated.Value
+                   , "CHANGE", "LEAVES", HiddenField1.Value, "LEAVES", Session["EMP_ID"].ToString());
+            }
+            if (getexp != Expiry.Value)
+            {
+                cm.AddLog("User " + Session["FULLNAME"].ToString().ToUpper() + " changed Leave EXPIRY DATE for " + emp.GetEmployeeName(empno) + " from " + getexp + " to " + Expiry.Value
+                   , "CHANGE", "LEAVES", HiddenField1.Value, "LEAVES", Session["EMP_ID"].ToString());
+            }
+        }
+
+        protected void btnUpdateLeave_Click(object sender, EventArgs e)
+        {
+            string confirmValue = Request.Form["confirm_value"];
+
+            if (confirmValue == "Yes")
+            {
+                getdata1();
+                if (cm.UpdateQueryCommon(saveLeaveUpdateParam(), "TBL_LEAVES", "id = '" + HiddenField1.Value + "'"))
+                {
+                    addlogs1();
+                    //db_Emp.updateUserInfo(HiddenEmpID.Value, txtbox_username.Text, txtbox_password.Text, (drpdwn_acctstatus.SelectedValue == "1" ? true : false));
+                    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully updated !!!');", true);
+                    closeTransDetails1();
+                    refresh();
+                }
+            }
+        }
+
+        public void closeTransDetails2()
+        {
+            updDisapprove.Update();
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append(@"<script type='text/javascript'>");
+            sb.Append(string.Format(@"$('#{0}').modal('hide')", "listdisapprove"));
+            sb.Append(@"</script>");
+
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "listdisapprove", sb.ToString(), false);
+
+        }
+        public void openTransDetails2(string empNo)
+        {
+            updDisapprove.Update();
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append(@"<script type='text/javascript'>");
+            sb.Append(string.Format(@"$('#{0}').modal('show')", "listdisapprove"));
+            sb.Append(@"</script>");
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "listdisapprove", sb.ToString(), false);
+        }
+        protected void lnkbtnXlist2_Click(object sender, EventArgs e)
+        {
+            closeTransDetails2();
+        }
+        public void populateUpdateField2(string id)
+        {
+            dis_datefrom.Value = cm.FormatDate(cm.GetSpecificDataFromDB("DateFrom", "TBL_LEAVESAPP", "where id = " + id + ""));
+            disHours.Value = cm.GetSpecificDataFromDB("LeaveHours", "TBL_LEAVESAPP", "where id = " + id + "");
+            //dis_ampm.Value = cm.GetSpecificDataFromDB("ampm", "TBL_LEAVESAPP", "where id = " + id + "");
+            dis_leavetype.Value = cm.GetSpecificDataFromDB("LeaveType", "TBL_LEAVESAPP", "where id = " + id + "");
+            dis_reason.Value = cm.GetSpecificDataFromDB("Reason", "TBL_LEAVESAPP", "where id = " + id + "");
+        }
+
+        Dictionary<string, string> saveDisapprove()
+        {
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            param.Add("reasons2", "'" + dis_Reason2.Value + "'");
+
+            return param;
+        }
+
+        protected void btnDisapprove_Click(object sender, EventArgs e)
+        {
+            string confirmValue = Request.Form["confirm_value"];
+
+            if (confirmValue == "Yes")
+            {
+                getleave = cm.GetSpecificDataFromDB("LeaveType", "TBL_LEAVESAPP", "where id = " + HiddenField2.Value + "");
+                getemp = cm.GetSpecificDataFromDB("FullName", "TBL_LEAVESAPP", "where id = " + HiddenField2.Value + "");
+                getreason = cm.GetSpecificDataFromDB("Reason", "TBL_LEAVESAPP", "where id = " + HiddenField2.Value + "");
+                getfiledate = cm.FormatDate(cm.GetSpecificDataFromDB("DateFiled", "TBL_LEAVESAPP", "where id = " + HiddenField2.Value + ""));
+                if (cm.UpdateQueryCommon(saveDisapprove(), "TBL_LEAVESAPP", "id = '" + HiddenField2.Value + "'"))
+                {
+                    ChangeLeaveStatus(HiddenField2.Value, "3");
+                    cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " Disapproved Leave of" + getemp + " with LEAVE TYPE " + getleave +
+                        ".Date Filed: " + getfiledate + ".Reason: " + getreason + ".", "DISAPPROVE", "LEAVES", HiddenField2.Value, "LEAVE", Session["EMP_ID"].ToString());
+                    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully Disapproved !!!');", true);
+                    closeTransDetails1();
+                    refresh();
+                }
+            }
+        }
+
+        protected void btnExport_Click(object sender, EventArgs e)
+        {
+            Response.Clear();
+            Response.Buffer = true;
+            Response.ContentType = "application/octet-stream";
+            Response.AddHeader("content-disposition", "attachment;filename= Leaves" + empno + ".xls");
+            Response.ContentType = "application/vnd.ms-excel";
+            Response.Charset = "";
+            this.EnableViewState = false;
+
+            System.IO.StringWriter swriter = new System.IO.StringWriter();
+            System.Web.UI.HtmlTextWriter htmlwriter = new System.Web.UI.HtmlTextWriter(swriter);
+
+            DataGrid dg = new DataGrid();
+            dg.DataSource = tk.populateGridLeaves(empno);
+            dg.DataBind();
+
+            dg.RenderControl(htmlwriter);
+
+
+            Response.Write(swriter.ToString());
+            cm.AddLog("User " + Session["USER_DISPLAY_NAME"].ToString().ToUpper() + " exported Applied Leaves",
+            "EXPORT", "EMPLYOEE", Session["EMP_ID"].ToString(), "EMPLOYEE", Session["EMP_ID"].ToString());
+            Response.End();
+            //exportTOxlsx();
+
+
+        }
+    }
+}

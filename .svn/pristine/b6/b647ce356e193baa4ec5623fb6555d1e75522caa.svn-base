@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/createLeaveType.aspx" hash="2e7cb0847" filehash="fd39cb808933bd6" flags="110000" assembly="App_Web_kk5mlmva" type="ASP.pages_admin_createleavetype_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/createLeaveType.aspx" />
+    </filedeps>
+</preserve>

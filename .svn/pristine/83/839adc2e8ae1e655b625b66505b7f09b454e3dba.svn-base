@@ -1,0 +1,154 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.Master" AutoEventWireup="true" CodeBehind="adminpassword.aspx.cs" Inherits="HRIS_APPELECTRIC.Pages.AdminKiosk.adminpassword" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <section class="content-header">
+     <h1>
+         Password Settings
+         <small>Reset Password</small>
+     </h1>
+     <ol class="breadcrumb">
+        <li><a href="#"><i class="fa fa-dashboard"></i> Password Settings</a></li>
+        <li class="active">Reset Password</li>
+    </ol>
+</section>
+<section class="content">
+<div class="box box-primary">
+        <div class="box-header">
+            <h4 class="box-title">Employee List</h4>
+        </div>
+        <div class="box-body">
+			<div class="" id="yw0">
+                <div class="portlet-content">
+                    <ul class="nav nav-pills">
+                        <li class=""><a href="adminpassword.aspx"><i class="fa fa-th-list"></i><span class="h6">List</span></a></li>
+                        </ul>
+                </div>
+            </div>		
+        
+		
+
+<div id="display-grid" class="grid-view">
+    <div class="summary">
+    <div class="row">
+    <div class="col-lg-6">
+    <label for="select_role" class="required">Search By Role </span></label>
+    <select class="form-control" name="select[Role]" id="select_role" runat = "server" style = "width:inherit" onselect="Status_SelectedIndexChanged" onclick="return select_role_onclick()">
+        <option value="">---Select Role---</option>
+        <option value="employee">Employee</option>
+        <option value="admin">Admin</option>
+        <option value="Timekeeper">Timekeeper</option>
+        
+    </select>
+    <asp:Button ID="btnSearch" class="btn btn-primary" runat="server" Text="Search" 
+            onclick="btnSearch_Click" ></asp:Button>
+    </div>
+    </div>
+    <br />
+    <div class="summary">Displaying <%=gridrangecount%> of <%=gridtotalcount%> results.</div>
+    <asp:GridView ID="GridViewList" runat="server" AutoGenerateColumns="False" 
+                                                ShowFooter="True" CssClass="items table table-striped table-bordered table-condensed"
+                                                GridLines="None" AllowPaging="True" Font-Names="Segoe UI"
+                                                ForeColor="Black" onrowcommand="GridViewList_RowCommand"
+                                                onpageindexchanging="GridViewList_PageIndexChanging"
+                                                ViewStateMode="Enabled" PageSize="1000">
+                                                        <EmptyDataTemplate><center><h1>NO USERS AVAILABLE</h1></center></EmptyDataTemplate> 
+                                                            <Columns>
+                                                                    <asp:TemplateField Visible="false">
+                                                                        <ItemTemplate>
+                                                                            <asp:Label ID="lblid" Text='<%# Eval("empid") %>' runat="server"></asp:Label>
+                                                                        </ItemTemplate>
+                                                                    </asp:TemplateField>
+                                                                    <asp:TemplateField>
+                                                                        <HeaderTemplate>
+                                                                            <asp:LinkButton ID="lnkFullName" CssClass="h8" Text='Full Name' runat="server" CommandName="Sort" CommandArgument="fullname"></asp:LinkButton><br />
+                                                                            <asp:TextBox ID="txtSearchFullName" CssClass="h5" runat="server" OnTextChanged="txtItem_TextChanged"  Width= "100%"></asp:TextBox>
+                                                                        </HeaderTemplate>
+                                                                        <ItemTemplate>
+                                                                            <asp:Label ID="lblFullName" Text='<%# Eval("fullname") %>' runat="server"></asp:Label>
+                                                                        </ItemTemplate>
+                                                                    </asp:TemplateField>
+                                                                    <asp:TemplateField>
+                                                                        <ItemTemplate>
+                                                                            <asp:Button ID="btnReset" CssClass="btn-danger btn-xs" runat="server" Text="Reset"  CommandName="reset" CommandArgument='<%# Eval("empid") %>'  />
+                                                                        </ItemTemplate>
+                                                                       
+                                                                    </asp:TemplateField>    
+                                                
+                                                                                                                    
+                                                </Columns>
+                                            </asp:GridView>
+
+</div>
+</div>
+
+</div>
+</section>
+
+
+<!-- UPDATE MODAL -->
+        <div class="modal fade" id="listmodal">
+    <div class="modal-dialog-upd">
+        <div class="modal-content">
+
+            <asp:UpdatePanel ID="upListDetails" runat="server" ChildrenAsTriggers="False" UpdateMode="Conditional">
+                <ContentTemplate>
+                    
+                    <div class="modal-header">
+                        <asp:LinkButton ID="lnkbtnXlist" CssClass ="close" runat="server" 
+                            onclick="lnkbtnXlist_Click" >
+                            <span>&times;</span>
+                        </asp:LinkButton>
+                        <h4 class="modal-title"><asp:Label ID="Label3" runat="server" Text="Reset Password"></asp:Label>
+                        <asp:Label ID="Label1" runat="server" Text="Employee"></asp:Label></h4>
+                    </div>
+                    <div class="modal-body">
+                        <asp:HiddenField ID="HiddenEmpID" runat="server" />
+                     <div class="row">
+	                    <!-- Modal Content -->
+
+  	                    <div class="col-lg-6">
+                                <label for="rst_Password" class="required">Password <span class="required">*</span></label><asp:RequiredFieldValidator ID="RequiredFieldValidator7" ControlToValidate="rst_Password" ForeColor="Red" runat="server" ErrorMessage="Field Required" ValidationGroup="ResetPasswordGroup"></asp:RequiredFieldValidator>	
+                            <input class="form-control" maxlength="50" name="Reset[Password]" id="rst_Password" type="text" runat="server" /><span class="help-inline" id="Span1" style="display: none"></span>
+                            <li class="active">e.g. Dela Cruz, Juan Carlo B. (JD+MMddyyyy)</li>
+                            </div>
+                            <div class="col-lg-6">
+                                
+    	
+                        </div>
+                       
+                    </div>
+	
+                        
+                    </div>
+                    <div class="modal-footer">
+                       <asp:Button ID="btnsaveUpdate" runat="server" Text="Update" CssClass="btn btn-default"
+                            onclick="btnsaveUpdate_Click" OnClientClick="Confirm()" validationgroup = "ResetPasswordGroup"></asp:Button>
+                           
+                       
+                    </div>
+                   
+
+                </ContentTemplate>
+                <Triggers>
+                    <asp:PostBackTrigger ControlID="btnsaveUpdate" />
+                </Triggers>
+            </asp:UpdatePanel>
+
+        </div>
+    </div>
+    <script type = "text/javascript">
+        function Confirm() {
+            var confirm_value = document.createElement("INPUT");
+            confirm_value.type = "hidden";
+            confirm_value.name = "confirm_value";
+            if (confirm("Are you sure you want to reset password?")) {
+                confirm_value.value = "Yes";
+            } else {
+                confirm_value.value = "No";
+            }
+            document.forms[0].appendChild(confirm_value);
+        }
+    </script>
+</div>
+</asp:Content>

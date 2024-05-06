@@ -1,0 +1,45 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace HRIS_APPELECTRIC.Pages.Admin.PayrollPages
+{
+    public partial class processpayroll : System.Web.UI.Page
+    {
+
+        Payroll pr = new Payroll();
+        Employee emp = new Employee();
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                cbIs13thMonthEnabled.Checked = false;
+                ddlCredDate.Items.AddRange(emp.GetDropDownMenuList("TBL_CUTOFF", "CDesc"));
+                
+            }
+        }
+
+        protected void btnProcess_Click(object sender, EventArgs e)
+        {
+            bool is13thMonthEnabled = false;
+            string confirmValue = Request.Form["confirm_value"];
+            if (confirmValue == "Yes")
+            {
+                if (cbIs13thMonthEnabled.Checked)
+                {
+                    is13thMonthEnabled = true;
+                }
+                System.Threading.Thread.Sleep(5000);
+                if (pr.processpayroll(ddlCredDate.SelectedValue, is13thMonthEnabled) < 0)
+                    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Payroll Failed !!!');", true);
+                else
+                    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Payroll Successful !!!');", true);
+            }
+        }
+
+        
+    }
+}

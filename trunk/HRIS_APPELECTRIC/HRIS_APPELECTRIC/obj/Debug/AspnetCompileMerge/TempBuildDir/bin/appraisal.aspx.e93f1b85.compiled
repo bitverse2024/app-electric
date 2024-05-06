@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/Employees/appraisal.aspx" hash="fffffffb122f315e" filehash="e2fc1f61b11dd764" flags="110000" assembly="App_Web_jilbd43a" type="ASP.pages_admin_employees_appraisal_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/Employees/appraisal.aspx" />
+    </filedeps>
+</preserve>

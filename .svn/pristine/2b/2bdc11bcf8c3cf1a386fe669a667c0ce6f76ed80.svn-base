@@ -1,0 +1,1460 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Data.SqlClient;
+using System.Data;
+using System.Configuration;
+using System.IO;
+using System.Net.Mail;
+using System.Net;
+using System.Data.OleDb;
+using System.Security.Cryptography;
+using System.Text;
+using System.Web.UI.WebControls;
+
+/// <summary>
+/// Summary description for Common
+/// </summary>
+public class Common
+{
+    static string connectionstring = ConfigurationManager.ConnectionStrings["conn"].ConnectionString;
+    string emailSMTP = ConfigurationManager.AppSettings["SMTP"];
+    string emailUSERNAME = ConfigurationManager.AppSettings["mailUserName"];
+    string emailPASSWORD = ConfigurationManager.AppSettings["mailPassword"];
+    int emailPORT = (ConfigurationManager.AppSettings["mailPort"] == "" ? int.Parse("587") : int.Parse(ConfigurationManager.AppSettings["mailPort"]));
+
+    public SqlCommand cmd = new SqlCommand();
+    public SqlConnection conn = new SqlConnection();
+    public SqlDataReader dread;
+    public SqlDataAdapter adpt = new SqlDataAdapter();
+    public DataTable dt = new DataTable();
+    User dbUser = new User();
+
+    #region CREATE
+    public bool InsertQueryCommon(Dictionary<string, string> param, string tbl)
+    {
+
+        try
+        {
+            string cols = "";
+            string values = "";
+            bool isfirstItem = true;
+            foreach (KeyValuePair<string, string> kvp in param)
+            {
+                cols += (isfirstItem ? "" : ",") + kvp.Key;
+                values += (isfirstItem ? "" : ",") + kvp.Value;
+                isfirstItem = false;
+            }
+            string base_query = "INSERT INTO " + tbl + " (" + cols + ") VALUES(" + values + ")";
+
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+            cmd = new SqlCommand(base_query, conn);
+            cmd.ExecuteNonQuery();
+
+            conn.Close();
+            return true;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+    }
+    #endregion CREATE
+
+
+    #region READ
+    public DataTable populateGridALL(string tbl, List<string> fields, string where)
+    {
+        dt = new DataTable();
+        conn = new SqlConnection(connectionstring);
+        string field = "";
+        if (fields != null)
+        {
+            bool isfirstItem = true;
+            foreach (string fld in fields)
+            {
+                field += (isfirstItem ? "" : ",") + fld; isfirstItem = false;
+            }
+
+        }
+        else
+            field = "*";
+        string qry = "Select " + field + " from " + tbl + " ";
+        if (where != null && where != "")
+            qry += where;
+
+        conn.Open();
+        adpt = new SqlDataAdapter(qry, conn);
+        adpt.Fill(dt);
+
+        conn.Close();
+        return dt;
+
+
+
+    }
+    public DataTable populateGridAppraisal()
+    {
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[3] { new DataColumn("emp_id"), new DataColumn("emp_FullName"), new DataColumn("emp_EmpID") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER", conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["emp_id"].ToString(), dread["emp_FullName"].ToString(), dread["emp_EmpID"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public DataTable populateGridAppraisalCol(string expr)
+    {
+
+        string base_query = "Select * from TBL_EMPLOYEE_MASTER where " + expr + "";
+
+        dt = new DataTable();
+        dt.Columns.AddRange(new DataColumn[3] { new DataColumn("emp_id"), new DataColumn("emp_FullName"), new DataColumn("emp_EmpID") });
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        dread = cmd.ExecuteReader();
+        while (dread.Read())
+        {
+            dt.Rows.Add(dread["emp_id"].ToString(), dread["emp_FullName"].ToString(), dread["emp_EmpID"].ToString());
+        }
+        dread.Close();
+
+        conn.Close();
+        return dt;
+
+    }
+
+    public string GetEmail(string empno)
+    {
+        string ret = "";
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select emp_Email from TBL_EMPLOYEE_MASTER where emp_EmpID = " + empno + "", conn);
+        dread = cmd.ExecuteReader();
+        dread.Read();
+        if (dread.HasRows)
+            ret = dread["emp_Email"].ToString();
+
+        if (ret == "")
+        {
+            dread.Close();
+            cmd = new SqlCommand("Select email from TBL_USER where empid = '" + empno + "'", conn);
+            dread = cmd.ExecuteReader();
+            dread.Read();
+            if (dread.HasRows)
+                ret = dread["EmailAddress"].ToString();
+
+        }
+
+        dread.Close();
+        conn.Close();
+        return ret;
+    }
+    /// <summary>
+    /// This will get all data and column name from the table
+    /// param2 = "where field = 'val'"
+    /// </summary>
+    /// <param name="tbl"></param>
+    /// <param name="wherecondition"></param>
+    /// <returns>Dictionary</returns>
+    public Dictionary<string, string> GetTableDict(string tbl, string wherecondition)
+    {
+        Dictionary<string, string> empInfo = new Dictionary<string, string>();
+        List<string> cols = new List<string>();
+        try
+        {
+
+
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+            cmd = new SqlCommand("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '" + tbl + "' ORDER BY ORDINAL_POSITION", conn);
+            dread = cmd.ExecuteReader();
+
+            while (dread.Read())
+            {
+                cols.Add(dread["COLUMN_NAME"].ToString());
+            }
+            dread.Close();
+
+            //cmd = new SqlCommand("Select * from TBL_EMPLOYEE_MASTER E, TBL_USERS U where E.emp_EmpID =" + empNo + " and E.emp_EmpID = U.empid", conn);
+            cmd = new SqlCommand("SELECT * from " + tbl + " " + wherecondition, conn);
+            dread = cmd.ExecuteReader();
+
+            while (dread.Read())
+            {
+                foreach (string strcols in cols)
+                {
+                    empInfo.Add(strcols, dread[strcols].ToString());
+
+                }
+            }
+            dread.Close();
+            conn.Close();
+            return empInfo;
+        }
+        catch (Exception e)
+        {
+            return empInfo;
+        }
+
+    }
+    
+
+    public ListItem[] GetDropDownMenuList(string tbl, string col)
+    {
+        return GetDropDownMenuList(tbl, col, "");
+    }
+    public ListItem[] GetDropDownMenuList(string tbl, string col, string val)
+    {
+        Dictionary<string, string> ddlist = new Dictionary<string, string>();
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+
+        cmd = new SqlCommand("Select * from " + tbl, conn);
+        dread = cmd.ExecuteReader();
+
+        while (dread.Read())
+        {
+            ddlist.Add(dread[col].ToString(), (val == "" ? dread[0].ToString() : dread[val].ToString()));
+
+
+        }
+        conn.Close();
+        int listcount = 0;
+        listcount = ddlist.Count;
+        ListItem[] ddlistitem = new ListItem[listcount];
+        int i = 0;
+        foreach (KeyValuePair<string, string> kvp in ddlist)
+        {
+            ddlistitem[i] = new ListItem(kvp.Key, kvp.Value);
+            i++;
+        }
+        return ddlistitem;
+    }
+
+    public bool getCSVContent(string path, out DataTable dtout)
+    {
+        bool valid = true;
+
+
+        DataTable ds = new DataTable("Temp");
+        ds.Columns.Add("Auto", typeof(int));
+        ds.Columns[0].AutoIncrement = true;
+        ds.Columns[0].AutoIncrementSeed = 1;
+        ds.Columns[0].AutoIncrementStep = 1;
+        ds.PrimaryKey = new DataColumn[] { ds.Columns["Auto"] };
+        OleDbConnection conn = new OleDbConnection("Provider=Microsoft.Jet.OleDb.4.0; Data Source = " + Path.GetDirectoryName(path) + "; Extended Properties = \"Text;HDR=YES;FMT=Delimited\"");
+
+        conn.Open();
+
+        OleDbDataAdapter adapter = new OleDbDataAdapter("SELECT * FROM " + Path.GetFileName(path), conn);
+
+
+        adapter.Fill(ds);
+        conn.Close();
+        //  ds.PrimaryKey = new DataColumn[] { ds.Columns["LOCATION"], ds.Columns["KEYNO"], ds.Columns["QTY"] };
+        dtout = ds;
+        return valid;
+
+
+
+    }
+
+    public bool getCSVContent1(Stream filestream, out DataTable dtable)
+    {
+        DataTable tempdb = new DataTable();
+        using (StreamReader sr = new StreamReader(filestream))
+        {
+
+            int j = 0;
+            while (!sr.EndOfStream)
+            {
+                string[] rows = sr.ReadLine().Split(',');
+                if (j == 0)
+                {
+                    for (int k = 0; k < rows.Count(); k++)
+                    {
+                        tempdb.Columns.Add(rows[j]); //add headers  
+                    }
+                    goto CONTINUE_LOOP;
+                }
+                DataRow dr = tempdb.NewRow();
+                for (int i = 0; i < rows.Length; i++)
+                {
+                    dr[i] = rows[i];
+
+                }
+                tempdb.Rows.Add(dr);
+
+            CONTINUE_LOOP:
+                j++;
+            }
+        }
+        dtable = tempdb;
+        return true;
+    }
+    public int EmployeeBulkImport(Stream filestream, out DataTable dtable)
+    {
+        DataTable tempdb = new DataTable();
+
+        int ret = 0;
+        string schedid = "";
+        schedid = GetSpecificDataFromDB("MIN(id) as id", "TBL_SCHEDULE");
+        if (schedid == "")
+        {
+            dtable = tempdb;
+            ret = -1;
+            goto EXIT;
+
+        }
+
+        //check if sched is available then get default sched index
+
+        string Fulltext = "";
+        using (StreamReader sr = new StreamReader(filestream))
+        {
+
+            string delimiter = "\t";
+            int j = 0;
+            int noOFuploaded = 0;
+            while (!sr.EndOfStream)
+            {
+                noOFuploaded++;
+                string[] rows = sr.ReadLine().Split(delimiter.ToCharArray());
+
+                if (j == 0)
+                {
+                    for (int k = 0; k < rows.Count(); k++)
+                    {
+                        tempdb.Columns.Add(rows[k]); //add headers  
+                    }
+                    goto CONTINUE_LOOP;
+                }
+                DataRow dr = tempdb.NewRow();
+                for (int i = 0; i < tempdb.Columns.Count; i++)
+                {
+                    dr[i] = rows[i];
+
+                }
+                tempdb.Rows.Add(dr);
+
+            CONTINUE_LOOP:
+                j++;
+            }
+
+        }//end of streamreader
+
+        var AllInRecords = (from row in tempdb.AsEnumerable()
+                            select new
+                            {
+
+                                EmpID = row.Field<string>("EmpID"),
+                                Status = row.Field<string>("Status"),
+                                Surname = row.Field<string>("Surname"),
+                                FirstName = row.Field<string>("FirstName"),
+                                MidName = row.Field<string>("MidName"),
+                                //emp_NickName = row.Field<string>("emp_NickName"),
+
+                                AssignmentCode = row.Field<string>("AssignmentCode"),
+                                DivisionCode = row.Field<string>("DivisionCode"),
+                                DeptCode = row.Field<string>("DeptCode"),
+                                BACode = row.Field<string>("BACode"),
+                                CostCenterCode = row.Field<string>("CostCenterCode"),
+                                PositionCode = row.Field<string>("PositionCode"),
+                                RankCode = row.Field<string>("RankCode"),
+                                PayClassCode = row.Field<string>("PayClassCode"),
+                                GroupCode = row.Field<string>("GroupCode"),
+                                HouseNumber = row.Field<string>("HouseNumber"),
+                                Street = row.Field<string>("Street"),
+                                HomeAddress = row.Field<string>("HomeAddress"),
+                                HomeZipCode = row.Field<string>("HomeZipCode"),
+
+                                ProvAddress = row.Field<string>("ProvAddress"),
+                                ProvCityCode = row.Field<string>("ProvCityCode"),
+                                ProvZipCode = row.Field<string>("ProvZipCode"),
+                                CellPhoneNo = row.Field<string>("CellPhoneNo"),
+                                Email = row.Field<string>("Email"),
+                                Birthdate = row.Field<string>("Birthdate"),
+
+                                BirthPlace = row.Field<string>("BirthPlace"),
+                                CivilStatus = row.Field<string>("CivilStatus"),
+                                Gender = row.Field<string>("Gender"),
+                                SSSNo = row.Field<string>("SSSNo"),
+                                TIN = row.Field<string>("TIN"),
+
+                                PagibigNo = row.Field<string>("PagibigNo"),
+                                PhilHealth_No = row.Field<string>("PhilHealth_No"),
+                                ProvTelNo = row.Field<string>("ProvTelNo"),
+                                NationalIDNo = row.Field<string>("NationalIDNo"),
+                                DateStart = row.Field<string>("DateStart"),
+
+                                DateSeparated = row.Field<string>("DateSeparated"),
+                                WageType = row.Field<string>("WageType"),
+                                SEA = row.Field<string>("SEA"),
+                                TaxableOTAllowance = row.Field<string>("TaxableOTAllowance"),
+                                Diminimis = row.Field<string>("Diminimis"),
+                                AAllowance = row.Field<string>("AAllowance"),
+                                CAllowance = row.Field<string>("CAllowance"),
+                                BEA = row.Field<string>("BEA"),
+                                SSSDed = row.Field<string>("SSSDed"),
+                                PhilHealthDed = row.Field<string>("PhilHealthDed"),
+                                PagibigDed = row.Field<string>("PagibigDed"),
+                                AcctNo = row.Field<string>("AcctNo"),
+
+                                Active = row.Field<string>("Active"),
+                                YTD_Cap = row.Field<string>("YTD_Cap"),
+                                Total_Cap = row.Field<string>("Total_Cap"),
+                                ReportingTo = row.Field<string>("ReportingTo"),
+                                ReportingTo2 = row.Field<string>("ReportingTo2"),
+
+                                team = row.Field<string>("team"),
+                                swipe = row.Field<string>("swipe"),
+                                TaxRate = row.Field<string>("TaxRate"),
+                                LoanDed = row.Field<string>("LoanDed"),
+                                TaxDed = row.Field<string>("TaxDed"),
+
+
+                                Monday = row.Field<string>("Monday"),
+                                Tuesday = row.Field<string>("Tuesday"),
+                                Wednesday = row.Field<string>("Wednesday"),
+                                Thursday = row.Field<string>("Thursday"),
+                                Friday = row.Field<string>("Friday"),
+                                Saturday = row.Field<string>("Saturday"),
+                                Sunday = row.Field<string>("Sunday")
+                            });
+        int recordcount = 0;
+        int successupload = 0;
+        int failedupload = 0;
+        foreach (var rec in AllInRecords)
+        {
+            //string position = rec.ps;
+            //string rnk = rec.rc;
+            //string dpt = rec.dc;
+            //string stat = rec.es;
+            recordcount++;
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            param.Add("emp_EmpID", "'" + rec.EmpID + "'");
+            param.Add("emp_Surname", "'" + rec.Surname + "'");
+            param.Add("emp_FirstName", "'" + rec.FirstName + "'");
+            param.Add("emp_MidName", "'" + rec.MidName + "'");
+            //param.Add("emp_FullName", "'" + rec.FullName + "'");
+            param.Add("emp_FullName", "'" + rec.Surname + ", " + rec.FirstName + " " + rec.MidName + "'");
+            //param.Add("emp_NickName", "'" + rec.NickName + "'");
+            param.Add("emp_Assignment", "" + rec.AssignmentCode + "");
+            param.Add("emp_Division", "'" + rec.DivisionCode + "'");
+            param.Add("emp_Department", "'" + rec.DeptCode + "'");
+            param.Add("emp_GroupCode", "'" + rec.GroupCode + "'");
+            param.Add("emp_PayClass", "'" + rec.PayClassCode + "'");
+            param.Add("emp_Status", "'" + rec.Status + "'");
+
+            param.Add("emp_Position", "" + rec.PositionCode + "");
+            param.Add("emp_Rank", "'" + rec.RankCode + "'");
+            param.Add("emp_HouseNumber", "'" + rec.HouseNumber + "'");
+            param.Add("emp_Street", "'" + rec.Street + "'");
+            param.Add("emp_PresentAddress", "'" + rec.HomeAddress + "'");
+            param.Add("emp_PresentZipCode", "'" + rec.HomeZipCode + "'");
+            param.Add("emp_CellPhoneNo", "'" + rec.CellPhoneNo + "'");
+            param.Add("emp_Email", "'" + rec.Email + "'");
+            param.Add("emp_Birthdate", "'" + FormatDate(rec.Birthdate) + "'");
+            param.Add("emp_Birthplace", "'" + rec.BirthPlace + "'");
+            param.Add("emp_CivilStatus", "'" + rec.CivilStatus + "'");
+            param.Add("emp_Gender", "'" + rec.Gender + "'");
+            param.Add("emp_SSSNo", "'" + rec.SSSNo + "'");
+            param.Add("emp_TIN", "'" + rec.TIN + "'");
+            param.Add("emp_PagibigNo", "'" + rec.PagibigNo + "'");
+            param.Add("PhilHealth_No", "'" + rec.PhilHealth_No + "'");
+            param.Add("emp_DateStart", "'" + FormatDate(rec.DateStart) + "'");
+            param.Add("emp_WageType", "'" + rec.WageType + "'");
+            param.Add("emp_Active", "'" + rec.Active + "'");
+            param.Add("emp_DateSeparated", "'" + FormatDate(rec.DateSeparated) + "'");
+
+            param.Add("emp_SEA", "'" + rec.SEA + "'");
+            param.Add("emp_TaxableOTAllowance", "" + rec.TaxableOTAllowance + "");
+            param.Add("emp_Diminimis", "" + rec.Diminimis + "");
+            param.Add("emp_AAllowance", "" + rec.AAllowance + "");
+            param.Add("emp_CAllowance", "" + rec.CAllowance + "");
+
+            param.Add("emp_SSSDed", "" + rec.SSSDed + "");
+            param.Add("emp_PhilHealthDed", "" + rec.PhilHealthDed + "");
+            param.Add("emp_PagibigDed", "" + rec.PagibigDed + "");
+            param.Add("emp_AccountNo", "'" + rec.AcctNo + "'");
+            param.Add("emp_YTD_Cap", "" + rec.YTD_Cap + "");
+
+            param.Add("emp_Total_Cap", "" + rec.Total_Cap + "");
+            param.Add("emp_Approver1", "'" + rec.ReportingTo + "'");
+            param.Add("emp_Approver2", "'" + rec.ReportingTo2 + "'");
+            param.Add("emp_Team", "" + rec.team + "");
+            param.Add("emp_swipe", "" + rec.swipe + "");
+            param.Add("emp_TaxRate", "" + rec.TaxRate + "");
+            param.Add("emp_LoanDed", "" + rec.LoanDed + "");
+            param.Add("emp_TaxDed", "" + rec.TaxDed + "");
+
+
+
+            ////param.Add("emp_DateStart", "'" + rec.DateStart + "'");
+            //param.Add("emp_DateStart", "'01-01-2000'");
+            ////param.Add("emp_Approver1", "'" + rec.FirstApprover + "'");
+            //param.Add("emp_Approver1", "''");
+
+            param.Add("emp_Monday", "" + rec.Monday + "");
+            param.Add("emp_Tuesday", "" + rec.Tuesday + "");
+            param.Add("emp_Wednesday", "" + rec.Wednesday + "");
+            param.Add("emp_Thursday", "" + rec.Thursday + "");
+            param.Add("emp_Friday", "" + rec.Friday + "");
+            param.Add("emp_Saturday", "" + rec.Saturday + "");
+            param.Add("emp_Sunday", "" + rec.Sunday + "");
+            //param.Add("emp_Monday", schedid);
+            //param.Add("emp_Tuesday", schedid);
+            //param.Add("emp_Wednesday", schedid);
+            //param.Add("emp_Thursday", schedid);
+            //param.Add("emp_Friday", schedid);
+            //param.Add("emp_Saturday", "0");
+            //param.Add("emp_Sunday", "0");
+            //param.Add("emp_Active", "'Y'");
+
+            if (ItemExist("TBL_EMPLOYEE_MASTER", "emp_EmpID", "where emp_EmpID = '" + rec.EmpID + "'", ""))
+                continue;
+
+            if (InsertQueryCommon(param, "TBL_EMPLOYEE_MASTER"))
+            {
+                successupload++;
+                string password = "password", username = "";
+                username = rec.FirstName[0].ToString() + (rec.MidName == "" ? "" : rec.MidName[0].ToString()) + rec.Surname;
+                username = username.ToLowerInvariant();
+                bool IsUsernameAvailable = false;
+                int iUsername = 0;
+                do
+                {
+                    IsUsernameAvailable = dbUser.IsUsernameAvailable(username);
+                    if (!IsUsernameAvailable)
+                        username += username + iUsername++;
+                } while (IsUsernameAvailable == false);
+                password = dbUser.GetSha1(dbUser.MD5Hash(password));
+
+                Dictionary<string, string> userparam = new Dictionary<string, string>();
+
+                userparam.Add("username", "'" + username + "'");
+                userparam.Add("password", "'" + password + "'");
+                userparam.Add("email", "'" + rec.Email + "'");
+                userparam.Add("loginAttempt", "0");
+                userparam.Add("roles", "'employee'");
+                userparam.Add("accounting", "'" + "" + "'");
+                userparam.Add("payroll", "'" + "" + "'");
+
+                userparam.Add("empid", "'" + rec.EmpID + "'");
+
+                DateTime datetoday = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Taipei Standard Time");
+                
+                userparam.Add("validdays", "90");
+                userparam.Add("approver", "'" + rec.ReportingTo + "'");
+                //userparam.Add("datecreatep", "'" + DateTime.Now.ToString("yyyy-MM-dd") + "'");
+                userparam.Add("datecreatep", "'" + datetoday.ToString("yyyy-MM-dd") + "'");
+                userparam.Add("password1", "'" + password + "'");
+
+                //Dictionary<string, string> userparam = new Dictionary<string, string>();
+                userparam = dbUser.saveUserParam("password", rec.FirstName, rec.MidName, rec.Surname, rec.EmpID, rec.Email);
+                dbUser.InsertQueryCommon(userparam, "TBL_USERS");
+
+            }
+            else
+                failedupload++;
+        }
+        dtable = tempdb;
+        ret = 1;
+    EXIT:
+        return ret;
+    }
+    public int EmployeeBulkUpdate(Stream filestream, out DataTable dtable)
+    {
+        DataTable tempdb = new DataTable();
+
+        int ret = 0;
+
+
+        //check if sched is available then get default sched index
+
+        string Fulltext = "";
+        using (StreamReader sr = new StreamReader(filestream))
+        {
+
+            string delimiter = "\t";
+            int j = 0;
+            int noOFuploaded = 0;
+            while (!sr.EndOfStream)
+            {
+                noOFuploaded++;
+                string[] rows = sr.ReadLine().Split(delimiter.ToCharArray());
+
+                if (j == 0)
+                {
+                    for (int k = 0; k < rows.Count(); k++)
+                    {
+                        tempdb.Columns.Add(rows[k]); //add headers  
+                    }
+                    goto CONTINUE_LOOP;
+                }
+                DataRow dr = tempdb.NewRow();
+                for (int i = 0; i < tempdb.Columns.Count; i++)
+                {
+                    dr[i] = rows[i];
+
+                }
+                tempdb.Rows.Add(dr);
+
+            CONTINUE_LOOP:
+                j++;
+            }
+
+        }//end of streamreader
+
+        var AllInRecords = (from row in tempdb.AsEnumerable()
+                            select new
+                            {
+
+                                FieldName1 = row.Field<string>("FieldName1"),
+                                FieldValue1 = row.Field<string>("FieldValue1"),
+                                TBLName1 = row.Field<string>("TBLName1"),
+                                MainField1 = row.Field<string>("MainField1"),
+                                MainKey1 = row.Field<string>("MainKey1")
+
+
+                            });
+        int recordcount = 0;
+        int successupload = 0;
+        int failedupload = 0;
+        foreach (var rec in AllInRecords)
+        {
+
+            recordcount++;
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            //  param.Add("emp_EmpID", "'" + rec.emp_EmpID + "'");
+            param.Add("" + rec.FieldName1 + "", "'" + rec.FieldValue1 + "'");
+
+
+            if (ItemExist("" + rec.TBLName1 + "", "" + rec.FieldName1 + "", "where " + rec.MainField1 + " = '" + rec.MainKey1 + "'", ""))
+            //continue;{
+            {
+                if (UpdateQueryCommon(param, "" + rec.TBLName1 + "", "" + rec.MainField1 + " = '" + rec.MainKey1 + "'"))
+                {
+                    successupload++;
+                    //string password = "password", username = "";
+                    //username = rec.FirstName[0].ToString() + (rec.MidName == "" ? "" : rec.MidName[0].ToString()) + rec.Surname;
+                    //username = username.ToLowerInvariant();
+                    //bool IsUsernameAvailable = false;
+                    //int iUsername = 0;
+                    //do
+                    //{
+                    //    IsUsernameAvailable = dbUser.IsUsernameAvailable(username);
+                    //    if (!IsUsernameAvailable)
+                    //        username += username + iUsername++;
+                    //} while (IsUsernameAvailable == false);
+                    //password = dbUser.GetSha1(dbUser.MD5Hash(password));
+
+                    Dictionary<string, string> userparam = new Dictionary<string, string>();
+
+
+
+                }
+            }
+            else
+                failedupload++;
+        }
+        dtable = tempdb;
+        ret = 1;
+    EXIT:
+        return ret;
+    }
+
+    public bool getXLS(string path, out DataTable dtout)
+    {
+
+        bool valid = true;
+        string sConnection = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + path + ";Extended Properties='Excel 12.0;HDR=No;IMEX=1'";
+        string sheet = "";
+        OleDbConnection con = new OleDbConnection(sConnection);
+        con.Open();
+
+        DataTable dtTablesList = con.GetSchema("Tables");
+        DataTable dt = new DataTable();
+        //dt.Columns.Add("Auto", typeof(int));
+        //dt.Columns[0].AutoIncrement = true;
+        //dt.Columns[0].AutoIncrementSeed = 1;
+        //dt.Columns[0].AutoIncrementStep = 1;
+        //dt.PrimaryKey = new DataColumn[] { dt.Columns["Auto"] };
+
+
+
+
+
+        if (dtTablesList.Rows.Count > 0)
+        {
+
+
+            sheet = dtTablesList.Rows[0]["TABLE_NAME"].ToString();
+        }
+
+
+        dtTablesList.Clear();
+        dtTablesList.Dispose();
+
+        if (sheet != "")
+        {
+
+
+            OleDbDataAdapter adpt = new OleDbDataAdapter("Select * From [" + sheet + "] order by F1", con);
+            adpt.Fill(dt);
+            con.Close();
+            // dt.PrimaryKey = new DataColumn[] { dt.Columns["LOCATION"], dt.Columns["KEYNO"], dt.Columns["QTY"] };
+            dtout = dt;
+            return (valid);
+
+
+
+        }
+        else
+        {
+            dtout = null;
+            con.Close();
+            return valid;
+        }
+
+    }//end of getXLS
+    public string GetSpecificDataFromDB(string field, string tbl)
+    {
+        return GetSpecificDataFromDB(field, tbl, "");
+    }
+    /// <summary>
+    /// Field : table column.
+    /// tbl : Table Name.
+    /// Condition should start with where e.g(where field = 'value')
+    /// </summary>
+    /// <param name="field"></param>
+    /// <param name="tbl"></param>
+    /// <param name="condition"></param>
+    /// <returns></returns>
+    public string GetSpecificDataFromDB(string field, string tbl, string condition)
+    {
+        string rec = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("Select " + field + " from " + tbl + " " + condition + "", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            rec = dread_fn[0].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+        return rec;
+
+    }
+
+    #endregion READ
+
+
+    #region UPDATE
+    /// <summary>
+    /// whereCondition = "field = 'value'"
+    /// </summary>
+    /// <param name="fieldToUpdate"></param>
+    /// <param name="newValue"></param>
+    /// <param name="tbl"></param>
+    /// <param name="whereCondition"></param>
+    /// <returns></returns>
+    public bool UpdateQueryCommon(string fieldToUpdate, string newValue, string tbl, string whereCondition)
+    {
+        Dictionary<string, string> param = new Dictionary<string, string>();
+        param.Add(fieldToUpdate, newValue);
+        return UpdateQueryCommon(param, tbl, whereCondition);
+    }
+    /// <summary>
+    /// whereCondition = "field = 'value'"
+    /// </summary>
+    /// <param name="param"></param>
+    /// <param name="tbl"></param>
+    /// <param name="whereCondition"></param>
+    /// <returns></returns>
+    public bool UpdateQueryCommon(Dictionary<string, string> param, string tbl, string whereCondition)
+    {
+
+        try
+        {
+            string setval = "";
+            bool isfirstItem = true;
+            foreach (KeyValuePair<string, string> kvp in param)
+            {
+                setval += (isfirstItem ? "" : ",") + kvp.Key + " = " + kvp.Value;
+
+
+                isfirstItem = false;
+            }
+            string base_query = "UPDATE " + tbl + " SET " + setval + " where " + whereCondition;
+
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+            cmd = new SqlCommand(base_query, conn);
+            cmd.ExecuteNonQuery();
+
+            conn.Close();
+            return true;
+        }
+        catch (Exception e)
+        {
+            conn.Close();
+            return false;
+        }
+    }
+
+    public bool TransferApplicantInfoToEmployee(string applicantID)
+    {
+        bool ret = false;
+        //TODO: this should migrate all applicant info to employee info when applicant gets HIRED
+        return ret;
+    }
+    #endregion UPDATE
+
+
+    #region DELETE
+    #endregion DELETE
+
+    #region String format
+    public string FormatDate(string strdate)
+    {
+        DateTime date = new DateTime();
+        if (!DateTime.TryParse(strdate, out date))
+            return "";
+        return FormatDate(date);
+
+    }
+
+
+
+    public string FormatDateyyyy(DateTime date)
+    {
+        DateTime dttemp = new DateTime();
+        dttemp = date;
+        string ret = dttemp.ToString("yyyy'-'MM'-'dd");
+        return ret;
+    }
+
+    public string FormatDateyyyy(string strdate)
+    {
+        DateTime date = new DateTime();
+        if (!DateTime.TryParse(strdate, out date))
+            return "";
+        return FormatDateyyyy(date);
+
+    }
+
+
+
+    public string FormatDate(DateTime date)
+    {
+        DateTime dttemp = new DateTime();
+        dttemp = date;
+        string ret = dttemp.ToString("MM/dd/yyyy");
+        return ret;
+    }
+    public string FormatTime(DateTime date)
+    {
+        DateTime dttemp = new DateTime();
+        dttemp = date;
+        string ret = dttemp.ToString("hh:mm tt");
+        return ret;
+    }
+    public string FormatDatePayroll(string strdate)
+    {
+        DateTime date = new DateTime();
+        if (!DateTime.TryParse(strdate, out date))
+            return "";
+        return FormatDatePayroll(date);
+
+    }
+    public string FormatDatePayroll(DateTime date)
+    {
+        DateTime dttemp = new DateTime();
+        dttemp = date;
+        string ret = dttemp.ToString("yyyy/MM/dd");
+        return ret;
+    }
+
+    public string FormatDateForPassword(DateTime date)
+    {
+        DateTime dttemp = new DateTime();
+        dttemp = date;
+        string ret = dttemp.ToString("MMddyyyy");
+        return ret;
+    }
+    public string FormatDateForPassword(string strdate)
+    {
+        DateTime date = new DateTime();
+        if (!DateTime.TryParse(strdate, out date))
+            return "";
+        return FormatDateForPassword(date);
+
+    }
+
+    public string FormatDateDay(string strdate)
+    {
+        DateTime date = new DateTime();
+        if (!DateTime.TryParse(strdate, out date))
+            return "";
+        return FormatDateDay(date);
+
+    }
+
+    public string FormatDateDay(DateTime date)
+    {
+        DateTime dttemp = new DateTime();
+        dttemp = date;
+        string ret = dttemp.ToString("dddd,MM/dd/yyyy");
+        return ret;
+    }
+
+    public string FormatDateDay1(string strdate)
+    {
+        DateTime date = new DateTime();
+        if (!DateTime.TryParse(strdate, out date))
+            return "";
+        return FormatDateDay1(date);
+
+    }
+
+    public string FormatDateDay1(DateTime date)
+    {
+        DateTime dttemp = new DateTime();
+        dttemp = date;
+        string ret = dttemp.ToString("dddd");
+        return ret;
+    }
+    #endregion String format
+
+    public DateTime dtnow()
+    {
+        DateTime dtnow = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Taipei Standard Time");
+        return dtnow;
+    }
+
+
+    public void AddLog(string log_description, string log_action, string model, string idModel, string field, string userid)
+    {
+        DateTime datetoday = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Taipei Standard Time");
+        string logs = @"~/Logs/";
+        string path = HttpContext.Current.Server.MapPath(logs);
+        string fileName = path + datetoday.Month + "-" + datetoday.Year + ".txt";
+        conn = new SqlConnection(connectionstring);
+        string base_query = "INSERT INTO TBL_ACTIVERECORDLOG VALUES('" + log_description + "','" + log_action + "','" + model + "','" + idModel + "','" + field + "','" + datetoday.ToString("MM-dd-yyyy") + "','" + userid + "')";
+        conn.Open();
+        cmd = new SqlCommand(base_query, conn);
+        cmd.ExecuteNonQuery();
+        conn.Close();
+        try
+        {
+            // Check if file already exists. If yes,append log.
+            if (File.Exists(fileName))
+            {
+                File.AppendAllText(fileName, base_query + Environment.NewLine);
+            }
+
+            // Create a new file
+            else
+                using (FileStream fs = File.Create(fileName))
+                {
+                    // Add some text to file    
+                    Byte[] title = new UTF8Encoding(true).GetBytes(base_query + Environment.NewLine);
+                    fs.Write(title, 0, title.Length);
+                    byte[] author = new UTF8Encoding(true).GetBytes("");
+                    fs.Write(author, 0, author.Length);
+                }
+
+            // Open the stream and read it back.    
+            using (StreamReader sr = File.OpenText(fileName))
+            {
+                string s = "";
+                while ((s = sr.ReadLine()) != null)
+                {
+                    Console.WriteLine(s);
+                }
+            }
+        }
+        catch (Exception Ex)
+        {
+            Console.WriteLine(Ex.ToString());
+        }
+    }
+
+    public void WriteToTextFile(List<string> items, string path)
+    {
+        using (StreamWriter _testData = new StreamWriter(path, true))
+        {
+            foreach (string txt in items)
+                _testData.WriteLine("(['" + txt + "']),"); // Write the file.
+
+        }
+    }
+    public bool ItemExist(string tbl, string field, string condition)
+    {
+        return ItemExist(tbl, field, condition, "");
+
+    }
+    /// <summary>
+    /// Check if item exist.
+    /// Condition = "where field = value"
+    /// </summary>
+    /// <param name="tbl"></param>
+    /// <param name="field"></param>
+    /// <param name="condition"></param>
+    /// <param name="val"></param>
+    /// <returns></returns>
+    public bool ItemExist(string tbl, string field, string condition, string val)
+    {
+        bool ret = true;
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select " + field + " from " + tbl + " " + condition + "", conn);
+        dread = cmd.ExecuteReader();
+        dread.Read();
+        if (dread.HasRows)
+            ret = true;
+        else
+            ret = false;
+
+        dread.Close();
+        conn.Close();
+        return ret;
+
+    }
+    public string GetCount(string tbl)
+    {
+        string cnt = "";
+
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+
+        cmd = new SqlCommand("Select COUNT(id) from "+tbl+"", conn);
+        dread = cmd.ExecuteReader();
+        dread.Read();
+        if (dread.HasRows)
+        {
+            cnt = dread[0].ToString();
+        }
+        conn.Close();
+
+
+        return cnt;
+
+    }
+
+    public bool CheckValidLeave(string tbl, string field, string condition)
+    {
+        bool ret = true;
+        conn = new SqlConnection(connectionstring);
+        conn.Open();
+        cmd = new SqlCommand("Select " + field + " from " + tbl + " " + condition + "", conn);
+        dread = cmd.ExecuteReader();
+        dread.Read();
+        if (dread.HasRows)
+            ret = true;
+        else
+            ret = false;
+
+        dread.Close();
+        conn.Close();
+        return ret;
+
+    }
+
+    public int sendApprove(Dictionary<string, string> emailParam, string subject)
+    {
+        int ret = 0;
+        String mailHeader = "<table border=2><tr><th>Field</th><th>Details</th></tr>";
+        String mailTableBody = "";
+        String mailFooter = "</table>";
+        String mailFinal = "";
+        String mailTemp = "";
+
+        //if (GridTransList.Rows.Count == 0)
+        //{
+        //    //Page.ClientScript.RegisterStartupScript(GetType(), "msgbox", "alert('Your Cart is currently empty !!!');", true);
+        //    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Your Cart is currently empty !!!');", true);
+        //    return;
+        //}
+
+        //foreach (DataRow mRow in db.PopulateGrid(sql).Rows)
+        //{
+        //    mailTemp = "<tr><td>" + mRow[0].ToString() + "</td><td>" + mRow[1].ToString() + "</td><td>" + mRow[2].ToString() + "</td><td>" + mRow[3].ToString() + "</td><td>" + mRow[4].ToString() + "</td></tr>";
+        //    mailTableBody += mailTemp;
+        //}
+
+        foreach (KeyValuePair<string, string> kvp in emailParam)
+        {
+            mailTemp = "<tr><td>" + kvp.Key + "</td><td>" + kvp.Value + "</td></tr>";
+            mailTableBody += mailTemp;
+            //cols += (isfirstItem ? "" : ",") + kvp.Key;
+            //values += (isfirstItem ? "" : ",") + kvp.Value;
+            //isfirstItem = false;
+        }
+
+        mailFinal = mailHeader + mailTableBody + mailFooter;
+
+
+
+
+        string header = "", body = "", footer = "";
+        header = "<b>Greetings from HRIS !</b> <br> <br>";
+        body = "This is to inform you that you have a approval request.<br>Control ID:   " + "#####" + "<br> <br>";
+        footer = "<br> <br> This email is machine generated, Please DO NOT REPLY. <br>       Copyright © 2014-2019 BitVerse Corporation. All rights reserved. <br> For comments or suggestions please email Bitverse.1@gmail.com";
+
+        try
+        {
+
+
+            ret = SendMail(GetEmail(emailParam["Approver1"]), subject, "ajwong029@gmail.com", header, body, mailFinal, footer);
+
+
+
+        }
+        catch
+        {
+
+            //Page.ClientScript.RegisterStartupScript(GetType(), "msgbox", "alert('No mail notification was sent due to SMTP server was busy but your transaction was successfully sent to Approver');", true);
+            //ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('No mail notification was sent due to SMTP server was busy but your transaction was successfully sent to Approver');", true);
+            //ScriptManager.RegisterClientScriptBlock(Page, typeof(Page), "clientscript", "alert('No mail notification was sent due to SMTP server was busy but your transaction was successfully sent to Approver');", true);
+            ret = 0;
+        }
+
+        //ScriptManager.RegisterClientScriptBlock(Page, typeof(Page), "clientscript", "alert('Control ID: " + Session["sendCID"].ToString() + "\\nItem Status: " + appstat + "\\nNotification has been sent');", true);
+
+
+        //ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully "+appstat+" - Notification has been sent');", true);
+        return ret;
+    }
+
+    public int GenEmail(string sendToEmpID, string subject, string content, string body)
+    {
+        int ret = 0;
+        //String mailHeader = "<table border=2><tr><th>Field</th><th>Details</th></tr>";
+        //String mailTableBody = "";
+        //String mailFooter = "</table>";
+        //String mailFinal = "";
+        //String mailTemp = "";
+
+        //if (GridTransList.Rows.Count == 0)
+        //{
+        //    //Page.ClientScript.RegisterStartupScript(GetType(), "msgbox", "alert('Your Cart is currently empty !!!');", true);
+        //    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Your Cart is currently empty !!!');", true);
+        //    return;
+        //}
+
+        //foreach (DataRow mRow in db.PopulateGrid(sql).Rows)
+        //{
+        //    mailTemp = "<tr><td>" + mRow[0].ToString() + "</td><td>" + mRow[1].ToString() + "</td><td>" + mRow[2].ToString() + "</td><td>" + mRow[3].ToString() + "</td><td>" + mRow[4].ToString() + "</td></tr>";
+        //    mailTableBody += mailTemp;
+        //}
+
+        //foreach (KeyValuePair<string, string> kvp in emailParam)
+        //{
+        //    mailTemp = "<tr><td>" + kvp.Key + "</td><td>" + kvp.Value + "</td></tr>";
+        //    mailTableBody += mailTemp;
+        //    //cols += (isfirstItem ? "" : ",") + kvp.Key;
+        //    //values += (isfirstItem ? "" : ",") + kvp.Value;
+        //    //isfirstItem = false;
+        //}
+
+        //mailFinal = mailHeader + mailTableBody + mailFooter;
+
+
+
+
+        string header = "", footer = "";
+        header = "<b>Greetings from HRIS !</b> <br> <br>";
+
+        footer = "<br> <br> This email is machine generated, Please DO NOT REPLY. <br>       Copyright © 2014-2019 BitVerse Corporation. All rights reserved. <br> For comments or suggestions please email Bitverse.1@gmail.com";
+
+        try
+        {
+
+
+            ret = SendMail(GetEmail(sendToEmpID), subject, "HRIS@BITVERSE.com", header, body, content, footer);
+
+
+        }
+        catch
+        {
+
+            //Page.ClientScript.RegisterStartupScript(GetType(), "msgbox", "alert('No mail notification was sent due to SMTP server was busy but your transaction was successfully sent to Approver');", true);
+            //ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('No mail notification was sent due to SMTP server was busy but your transaction was successfully sent to Approver');", true);
+            //ScriptManager.RegisterClientScriptBlock(Page, typeof(Page), "clientscript", "alert('No mail notification was sent due to SMTP server was busy but your transaction was successfully sent to Approver');", true);
+            ret = 0;
+        }
+
+        //ScriptManager.RegisterClientScriptBlock(Page, typeof(Page), "clientscript", "alert('Control ID: " + Session["sendCID"].ToString() + "\\nItem Status: " + appstat + "\\nNotification has been sent');", true);
+
+
+        //ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Successfully "+appstat+" - Notification has been sent');", true);
+        return ret;
+    }
+
+    public int SendMail(string mailTo, string subject, string mailFrom, string header, string body, string mailFinal, string footer)
+    {
+        int ret = 1;
+        MailMessage mail = new MailMessage();
+
+        //mail.To.Add(approver_DrpList.SelectedValue.ToString()+",czarinapamela2.vicmudo@toshiba.co.jp");
+        mail.To.Add(mailTo);
+        mail.CC.Add("anthonyjanellewong@gmail.com");
+
+        mail.Subject = subject;
+
+        mail.From = new MailAddress(mailFrom);
+
+        AlternateView htmlView = AlternateView.CreateAlternateViewFromString(header + body + mailFinal + footer, null, "text/html");
+        mail.AlternateViews.Add(htmlView);
+        try
+        {
+
+            //SmtpClient smtp = new SmtpClient(emailSMTP, 465);
+            //smtp.EnableSsl = true;
+            //int a = smtp.Timeout;
+            //smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+            //smtp.UseDefaultCredentials = false;
+            //smtp.Credentials = new NetworkCredential(emailUSERNAME, "P@ssw0rd123");
+
+
+
+            //smtp.Send(mail);
+
+            var client = new SmtpClient(emailSMTP, emailPORT)
+            {
+                EnableSsl = true,
+                UseDefaultCredentials = false,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                Credentials = new NetworkCredential(emailUSERNAME, emailPASSWORD)
+
+            };
+            client.Send(mail);
+
+            ret = 1;
+        }
+        catch
+        {
+            ret = 0;
+        }
+        return ret;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="starttime"></param>
+    /// <param name="endTime"></param>
+    /// <param name="timeOption"></param>
+    /// <returns>hours , minutes based on timeOption</returns>
+    public double get_Time_Difference(string starttime, string endTime, int timeOption)
+    {
+        double hrs = 0;
+        try
+        {
+
+            TimeSpan diff = TimeSpan.Parse(endTime) - TimeSpan.Parse(starttime);
+            hrs = Math.Round(diff.TotalHours, 2);
+            if (timeOption == 2)
+            {
+                hrs = Math.Round(diff.TotalMinutes, 2);
+            }
+        }
+        catch { }//not yet sure what error return this should be
+
+        return hrs;
+
+
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="starttime"></param>
+    /// <param name="endTime"></param>
+    /// <returns>double TotalHours</returns>
+    public double get_Time_Difference(string starttime, string endTime)
+    {
+        return get_Time_Difference(starttime, endTime, 1);
+
+    }
+
+    public double get_days_Difference(DateTime startdate, DateTime enddate)
+    {
+        double days = 0;
+        try
+        {
+            days = (enddate - startdate).TotalDays;
+            days = Math.Round(days, 2);
+        }
+        catch { }//not yet sure what error return this should be
+
+        return days;
+
+
+    }
+
+
+    #region Cryptography
+
+    public string EncryptMD5(string text)
+    {
+        string key = "";
+        using (var md5 = new MD5CryptoServiceProvider())
+        {
+            using (var tdes = new TripleDESCryptoServiceProvider())
+            {
+                tdes.Key = md5.ComputeHash(UTF8Encoding.UTF8.GetBytes(key));
+                tdes.Mode = CipherMode.ECB;
+                tdes.Padding = PaddingMode.PKCS7;
+
+                using (var transform = tdes.CreateEncryptor())
+                {
+                    byte[] textBytes = UTF8Encoding.UTF8.GetBytes(text);
+                    byte[] bytes = transform.TransformFinalBlock(textBytes, 0, textBytes.Length);
+                    return Convert.ToBase64String(bytes, 0, bytes.Length);
+                }
+            }
+        }
+    }
+    public void DeleteQuery(string tbl, string where)
+    {
+        try
+        {
+            conn = new SqlConnection(connectionstring);
+            conn.Open();
+
+            cmd = new SqlCommand("DELETE from " + tbl + " " + where + "", conn);
+            cmd.ExecuteNonQuery();
+        }
+        catch
+        {
+            conn.Close();
+        }
+        conn.Close();
+
+
+    }
+    public string DecryptMD5(string cipher)
+    {
+        string key = "";
+        using (var md5 = new MD5CryptoServiceProvider())
+        {
+            using (var tdes = new TripleDESCryptoServiceProvider())
+            {
+                tdes.Key = md5.ComputeHash(UTF8Encoding.UTF8.GetBytes(key));
+                tdes.Mode = CipherMode.ECB;
+                tdes.Padding = PaddingMode.PKCS7;
+
+                using (var transform = tdes.CreateDecryptor())
+                {
+                    byte[] cipherBytes = Convert.FromBase64String(cipher);
+                    byte[] bytes = transform.TransformFinalBlock(cipherBytes, 0, cipherBytes.Length);
+                    return UTF8Encoding.UTF8.GetString(bytes);
+                }
+            }
+        }
+    }
+
+    #endregion Cryptography
+    #region new
+    public string FormatDateddMMMMyyyy(string strdate)
+    {
+        DateTime date = new DateTime();
+        if (!DateTime.TryParse(strdate, out date))
+            return "";
+        return FormatDateddMMMMyyyy(date);
+
+    }
+
+    public string FormatDateddMMMMyyyy(DateTime date)
+    {
+        DateTime dttemp = new DateTime();
+        dttemp = date;
+        string ret = dttemp.ToString("MMMM dd, yyyy");
+        return ret;
+    }
+    public void GetThreeDataFromDB(string field1, string field2, string field3, string tbl, string condition, out string val1, out string val2, out string val3)
+    {
+        val1 = "";
+        val2 = "";
+        val3 = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("Select " + field1 + ", " + field2 + ", " + field3 + " from " + tbl + " " + condition + "", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            val1 = dread_fn[0].ToString();
+            val2 = dread_fn[1].ToString();
+            val3 = dread_fn[2].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+
+
+    }
+    public void GetTwoDataFromDB(string field1, string field2, string tbl, string condition, out string val1, out string val2)
+    {
+        val1 = "";
+        val2 = "";
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("Select " + field1 + ", " + field2 + " from " + tbl + " " + condition + "", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            val1 = dread_fn[0].ToString();
+            val2 = dread_fn[1].ToString();
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+
+
+    }
+    public bool isHasSchedule(string empno, string bussdate)
+    {
+        bool ret = false;
+
+        SqlConnection conn_fn = new SqlConnection(connectionstring);
+        conn_fn.Open();
+        SqlDataReader dread_fn;
+        SqlCommand cmd1 = new SqlCommand("Select * from TBL_FLEXISCHED where EmpID = '" + empno + "' AND BussDate = '" + FormatDateyyyy(bussdate) + "'", conn_fn);
+        dread_fn = cmd1.ExecuteReader();
+        dread_fn.Read();
+        if (dread_fn.HasRows)
+        {
+            if (dread_fn["Sched_TimeIn"].ToString() != "RD" && dread_fn["Sched_TimeOut"].ToString() != "RD")
+            {
+                ret = true;
+            }
+        }
+        dread_fn.Close();
+        conn_fn.Close();
+
+
+        return ret;
+    }
+
+    #endregion new
+}

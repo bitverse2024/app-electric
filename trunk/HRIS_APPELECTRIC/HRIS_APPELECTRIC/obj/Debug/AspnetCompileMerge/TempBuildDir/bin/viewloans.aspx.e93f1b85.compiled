@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/Employees/viewloans.aspx" hash="fffffffb122f315e" filehash="e2fc2759ecbf0ec2" flags="110000" assembly="App_Web_dd4x2hei" type="ASP.pages_admin_employees_viewloans_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/Employees/viewloans.aspx" />
+    </filedeps>
+</preserve>

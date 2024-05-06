@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/useraccess.aspx" hash="2e7cb0847" filehash="f02c302bba23050c" flags="110000" assembly="App_Web_loybl1ma" type="ASP.pages_admin_useraccess_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/useraccess.aspx" />
+    </filedeps>
+</preserve>

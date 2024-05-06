@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/createPayrollGroup.aspx" hash="fffffffb122f315e" filehash="1d03dbc8078b425c" flags="110000" assembly="App_Web_ccwycjpk" type="ASP.pages_admin_createpayrollgroup_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/createPayrollGroup.aspx" />
+    </filedeps>
+</preserve>

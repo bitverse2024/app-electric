@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/HRRecruitment/applicanteducation.aspx" hash="fffffffb122f315e" filehash="1d03f9fcfd1e70c6" flags="110000" assembly="App_Web_g4uxa2q5" type="ASP.pages_hrrecruitment_applicanteducation_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/HRRecruitment/applicanteducation.aspx" />
+    </filedeps>
+</preserve>

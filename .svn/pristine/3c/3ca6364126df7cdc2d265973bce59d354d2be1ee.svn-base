@@ -1,0 +1,182 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.Master" AutoEventWireup="true" CodeBehind="adminhtli.aspx.cs" Inherits="HRIS_APPELECTRIC.Pages.AdminKiosk.adminhtli" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <aside class="right-side">
+          <!-- Small boxes (Stat box) -->
+          <div class="row">
+	<div class="col-lg-12">
+		<div id="content">
+			
+<section class="content-header">
+     <h1>HTLI Directory
+         <small>Phone &amp; Contact Numbers</small>
+     </h1>
+     <ol class="breadcrumb">
+        <li><a href="../../Default_kioskAdmin.aspx"><i class="fa fa-dashboard"></i> Admin</a></li>
+        <li class="active">Phone &amp; Contact Numbers</li>
+    </ol>
+</section>
+
+
+<section class="content">
+    <div class="box box-primary">
+        <div class="box-header">
+
+
+			<div class="" id="yw0">
+<div class="portlet-content">
+<ul class="nav nav-pills"><li class=""><a href="createhtli.aspx"><i class="icon-plus"></i> Add</a></li><li class="active"><a href="adminhtli.aspx"><i class="icon-th-list"></i> List</a></li></ul></div>
+</div>				<div class="box-body">
+<a id="A1" class="btn btn-app" runat="server" onserverclick="btnExport_Click">
+                <i class="fa fa-file-excel-o"></i>
+                Export to Excel
+            </a>
+            <a id="A2" class="btn btn-app" runat="server" onserverclick="ExportToPDF">
+                <i class="fa fa-file-excel-o"></i>
+                Export to PDF
+            </a>
+
+            <%--<a href="<%= ResolveUrl("~/Pages/Admin/Employee/ImportEmployeeList.aspx")%>" class="btn btn-app">
+                <i class="fa fa-file-excel-o"></i>
+                Import
+            </a>
+            
+            <a id="A2" class="btn btn-app search-button" runat="server" onserverclick="btnSearch_Click">
+                <i class="fa fa-search"></i>
+                Advanced Search
+            </a>--%>
+        <hr />
+
+						<div class="search-form" style="display:none">
+							
+<div class="wide form">
+
+
+<input type="hidden" value="htli/index" name="r">
+	<div class="row">
+		<label for="Htli_id">ID</label>		<input name="Htli[id]" id="Htli_id" type="text">	</div>
+
+	<div class="row">
+		<label for="Htli_Name">Name</label>		<input size="50" maxlength="50" name="Htli[Name]" id="Htli_Name" type="text">	</div>
+
+	<div class="row">
+		<label for="Htli_Position">Position</label>		<input size="50" maxlength="50" name="Htli[Position]" id="Htli_Position" type="text">	</div>
+
+	<div class="row">
+		<label for="Htli_Cp_Number">Cp Number</label>		<input name="Htli[Cp_Number]" id="Htli_Cp_Number" type="text" maxlength="50">	</div>
+
+	<div class="row">
+		<label for="Htli_Phone_Number">Phone Number</label>		<input name="Htli[Phone_Number]" id="Htli_Phone_Number" type="text" maxlength="50">	</div>
+
+	<div class="row">
+		<label for="Htli_Email">Email</label>		<input size="20" maxlength="20" name="Htli[Email]" id="Htli_Email" type="text">	</div>
+
+	<div class="row buttons">
+		<input type="submit" name="yt0" value="Search">	</div>
+
+
+</div><!-- search-form -->		
+						</div>
+
+						<!-- search-form -->
+
+
+						<div id="display-grid" class="grid-view">
+    <div class="summary">Displaying <%=gridrangecount%> of <%=gridtotalcount%> results.</div>
+    <asp:GridView ID="GridViewList" runat="server" AutoGenerateColumns="False" 
+                                                ShowFooter="True" CssClass="items table table-striped table-bordered table-condensed"
+                                                GridLines="None" AllowPaging="True" Font-Names="Segoe UI"
+                                                ForeColor="Black" onrowcommand="GridViewList_RowCommand"
+                                                onpageindexchanging="GridViewList_PageIndexChanging"
+                                                ViewStateMode="Enabled">
+                                                        <EmptyDataTemplate><center><h1>NO DATA AVAILABLE</h1></center></EmptyDataTemplate> 
+                                                            <Columns>
+                                                                    <asp:TemplateField Visible="false">
+                                                                        <ItemTemplate>
+                                                                            <asp:Label ID="lblid" Text='<%# Eval("id") %>' runat="server"></asp:Label>
+                                                                        </ItemTemplate>
+                                                                    </asp:TemplateField>
+                                                                    <asp:TemplateField>
+                                                                        <HeaderTemplate>
+                                                                            <asp:LinkButton ID="lnkName" Text='Name' runat="server" CommandName="Sort" CommandArgument="Name"></asp:LinkButton><br />
+                                                                            <asp:TextBox ID="txtSearchName"  runat="server" OnTextChanged="txtItem_TextChanged"  Width= "100%"></asp:TextBox>
+                                                                        </HeaderTemplate>
+                                                                        <ItemTemplate>
+                                                                            <asp:Label ID="lblName" Text='<%# Eval("Name") %>' runat="server"></asp:Label>
+                                                                        </ItemTemplate>
+                                                                    </asp:TemplateField>
+                                                                    <asp:TemplateField>
+                                                                        <HeaderTemplate>
+                                                                            <asp:LinkButton ID="lnkPositione" Text='Position' runat="server" CommandName="Sort" CommandArgument="Position"></asp:LinkButton><br />
+                                                                            <asp:TextBox ID="txtSearchPosition"  runat="server" OnTextChanged="txtItem_TextChanged"  Width= "100%"></asp:TextBox>
+                                                                        </HeaderTemplate>
+                                                                        <ItemTemplate>
+                                                                            <asp:Label ID="lblPosition" Text='<%# Eval("Position") %>' runat="server"></asp:Label>
+                                                                        </ItemTemplate>
+                                                                    </asp:TemplateField>
+                                                                    <asp:TemplateField>
+                                                                        <HeaderTemplate>
+                                                                            <asp:LinkButton ID="lnkCp_Number" Text='CP Number' runat="server" CommandName="Sort" CommandArgument="Cp_Number"></asp:LinkButton><br />
+                                                                            <asp:TextBox ID="txtSearchCp_Number"  runat="server" OnTextChanged="txtItem_TextChanged"  Width= "100%"></asp:TextBox>
+                                                                        </HeaderTemplate>
+                                                                        <ItemTemplate>
+                                                                            <asp:Label ID="lblCp_Number" Text='<%# Eval("Cp_Number") %>' runat="server"></asp:Label>
+                                                                        </ItemTemplate>
+                                                                    </asp:TemplateField>
+                                                                    <asp:TemplateField>
+                                                                        <HeaderTemplate>
+                                                                            <asp:LinkButton ID="lnkPhone_Number" Text='Phone Number' runat="server" CommandName="Sort" CommandArgument="Phone_Number"></asp:LinkButton><br />
+                                                                            <asp:TextBox ID="txtSearchPhone_Number"  runat="server" OnTextChanged="txtItem_TextChanged"  Width= "100%"></asp:TextBox>
+                                                                        </HeaderTemplate>
+                                                                        <ItemTemplate>
+                                                                            <asp:Label ID="lblPhone_Number" Text='<%# Eval("Phone_Number") %>' runat="server"></asp:Label>
+                                                                        </ItemTemplate>
+                                                                    </asp:TemplateField>
+                                                                    <asp:TemplateField>
+                                                                        <HeaderTemplate>
+                                                                            <asp:LinkButton ID="lnkEmail" Text='Email' runat="server" CommandName="Sort" CommandArgument="Email"></asp:LinkButton><br />
+                                                                            <asp:TextBox ID="txtSearchEmail"  runat="server" OnTextChanged="txtItem_TextChanged"  Width= "100%"></asp:TextBox>
+                                                                        </HeaderTemplate>
+                                                                        <ItemTemplate>
+                                                                            <asp:Label ID="lblEmail" Text='<%# Eval("Email") %>' runat="server"></asp:Label>
+                                                                        </ItemTemplate>
+                                                                    </asp:TemplateField>
+                                                                 
+                                                          
+
+                                                                    <asp:TemplateField>
+                                                                        <HeaderTemplate>
+                                                                            <asp:LinkButton ID="lblReset" Text='Reset' runat="server" CommandName="Reset" CommandArgument="Reset"></asp:LinkButton><br />
+                                                                            
+                                                                        </HeaderTemplate>
+                                                                        <ItemTemplate>
+                                                                            <%--<asp:Button ID="btnView" CssClass="btn-success btn-xs" runat="server" Text="View"  CommandName="view" CommandArgument='<%# Eval("id") %>'  />
+                                                                            <asp:Button ID="btnUpdate" CssClass="btn-success btn-xs" runat="server" Text="Update"   CommandName="upd" CommandArgument='<%# Eval("id") %>'  />--%>
+                                                                            <asp:Button ID="btnDelete" CssClass="btn-danger btn-xs" runat="server" Text="Delete"  CommandName="del" CommandArgument='<%# Eval("id") %>'  />
+                                                                        </ItemTemplate>
+                                                                       
+                                                                    </asp:TemplateField>    
+                                                
+                                                                                                                    
+                                                </Columns>
+                                            </asp:GridView>
+
+</div>
+				</div>		
+		</div>
+    </div>
+</section>
+		</div><!-- content -->
+	</div>
+	<div class="col-lg-6">
+		<div id="sidebar">
+				
+		
+		</div><!-- sidebar -->
+	</div>
+</div>
+ 
+          <!-- /.row (main row) -->
+        </aside>
+</asp:Content>

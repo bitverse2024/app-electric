@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/Employees/COEOthers.aspx" hash="2e7cb0847" filehash="f02c3ae2c08398cd" flags="110000" assembly="App_Web_2y013yfe" type="ASP.pages_admin_employees_coeothers_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/Employees/COEOthers.aspx" />
+    </filedeps>
+</preserve>

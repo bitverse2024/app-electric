@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/UpdateBulkData.aspx" hash="2e7cb0847" filehash="f02c2f7a8a636f76" flags="110000" assembly="App_Web_ombe5zcw" type="ASP.pages_admin_updatebulkdata_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/UpdateBulkData.aspx" />
+    </filedeps>
+</preserve>

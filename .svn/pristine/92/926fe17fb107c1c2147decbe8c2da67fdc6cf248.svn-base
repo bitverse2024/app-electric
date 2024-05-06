@@ -1,0 +1,24 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace HRIS_APPELECTRIC.Pages.Admin.PayrollPages
+{
+    public partial class payslip : System.Web.UI.Page
+    {
+        Employee emp = new Employee();
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            ddlCredDate.Items.AddRange(emp.GetDropDownMenuList("TBL_CUTOFF", "CDesc"));
+            ddlEmployee.Items.AddRange(emp.GetDropDownMenuListEmployee());
+        }
+
+        protected void btnProcess_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("payslipview.aspx?cid=" + ddlCredDate.SelectedValue + "&empid="+ ddlEmployee .SelectedValue+ "");
+        }
+    }
+}

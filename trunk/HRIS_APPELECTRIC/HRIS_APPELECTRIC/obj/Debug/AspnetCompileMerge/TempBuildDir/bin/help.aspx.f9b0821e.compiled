@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Help.aspx" hash="fffffffb122f315e" filehash="1d03d0c16f5a7d05" flags="110000" assembly="App_Web_0weqijkz" type="ASP.pages_help_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Help.aspx" />
+    </filedeps>
+</preserve>

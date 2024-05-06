@@ -1,0 +1,40 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace HRIS_APPELECTRIC.Pages.Admin.PayrollPages
+{
+    public partial class processpayroll : System.Web.UI.Page
+    {
+
+        Payroll pr = new Payroll();
+        Employee emp = new Employee();
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                ddlCredDate.Items.AddRange(emp.GetDropDownMenuList("TBL_CUTOFF", "CDesc"));
+                
+            }
+        }
+
+        protected void btnProcess_Click(object sender, EventArgs e)
+        {
+            string confirmValue = Request.Form["confirm_value"];
+            if (confirmValue == "Yes")
+            {
+                
+                System.Threading.Thread.Sleep(5000);
+                if (pr.processpayroll(ddlCredDate.SelectedValue) < 0)
+                    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Payroll Failed !!!');", true);
+                else
+                    ScriptManager.RegisterClientScriptBlock(this.Page, this.Page.GetType(), "alert", " alert('Payroll Successful !!!');", true);
+            }
+        }
+
+        
+    }
+}

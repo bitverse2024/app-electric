@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/PayrollPages/printpayslip.aspx" hash="2e7cb0847" filehash="f02c4387ade84571" flags="110000" assembly="App_Web_uu0hbzi5" type="ASP.pages_admin_payrollpages_printpayslip_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/PayrollPages/printpayslip.aspx" />
+    </filedeps>
+</preserve>

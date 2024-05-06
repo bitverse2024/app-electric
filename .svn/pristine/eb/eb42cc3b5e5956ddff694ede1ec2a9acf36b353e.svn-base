@@ -1,0 +1,75 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.Master" AutoEventWireup="true" CodeBehind="LatesReport.aspx.cs" Inherits="HRIS_APPELECTRIC.Pages.Admin.Reports.LatesReport" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+<div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6"></div>
+                <div class="col-sm-6"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="content">
+            <div class="container-fluid">
+                <div class="container"></div>
+                <h3 class="m-0 text-dark">Lates<small> Report</small></h3>
+                <section class="card">
+                    <div class="card-header">
+                        <a href="contributions.aspx" class="btn btn-default"><i class="fa fa-list"></i><span class="h6">List</span></a>
+
+                    </div>
+                    <div class="card-body">
+                        <div class="content">
+                            <div class="container-fluid">
+                                <div class="box-body">
+                                    <div class="form">
+
+                                        <fieldset>
+                                            <%--<legend>
+                                                <p class="note">Fields with <span class="required text-red">**</span> are required.</p>
+                                            </legend>--%>
+
+
+                                            <div class="row">
+                                                <div class="form col-lg-4">
+                                                    <label for="monthlydt" class="required">Month<span class="required text-red">*
+                                    <asp:RequiredFieldValidator ID="RequiredFieldValidator5" runat="server" ControlToValidate="monthlydt" ValidationGroup="CreateCutOffGroup" ForeColor="Red" ErrorMessage="Field Required"></asp:RequiredFieldValidator></span></label>
+                                                                <input class="form-control" style="width:225px" id="monthlydt" type="month" runat="server">
+                                                </div>
+                                                
+                                            </div>
+                                            <div class="row">
+                                                
+                                                <div class="form col-lg-6">
+                                                    <label for="lblEmp" class="required">Employee </label>
+                                                    <br />
+                                                    <asp:DropDownList ID="ddlEmp" CssClass="form-control" runat="server" Width="300px">
+                                                        <asp:ListItem Value="" Text="--- All ---"></asp:ListItem>
+                                                    </asp:DropDownList>
+                                                </div>
+                                            </div>
+                                            <br />
+                                                    <div class="footer">
+                                                        <asp:Button ID="btnSearch" runat="server" class="btn btn-info" Text="Export Excel"
+                                                            OnClick="btnExport_Click"></asp:Button>
+                                                        <asp:Button ID="btnExportPFG" runat="server" class="btn btn-info" Text="Export PDF"
+                                                            OnClick="ExportToPDF"></asp:Button>
+                                                    </div>
+                                            <br />
+                                            
+                                        </fieldset>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+            <!-- content -->
+        </div>
+    </div>
+</asp:Content>
+

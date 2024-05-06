@@ -1,0 +1,103 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+
+namespace HRIS_APPELECTRIC
+{
+    public partial class _Default : Page
+    {
+        Employee emp = new Employee();
+        Timekeeping tk = new Timekeeping();
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!Page.IsPostBack)
+            {
+                //if (Session["AUTHEN_STATUS"] == "1")
+                //{
+                try
+                {
+                    if (Session["ROLES"].ToString() == "employee")
+                    {
+                        ScriptManager.RegisterStartupScript(this, this.GetType(),
+                    "alert",
+                    "alert('Please login as admin.');window.location ='Default_kiosk.aspx';", true);
+                    }
+                    if (Session["ROLES"].ToString() == "applicant")
+                    {
+                        ScriptManager.RegisterStartupScript(this, this.GetType(),
+                    "alert",
+                    "alert('Please login as admin.');window.location ='Default_kioskapplicant.aspx';", true);
+                    }
+                    else
+                    {
+                        refresh();
+                    }
+
+                }
+                catch
+                {
+                    Response.Redirect("~/Pages/Login.aspx");
+
+                }
+                    
+                
+
+                //}
+                //else
+                //{
+                //    Response.Redirect("~/Pages/Login.aspx");
+                //}
+
+                //refresh();
+            }
+        }
+        void refresh()
+        {
+            DataTable dt = new DataTable();
+            dt = emp.populateGridEmployeeContEnd();
+            GridExpCont.DataSource = dt;
+            GridExpCont.DataBind();
+            ViewState["EMP_GRID"] = dt;
+            ViewState["SORTDR"] = null;
+
+            dt = new DataTable();
+            dt = tk.populateGridEmpLeave();
+            GridEmpLeaves.DataSource = dt;
+            GridEmpLeaves.DataBind();
+            ViewState["EMP_GRID"] = dt;
+            ViewState["SORTDR"] = null;
+
+            dt = new DataTable();
+            dt = emp.populateGridEmployeeBirthdate();
+            GridEmpBdate.DataSource = dt;
+            GridEmpBdate.DataBind();
+            ViewState["EMP_GRID"] = dt;
+            ViewState["SORTDR"] = null;
+
+            dt = new DataTable();
+            dt = emp.populateGridEmployee3Mos();
+            Grid3Mos.DataSource = dt;
+            Grid3Mos.DataBind();
+            ViewState["EMP_GRID"] = dt;
+            ViewState["SORTDR"] = null;
+
+            dt = new DataTable();
+            dt = emp.populateGridEmployee5Mos();
+            Grid5Mos.DataSource = dt;
+            Grid5Mos.DataBind();
+            ViewState["EMP_GRID"] = dt;
+            ViewState["SORTDR"] = null;
+
+            dt = new DataTable();
+            dt = emp.populateGridEmployeeAnniv();
+            GridEmpAnniv.DataSource = dt;
+            GridEmpAnniv.DataBind();
+            ViewState["EMP_GRID"] = dt;
+            ViewState["SORTDR"] = null;
+        }
+    }
+}

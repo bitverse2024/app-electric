@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<preserve resultType="3" virtualPath="/Pages/Admin/TK/EmployeeScheduler.aspx" hash="fffffffb122f315e" filehash="e2fbfdc18187d7fe" flags="110000" assembly="App_Web_4xqx2u11" type="ASP.pages_admin_tk_employeescheduler_aspx">
+    <filedeps>
+        <filedep name="/MasterPage.Master" />
+        <filedep name="/Pages/Admin/TK/EmployeeScheduler.aspx" />
+    </filedeps>
+</preserve>
